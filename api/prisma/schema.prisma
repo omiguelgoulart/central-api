@@ -1,0 +1,160 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+
+enum Papel {
+  ADMIN
+  TORCEDOR
+}
+
+enum StatusSocio {
+  ATIVO
+  INADIMPLENTE
+  CANCELADO
+}
+
+enum StatusPagamento {
+  PENDENTE
+  PAGO
+  ATRASADO
+  CANCELADO
+}
+
+enum StatusIngresso {
+  VALIDO
+  USADO
+  CANCELADO
+}
+
+enum Periodicidade {
+  MENSAL
+  TRIMESTRAL
+  SEMESTRAL
+  ANUAL
+}
+
+enum MetodoPagamento {
+  BOLETO
+  CARTAO_CREDITO
+  CARTAO_DEBITO
+  DINHEIRO
+  PIX
+}
+
+
+
+model Usuario {
+  id         Int       @id @default(autoincrement())
+  email      String    @unique
+  senha      String
+  papel      Papel     @default(TORCEDOR)
+  criadoEm   DateTime  @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  torcedor   Torcedor?
+}
+
+model Torcedor {
+  id          Int          @id @default(autoincrement())
+  usuarioId   Int          @unique
+  nome        String
+  cpf         String       @unique
+  dataNasc    DateTime?
+  endereco    String?
+  telefone    String?
+  status      StatusSocio  @default(ATIVO)
+
+  planoId     Int?
+  plano       Plano?       @relation(fields: [planoId], references: [id])
+
+  usuario     Usuario      @relation(fields: [usuarioId], references: [id])
+  pagamentos  Pagamento[]
+  ingressos   Ingresso[]
+
+  criadoEm    DateTime     @default(now())
+  atualizadoEm DateTime    @updatedAt
+
+  @@index([status])
+  @@index([planoId])
+}
+
+
+model Plano {
+  id          Int        @id @default(autoincrement())
+  nome        String
+  descricao   String?
+  valor       Float     
+  periodicidade Periodicidade   
+  beneficios  String?
+
+  socios      Torcedor[]
+
+  criadoEm    DateTime    @default(now())
+  atualizadoEm DateTime   @updatedAt
+
+  @@unique([nome])
+}
+
+
+model Pagamento {
+  id          Int              @id @default(autoincrement())
+  socioId     Int
+  valor       Float         
+  status      StatusPagamento   @default(PENDENTE)
+  vencimento  DateTime
+  pagoEm      DateTime?
+  referencia  String?
+  metodo      MetodoPagamento       
+
+  socio       Torcedor          @relation(fields: [socioId], references: [id])
+
+  criadoEm    DateTime          @default(now())
+  atualizadoEm DateTime         @updatedAt
+
+  @@index([socioId])
+  @@index([status, vencimento])
+}
+
+// Eventos / jogos
+model Evento {
+  id          Int        @id @default(autoincrement())
+  nome        String
+  data        DateTime
+  local       String
+  descricao   String?
+
+  ingressos   Ingresso[]
+
+  criadoEm    DateTime   @default(now())
+  atualizadoEm DateTime  @updatedAt
+
+  @@index([data])
+}
+
+// Ingressos emitidos
+model Ingresso {
+  id          Int             @id @default(autoincrement())
+  socioId     Int?
+  eventoId    Int
+  qrCode      String          @unique
+  status      StatusIngresso  @default(VALIDO)
+  criadoEm    DateTime        @default(now())
+  usadoEm     DateTime?
+
+  socio       Torcedor?       @relation(fields: [socioId], references: [id])
+  evento      Evento          @relation(fields: [eventoId], references: [id])
+
+  @@index([eventoId, status])
+}
