@@ -13,7 +13,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 enum Papel {
   ADMIN
   TORCEDOR
@@ -56,19 +55,23 @@ enum MetodoPagamento {
 
 
 model Usuario {
-  id         Int       @id @default(autoincrement())
+  id         String   @id @default(uuid())
+  nome       String
   email      String    @unique
   senha      String
   papel      Papel     @default(TORCEDOR)
+  matricula  String?   @unique
+
   criadoEm   DateTime  @default(now())
   atualizadoEm DateTime @updatedAt
 
   torcedor   Torcedor?
+  @@map("usuarios")
 }
 
 model Torcedor {
-  id          Int          @id @default(autoincrement())
-  usuarioId   Int          @unique
+  id         String   @id @default(uuid())
+  usuarioId   String       @unique
   nome        String
   cpf         String       @unique
   dataNasc    DateTime?
@@ -76,7 +79,7 @@ model Torcedor {
   telefone    String?
   status      StatusSocio  @default(ATIVO)
 
-  planoId     Int?
+  planoId     String?
   plano       Plano?       @relation(fields: [planoId], references: [id])
 
   usuario     Usuario      @relation(fields: [usuarioId], references: [id])
@@ -88,11 +91,12 @@ model Torcedor {
 
   @@index([status])
   @@index([planoId])
+  @@map("torcedores")
 }
 
 
 model Plano {
-  id          Int        @id @default(autoincrement())
+  id         String   @id @default(uuid())
   nome        String
   descricao   String?
   valor       Float     
@@ -105,15 +109,16 @@ model Plano {
   atualizadoEm DateTime   @updatedAt
 
   @@unique([nome])
+  @@map("planos")
 }
 
 
 model Pagamento {
-  id          Int              @id @default(autoincrement())
-  socioId     Int
+  id         String   @id @default(uuid())
+  socioId     String
   valor       Float         
   status      StatusPagamento   @default(PENDENTE)
-  vencimento  DateTime
+  dataVencimento  DateTime
   pagoEm      DateTime?
   referencia  String?
   metodo      MetodoPagamento       
@@ -124,12 +129,12 @@ model Pagamento {
   atualizadoEm DateTime         @updatedAt
 
   @@index([socioId])
-  @@index([status, vencimento])
+  @@index([status, dataVencimento])
+  @@map("pagamentos")
 }
 
-// Eventos / jogos
-model Evento {
-  id          Int        @id @default(autoincrement())
+model Jogo {
+  id         String   @id @default(uuid())
   nome        String
   data        DateTime
   local       String
@@ -141,20 +146,22 @@ model Evento {
   atualizadoEm DateTime  @updatedAt
 
   @@index([data])
+  @@map("jogos")
 }
 
-// Ingressos emitidos
 model Ingresso {
-  id          Int             @id @default(autoincrement())
-  socioId     Int?
-  eventoId    Int
+  id         String   @id @default(uuid())
+  socioId     String?
+  eventoId    String
   qrCode      String          @unique
+  valor       Float
   status      StatusIngresso  @default(VALIDO)
   criadoEm    DateTime        @default(now())
   usadoEm     DateTime?
 
   socio       Torcedor?       @relation(fields: [socioId], references: [id])
-  evento      Evento          @relation(fields: [eventoId], references: [id])
+  evento      Jogo          @relation(fields: [eventoId], references: [id])
 
   @@index([eventoId, status])
+  @@map("ingressos")
 }
