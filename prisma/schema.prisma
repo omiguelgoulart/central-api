@@ -13,11 +13,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Papel {
-  ADMIN
-  TORCEDOR
-}
-
 enum StatusSocio {
   ATIVO
   INADIMPLENTE
@@ -52,116 +47,238 @@ enum MetodoPagamento {
   PIX
 }
 
+enum StatusAssinatura {
+  ATIVA
+  CANCELADA
+  SUSPENSA
+  EXPIRADA
+}
 
+enum StatusFatura {
+  ABERTA
+  PAGA
+  ATRASADA
+  CANCELADA
+}
 
-model Usuario {
-  id         String   @id @default(uuid())
-  nome       String
-  email      String    @unique
-  senha      String
-  papel      Papel     @default(TORCEDOR)
-  matricula  String?   @unique
-
-  criadoEm   DateTime  @default(now())
+model Admin {
+  id           String   @id @default(uuid())
+  nome         String
+  email        String   @unique
+  senha        String
+  criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
-  torcedor   Torcedor?
-  @@map("usuarios")
+  @@map("admins")
 }
 
 model Torcedor {
-  id         String   @id @default(uuid())
-  usuarioId   String       @unique
-  nome        String
-  cpf         String       @unique
-  dataNasc    DateTime?
-  endereco    String?
-  telefone    String?
-  status      StatusSocio  @default(ATIVO)
+  id        String      @id @default(uuid())
+  nome      String
+  email     String      @unique
+  senha     String
+  matricula String?     @unique
+  cpf       String?     @unique
+  dataNasc  DateTime?
+  endereco  String?
+  telefone  String?
+  status    StatusSocio @default(ATIVO)
 
   planoId     String?
   plano       Plano?       @relation(fields: [planoId], references: [id])
-
-  usuario     Usuario      @relation(fields: [usuarioId], references: [id])
+  assinaturas Assinatura[]
   pagamentos  Pagamento[]
   ingressos   Ingresso[]
 
-  criadoEm    DateTime     @default(now())
-  atualizadoEm DateTime    @updatedAt
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
 
   @@index([status])
   @@index([planoId])
   @@map("torcedores")
 }
 
-
 model Plano {
-  id         String   @id @default(uuid())
-  nome        String
-  descricao   String?
-  valor       Float     
-  periodicidade Periodicidade   
-  beneficios  String?
+  id            String        @id @default(uuid())
+  nome          String
+  descricao     String?
+  valor         Decimal
+  periodicidade Periodicidade
+  beneficios    String?
 
   socios      Torcedor[]
+  assinaturas Assinatura[]
 
-  criadoEm    DateTime    @default(now())
-  atualizadoEm DateTime   @updatedAt
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
 
   @@unique([nome])
   @@map("planos")
 }
 
+model Assinatura {
+  id                String           @id @default(uuid())
+  torcedorId        String
+  planoId           String
+  status            StatusAssinatura @default(ATIVA)
+  inicioEm          DateTime
+  fimEm             DateTime?
+  proximaCobrancaEm DateTime?
+
+  torcedor Torcedor @relation(fields: [torcedorId], references: [id])
+  plano    Plano    @relation(fields: [planoId], references: [id])
+  faturas  Fatura[]
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([torcedorId, status])
+  @@index([planoId])
+}
+
+model Fatura {
+  id           String           @id @default(uuid())
+  assinaturaId String
+  competencia  String // "2025-09" por ex.
+  valor        Decimal
+  status       StatusFatura     @default(ABERTA)
+  vencimentoEm DateTime
+  pagoEm       DateTime?
+  referencia   String?          @unique
+  metodo       MetodoPagamento?
+
+  assinatura Assinatura  @relation(fields: [assinaturaId], references: [id])
+  pagamentos Pagamento[]
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([assinaturaId, status, vencimentoEm, competencia])
+}
 
 model Pagamento {
-  id         String   @id @default(uuid())
-  socioId     String
-  valor       Float         
-  status      StatusPagamento   @default(PENDENTE)
-  dataVencimento  DateTime
-  pagoEm      DateTime?
-  referencia  String?
-  metodo      MetodoPagamento       
+  id             String          @id @default(uuid())
+  socioId        String
+  valor          Decimal
+  status         StatusPagamento @default(PENDENTE)
+  dataVencimento DateTime
+  pagoEm         DateTime?
+  referencia     String?
+  metodo         MetodoPagamento
+  descricao      String?
+  faturaId       String?
 
-  socio       Torcedor          @relation(fields: [socioId], references: [id])
+  socio  Torcedor @relation(fields: [socioId], references: [id])
+  fatura Fatura?  @relation(fields: [faturaId], references: [id])
 
-  criadoEm    DateTime          @default(now())
-  atualizadoEm DateTime         @updatedAt
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
 
   @@index([socioId])
-  @@index([status, dataVencimento])
+  @@index([status, dataVencimento, metodo])
   @@map("pagamentos")
 }
 
 model Jogo {
-  id         String   @id @default(uuid())
-  nome        String
-  data        DateTime
-  local       String
-  descricao   String?
+  id        String   @id @default(uuid())
+  nome      String
+  data      DateTime
+  local     String
+  descricao String?
 
-  ingressos   Ingresso[]
+  ingressos Ingresso[]
+  lotes     Lote[]
 
-  criadoEm    DateTime   @default(now())
-  atualizadoEm DateTime  @updatedAt
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
 
   @@index([data])
   @@map("jogos")
 }
 
+model Setor {
+  id         String @id @default(uuid())
+  nome       String
+  capacidade Int
+
+  criadoEm     DateTime  @default(now())
+  atualizadoEm DateTime  @updatedAt
+  Assentos     Assento[]
+  Lotes        Lote[]
+
+  @@unique([nome])
+  @@map("setores")
+}
+
+model Assento {
+  id      String @id @default(uuid())
+  setorId String
+  numero  Int
+
+  setor Setor @relation(fields: [setorId], references: [id])
+
+  ingressos Ingresso[]
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@unique([setorId, numero])
+  @@index([setorId])
+  @@map("assentos")
+}
+
 model Ingresso {
-  id         String   @id @default(uuid())
-  socioId     String?
-  eventoId    String
-  qrCode      String          @unique
-  valor       Float
-  status      StatusIngresso  @default(VALIDO)
-  criadoEm    DateTime        @default(now())
-  usadoEm     DateTime?
+  id           String         @id @default(uuid())
+  socioId      String?
+  eventoId     String
+  qrCode       String         @unique
+  valor        Decimal
+  status       StatusIngresso @default(VALIDO)
+  criadoEm     DateTime       @default(now())
+  usadoEm      DateTime?
+  atualizadoEm DateTime       @updatedAt
+  loteId       String?
+  assentoId    String?
 
-  socio       Torcedor?       @relation(fields: [socioId], references: [id])
-  evento      Jogo          @relation(fields: [eventoId], references: [id])
+  socio    Torcedor? @relation(fields: [socioId], references: [id])
+  evento   Jogo      @relation(fields: [eventoId], references: [id])
+  lote     Lote?     @relation(fields: [loteId], references: [id])
+  assento  Assento?  @relation(fields: [assentoId], references: [id])
+  checkins Checkin[]
 
-  @@index([eventoId, status])
+  @@index([eventoId, status, loteId, assentoId])
   @@map("ingressos")
+}
+
+model Lote {
+  id            String @id @default(uuid())
+  nome          String
+  quantidade    Int
+  precoUnitario Decimal
+  jogoId        String
+  setorId       String?
+
+  jogo      Jogo       @relation(fields: [jogoId], references: [id])
+  setor     Setor?     @relation(fields: [setorId], references: [id])
+  ingressos Ingresso[]
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([jogoId, nome])
+  @@map("lotes")
+}
+
+model Checkin {
+  id         String   @id @default(uuid())
+  ingressoId String
+  feitoEm    DateTime @default(now())
+  feitoPor   String? // id do conferente/admin, se houver
+  local      String? // catraca/portão
+
+  ingresso Ingresso @relation(fields: [ingressoId], references: [id])
+
+  @@index([ingressoId])
+  @@unique([ingressoId, feitoEm])
+  @@map("checkins")
 }
