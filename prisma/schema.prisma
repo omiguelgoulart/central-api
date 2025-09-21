@@ -69,6 +69,9 @@ model Admin {
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
+  jogosCriados     Jogo[] @relation("JogoCriadoPor")
+  jogosAtualizados Jogo[] @relation("JogoAtualizadoPor")
+
   @@map("admins")
 }
 
@@ -188,6 +191,13 @@ model Jogo {
 
   ingressos Ingresso[]
   lotes     Lote[]
+
+  criadoPorId     String?
+  atualizadoPorId String?
+
+  criadoPor       Admin? @relation("JogoCriadoPor", fields: [criadoPorId], references: [id])
+  atualizadoPor   Admin? @relation("JogoAtualizadoPor", fields: [atualizadoPorId], references: [id])
+
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
