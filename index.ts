@@ -1,14 +1,21 @@
 import express from 'express'
 import routesUsuarios from './routes/usuariosRoute'
 import routesLogin from './routes/loginRoute'
+import cors from 'cors'
+
 
 const app = express()
 const port = 3003
 
+app.use(cors(
+  {
+    origin: '*'
+  }
+))
 app.use(express.json())
 
 
-app.use("/usuarios", routesUsuarios)
+app.use("/usuario", routesUsuarios)
 app.use("/login", routesLogin)
 
 

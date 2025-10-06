@@ -23,7 +23,7 @@ export async function loginController(req: Request, res: Response): Promise<void
   }
 
   try {
-    const usuario = await prisma.usuario.findFirst({
+    const usuario = await prisma.torcedor.findFirst({
       where: { email },
     })
 
