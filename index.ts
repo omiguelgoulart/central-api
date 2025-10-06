@@ -1,6 +1,7 @@
 import express from 'express'
 import routesUsuarios from './routes/usuariosRoute'
 import routesLogin from './routes/loginRoute'
+import routesPlanos from './routes/planosRoute'
 import cors from 'cors'
 
 
@@ -17,6 +18,7 @@ app.use(express.json())
 
 app.use("/usuario", routesUsuarios)
 app.use("/login", routesLogin)
+app.use("/planos", routesPlanos)
 
 
 app.get('/', (req, res) => {
