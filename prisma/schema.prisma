@@ -125,7 +125,7 @@ model Assinatura {
   planoId           String
   status            StatusAssinatura @default(ATIVA)
   inicioEm          DateTime
-  fimEm             DateTime?
+  expiraEm          DateTime?
   proximaCobrancaEm DateTime?
 
   torcedor Torcedor @relation(fields: [torcedorId], references: [id])
