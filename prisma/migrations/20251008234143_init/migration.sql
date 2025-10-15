@@ -42,11 +42,33 @@ CREATE TABLE `planos` (
     `descricao` VARCHAR(191) NULL,
     `valor` DECIMAL(65, 30) NOT NULL,
     `periodicidade` ENUM('MENSAL', 'TRIMESTRAL', 'SEMESTRAL', 'ANUAL') NOT NULL,
-    `beneficios` VARCHAR(191) NULL,
+    `isFeatured` BOOLEAN NOT NULL DEFAULT false,
+    `badgeLabel` VARCHAR(191) NULL,
+    `ordem` INTEGER NOT NULL DEFAULT 0,
     `criadoEm` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `atualizadoEm` DATETIME(3) NOT NULL,
 
     UNIQUE INDEX `planos_nome_key`(`nome`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `beneficios` (
+    `id` VARCHAR(191) NOT NULL,
+    `slug` VARCHAR(191) NOT NULL,
+    `titulo` VARCHAR(191) NOT NULL,
+    `descricao` VARCHAR(191) NULL,
+    `icone` VARCHAR(191) NULL,
+    `ativo` BOOLEAN NOT NULL DEFAULT true,
+    `planoId` VARCHAR(191) NOT NULL,
+    `ordem` INTEGER NOT NULL DEFAULT 0,
+    `destaque` BOOLEAN NOT NULL DEFAULT false,
+    `observacao` VARCHAR(191) NULL,
+    `criadoEm` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `atualizadoEm` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `beneficios_slug_key`(`slug`),
+    INDEX `beneficios_planoId_idx`(`planoId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -196,6 +218,9 @@ CREATE TABLE `checkins` (
 
 -- AddForeignKey
 ALTER TABLE `torcedores` ADD CONSTRAINT `torcedores_planoId_fkey` FOREIGN KEY (`planoId`) REFERENCES `planos`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `beneficios` ADD CONSTRAINT `beneficios_planoId_fkey` FOREIGN KEY (`planoId`) REFERENCES `planos`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Assinatura` ADD CONSTRAINT `Assinatura_torcedorId_fkey` FOREIGN KEY (`torcedorId`) REFERENCES `torcedores`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

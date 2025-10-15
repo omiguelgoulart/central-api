@@ -8,15 +8,15 @@ const prisma = new PrismaClient()
 const planoSchema = z.object({
     nome: z.string().trim().min(1, "Informe o nome do plano").max(100),
     valor: z.number().min(0, "Preço mensal deve ser positivo"),
-    Periodicidade: z.enum([ 'MENSAL', 'TRIMESTRAL', 'SEMESTRAL', 'ANUAL' ], { required_error: "Informe a periodicidade do plano"
+    Periodicidade: z.enum(['MENSAL', 'TRIMESTRAL', 'SEMESTRAL', 'ANUAL'], {
+        required_error: "Informe a periodicidade do plano"
     }),
     descricao: z.string().trim().min(1, "Informe a descrição do plano").max(500),
-    beneficios: z.string().trim().min(1, "Informe os benefícios do plano").max(500),
 });
 
 router.post("/", async (req, res) => {
     try {
-        const { nome, valor, Periodicidade, descricao, beneficios } = planoSchema.parse(req.body);
+        const { nome, valor, Periodicidade, descricao } = planoSchema.parse(req.body);
         const planoExistente = await prisma.plano.findUnique({
             where: { nome }
         });
@@ -30,7 +30,6 @@ router.post("/", async (req, res) => {
                 valor,
                 periodicidade: Periodicidade,
                 descricao,
-                beneficios
             }
         });
         res.status(201).json({ message: 'Plano criado com sucesso', planoId: novoPlano.id });
@@ -46,7 +45,14 @@ router.post("/", async (req, res) => {
 
 router.get("/", async (req, res) => {
     try {
-        const planos = await prisma.plano.findMany();
+        const planos = await prisma.plano.findMany({
+            include: {
+                beneficios: true
+            },
+            orderBy: {
+                valor: 'asc'
+            }
+        });
         res.status(200).json(planos);
     } catch (error) {
         console.error(error);
@@ -55,11 +61,8 @@ router.get("/", async (req, res) => {
 });
 
 router.get("/:id", async (req, res) => {
-    const planoId = Number(req.params.id);
-    if (isNaN(planoId)) {
-        res.status(400).json({ error: 'ID do plano inválido' });
-        return;
-    }
+    const id = req.params.id;
+    const planoId = parseInt(id);
     try {
         const plano = await prisma.plano.findUnique({
             where: { id: planoId.toString() }
@@ -76,21 +79,17 @@ router.get("/:id", async (req, res) => {
 });
 
 router.delete("/:id", async (req, res) => {
-    const planoId = Number(req.params.id);
-    if (isNaN(planoId)) {
-        res.status(400).json({ error: 'ID do plano inválido' });
-        return;
-    }
+    const id = req.params.id;
     try {
-        const plano = await prisma.plano.findUnique({
-            where: { id: planoId.toString() }
+        const planoExistente = await prisma.plano.findUnique({
+            where: { id }
         });
-        if (!plano) {
+        if (!planoExistente) {
             res.status(404).json({ error: 'Plano não encontrado' });
             return;
         }
         await prisma.plano.delete({
-            where: { id: planoId.toString() }
+            where: { id }
         });
         res.status(200).json({ message: 'Plano deletado com sucesso' });
     } catch (error) {
@@ -113,7 +112,7 @@ router.patch("/:id", async (req, res) => {
             res.status(404).json({ error: 'Plano não encontrado' });
             return;
         }
-        const { nome, valor, Periodicidade, descricao, beneficios } = planoSchema.partial().parse(req.body);
+        const { nome, valor, Periodicidade, descricao } = planoSchema.partial().parse(req.body);
         if (nome && nome !== planoExistente.nome) {
             const nomeJaUsado = await prisma.plano.findUnique({
                 where: { nome }
@@ -130,7 +129,6 @@ router.patch("/:id", async (req, res) => {
                 valor: valor ?? planoExistente.valor,
                 periodicidade: Periodicidade ?? planoExistente.periodicidade,
                 descricao: descricao ?? planoExistente.descricao,
-                beneficios: beneficios ?? planoExistente.beneficios,
             }
         });
         res.status(200).json({ message: 'Plano atualizado com sucesso', plano: planoAtualizado });
