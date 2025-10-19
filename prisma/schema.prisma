@@ -218,25 +218,30 @@ model Fatura {
 model Pagamento {
   id             String          @id @default(uuid())
   torcedorId     String
-  valor          Decimal
-  status         StatusPagamento @default(PENDENTE)
+  valor          Decimal          @db.Decimal(10, 2)
+  status         StatusPagamento  @default(PENDENTE)
   dataVencimento DateTime
   pagoEm         DateTime?
-  referencia     String?
+  referencia     String?          @unique
   metodo         MetodoPagamento
   descricao      String?
+
+  // 🔹 Vínculos opcionais (um OU outro)
   faturaId       String?
 
   torcedor Torcedor @relation("TorcedorPagamentos", fields: [torcedorId], references: [id])
-  fatura   Fatura?  @relation(fields: [faturaId], references: [id])
+  fatura   Fatura?  @relation(fields: [faturaId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  ingressos Ingresso[] // Um pagamento pode ter vários ingressos
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
   @@index([torcedorId])
+  @@index([faturaId])
   @@index([status, dataVencimento, metodo])
   @@map("pagamentos")
 }
+
 
 model Jogo {
   id        String   @id @default(uuid())
@@ -309,6 +314,8 @@ model Ingresso {
   lote         Lote?          @relation(fields: [loteId], references: [id])
   assento      Assento?       @relation(fields: [assentoId], references: [id])
   checkins     Checkin[]
+  pagamentoId  String?
+  pagamento    Pagamento? @relation(fields: [pagamentoId], references: [id])
 
   @@index([eventoId, status, loteId, assentoId])
   @@map("ingressos")
