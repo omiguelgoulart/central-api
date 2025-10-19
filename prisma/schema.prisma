@@ -61,7 +61,6 @@ enum StatusFatura {
   CANCELADA
 }
 
-
 model Admin {
   id           String   @id @default(uuid())
   nome         String
@@ -77,29 +76,42 @@ model Admin {
 }
 
 model Torcedor {
-  id        String      @id @default(uuid())
-  nome      String
-  email     String      @unique
-  senha     String
-  matricula String?     @unique
-  cpf       String?     @unique
-  dataNasc  DateTime?
-  endereco  String?
-  telefone  String?
-  status    StatusSocio @default(ATIVO)
+  id                 String       @id @default(uuid())
+  matricula          String       @unique
+  nome               String
+  email              String       @unique
+  senha              String
+  telefone           String?
+  cpf                String?      @unique
+  dataNascimento     DateTime?
+  genero             String?
+  fotoUrl            String?
+  enderecoLogradouro String?
+  enderecoNumero     String?
+  enderecoBairro     String?
+  enderecoCidade     String?
+  enderecoUF         String?
+  enderecoCEP        String?
+  statusSocio        StatusSocio?
+  inadimplenteDesde  DateTime?
+  aceitaTermosEm     DateTime?
+  aceitaMarketing    Boolean?     @default(false)
+  aceitaMarketingEm  DateTime?
+  origemCadastro     String?
+  documentoFrenteUrl String?
+  documentoVersoUrl  String?
+  gatewayClienteId   String?
+  faceId             String?
+  assinaturas        Assinatura[]
+  pagamentos         Pagamento[]  @relation("TorcedorPagamentos")
+  ingressos          Ingresso[]   @relation("IngressoSocio")
+  criadoEm           DateTime     @default(now())
+  atualizadoEm       DateTime     @updatedAt
 
-  planoId     String?
-  plano       Plano?       @relation(fields: [planoId], references: [id])
-  assinaturas Assinatura[]
-  pagamentos  Pagamento[]
-  ingressos   Ingresso[]
-
-  criadoEm     DateTime @default(now())
-  atualizadoEm DateTime @updatedAt
-
-  @@index([status])
-  @@index([planoId])
-  @@map("torcedores")
+  @@index([statusSocio])
+  @@index([cpf])
+  @@index([email])
+  @@map("torcedores") // 🔴 ESSENCIAL
 }
 
 model Plano {
@@ -110,35 +122,34 @@ model Plano {
   periodicidade Periodicidade
 
   // extras pro card
-  isFeatured   Boolean   @default(false)
-  badgeLabel   String?
-  ordem        Int       @default(0)
+  isFeatured Boolean @default(false)
+  badgeLabel String?
+  ordem      Int     @default(0)
 
   // relações
-  socios       Torcedor[]
   assinaturas  Assinatura[]
   beneficios   Beneficio[]
-  criadoEm     DateTime @default(now())
-  atualizadoEm DateTime @updatedAt
+  criadoEm     DateTime     @default(now())
+  atualizadoEm DateTime     @updatedAt
 
   @@map("planos")
 }
 
 model Beneficio {
-  id         String   @id @default(uuid())
-  slug       String   @unique         
-  titulo     String                    
-  descricao  String?
-  icone      String?                   
-  ativo      Boolean  @default(true)
+  id        String  @id @default(uuid())
+  slug      String  @unique
+  titulo    String
+  descricao String?
+  icone     String?
+  ativo     Boolean @default(true)
 
   // relação com plano
-  planoId    String
-  plano      Plano    @relation(fields: [planoId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  planoId String
+  plano   Plano  @relation(fields: [planoId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   // controle visual/ordem dentro do card do plano
-  ordem      Int      @default(0)
-  destaque   Boolean  @default(false)
+  ordem      Int     @default(0)
+  destaque   Boolean @default(false)
   observacao String?
 
   criadoEm     DateTime @default(now())
@@ -154,18 +165,34 @@ model Assinatura {
   planoId           String
   status            StatusAssinatura @default(ATIVA)
   inicioEm          DateTime
-  expiraEm          DateTime?
+  expiraEm          DateTime? // ok ser opcional (plano sem prazo fixo)
   proximaCobrancaEm DateTime?
 
-  torcedor Torcedor @relation(fields: [torcedorId], references: [id])
-  plano    Plano    @relation(fields: [planoId], references: [id])
+  // Auditoria de ciclo de vida
+  canceladaEm        DateTime?
+  motivoCancelamento String?
+  suspensaEm         DateTime?
+  retomadaEm         DateTime?
+
+  // Cobrança
+  periodicidade       Periodicidade @default(MENSAL) // crie o enum (MENSAL/TRIMESTRAL/ANUAL...)
+  valorAtual          Decimal?      @db.Decimal(10, 2)
+  moeda               String?       @default("BRL")
+  gatewayClienteId    String? // id do cliente no gateway (ex.: ASAAS/Stripe)
+  gatewayAssinaturaId String? // id da assinatura no gateway
+
+  torcedor Torcedor @relation(fields: [torcedorId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  plano    Plano    @relation(fields: [planoId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   faturas  Fatura[]
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
+  // Índices que ajudam MUITO no dia a dia
   @@index([torcedorId, status])
   @@index([planoId])
+  @@index([status, proximaCobrancaEm])
+  @@index([torcedorId, planoId, status])
 }
 
 model Fatura {
@@ -190,7 +217,7 @@ model Fatura {
 
 model Pagamento {
   id             String          @id @default(uuid())
-  socioId        String
+  torcedorId     String
   valor          Decimal
   status         StatusPagamento @default(PENDENTE)
   dataVencimento DateTime
@@ -200,13 +227,13 @@ model Pagamento {
   descricao      String?
   faturaId       String?
 
-  socio  Torcedor @relation(fields: [socioId], references: [id])
-  fatura Fatura?  @relation(fields: [faturaId], references: [id])
+  torcedor Torcedor @relation("TorcedorPagamentos", fields: [torcedorId], references: [id])
+  fatura   Fatura?  @relation(fields: [faturaId], references: [id])
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
-  @@index([socioId])
+  @@index([torcedorId])
   @@index([status, dataVencimento, metodo])
   @@map("pagamentos")
 }
@@ -224,9 +251,8 @@ model Jogo {
   criadoPorId     String?
   atualizadoPorId String?
 
-  criadoPor       Admin? @relation("JogoCriadoPor", fields: [criadoPorId], references: [id])
-  atualizadoPor   Admin? @relation("JogoAtualizadoPor", fields: [atualizadoPorId], references: [id])
-
+  criadoPor     Admin? @relation("JogoCriadoPor", fields: [criadoPorId], references: [id])
+  atualizadoPor Admin? @relation("JogoAtualizadoPor", fields: [atualizadoPorId], references: [id])
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
@@ -278,19 +304,18 @@ model Ingresso {
   atualizadoEm DateTime       @updatedAt
   loteId       String?
   assentoId    String?
-
-  socio    Torcedor? @relation(fields: [socioId], references: [id])
-  evento   Jogo      @relation(fields: [eventoId], references: [id])
-  lote     Lote?     @relation(fields: [loteId], references: [id])
-  assento  Assento?  @relation(fields: [assentoId], references: [id])
-  checkins Checkin[]
+  socio        Torcedor?      @relation("IngressoSocio", fields: [socioId], references: [id])
+  evento       Jogo           @relation(fields: [eventoId], references: [id])
+  lote         Lote?          @relation(fields: [loteId], references: [id])
+  assento      Assento?       @relation(fields: [assentoId], references: [id])
+  checkins     Checkin[]
 
   @@index([eventoId, status, loteId, assentoId])
   @@map("ingressos")
 }
 
 model Lote {
-  id            String @id @default(uuid())
+  id            String  @id @default(uuid())
   nome          String
   quantidade    Int
   precoUnitario Decimal
@@ -317,7 +342,7 @@ model Checkin {
 
   ingresso Ingresso @relation(fields: [ingressoId], references: [id])
 
-  @@index([ingressoId])
   @@unique([ingressoId, feitoEm])
+  @@index([ingressoId])
   @@map("checkins")
 }

@@ -2,8 +2,9 @@ import express from 'express'
 import routesUsuarios from './routes/usuariosRoute'
 import routesLogin from './routes/loginRoute'
 import routesPlanos from './routes/planosRoute'
-import routesAssinatura from './routes/assinaturaRoute'
-import routesFatura from './routes/faturaRoute'
+import routesAssinatura from './routes/pagamento/assinaturaRoute'
+import routesFatura from './routes/pagamento/faturaRoute'
+import routesPagamento from './routes/pagamento/pagamentoRoute'
 
 import cors from 'cors'
 
@@ -24,6 +25,8 @@ app.use("/login", routesLogin)
 app.use("/planos", routesPlanos)
 app.use("/assinatura", routesAssinatura)
 app.use("/fatura", routesFatura)
+app.use("/pagamento", routesPagamento)
+
 
 
 app.get('/', (req, res) => {

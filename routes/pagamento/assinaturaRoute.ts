@@ -10,8 +10,17 @@ const assinaturaSchema = z.object({
     planoId: z.string().uuid("ID do plano inválido"),
     status: z.enum(['ATIVA', 'CANCELADA', 'SUSPENSA', 'EXPIRADA'], { required_error: "Informe o status da assinatura" }),
     inicioEm: z.string(),
-    expiraEm: z.string(),
-    proximaCobrancaEm: z.string()
+    expiraEm: z.string().optional().nullable(),
+    proximaCobrancaEm: z.string().optional().nullable(),
+    canceladaEm: z.string().optional().nullable(),
+    motivoCancelamento: z.string().optional().nullable(),
+    suspensaEm: z.string().optional().nullable(),
+    retomadaEm: z.string().optional().nullable(),
+    periodicidade: z.enum(['MENSAL', 'TRIMESTRAL', 'ANUAL'], { required_error: "Informe a periodicidade" }).optional(),
+    valorAtual: z.string().optional().nullable(),
+    moeda: z.string().optional().nullable(),
+    gatewayClienteId: z.string().optional().nullable(),
+    gatewayAssinaturaId: z.string().optional().nullable()
 });
 
 router.post("/", async (req, res) => {
@@ -37,11 +46,11 @@ router.post("/", async (req, res) => {
                 planoId,
                 status,
                 inicioEm: new Date(inicioEm),
-                expiraEm: new Date(expiraEm),
-                proximaCobrancaEm: new Date(proximaCobrancaEm)
+                expiraEm: expiraEm ? new Date(expiraEm) : null,
+                proximaCobrancaEm: proximaCobrancaEm ? new Date(proximaCobrancaEm) : null
             }
         });
-        res.status(201).json({ message: 'Assinatura criada com sucesso', assinaturaId: novaAssinatura.id });
+        res.status(201).json(novaAssinatura);
     } catch (error) {
         if (error instanceof z.ZodError) {
             res.status(400).json({ errors: error.errors });
@@ -54,7 +63,12 @@ router.post("/", async (req, res) => {
 
 router.get("/", async (req, res) => {
     try {
-        const assinaturas = await prisma.assinatura.findMany();
+        const assinaturas = await prisma.assinatura.findMany({
+            include: {
+                torcedor: true,
+                plano: true
+            }
+        });
         res.status(200).json(assinaturas);
     } catch (error) {
         console.error(error);
@@ -86,10 +100,10 @@ router.get("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
     const assinaturaId = req.params.id;
     try {
-        const assinatura = await prisma.assinatura.findUnique({
+        const assinaturaExistente = await prisma.assinatura.findUnique({
             where: { id: assinaturaId }
         });
-        if (!assinatura) {
+        if (!assinaturaExistente) {
             res.status(404).json({ error: 'Assinatura não encontrada' });
             return;
         }
