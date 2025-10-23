@@ -1,16 +1,18 @@
 import express from 'express'
-import routesUsuarios from './routes/usuariosRoute'
-import routesLogin from './routes/loginRoute'
-import routesPlanos from './routes/planosRoute'
-import routesAssinatura from './routes/pagamento/assinaturaRoute'
-import routesFatura from './routes/pagamento/faturaRoute'
-import routesPagamento from './routes/pagamento/pagamentoRoute'
+import routesUsuarios from './src/routes/torcedor/usuariosRoute';
+import routesLogin from './src/routes/torcedor/loginRoute';
+import routesPlanos from './src/routes/plano/planosRoute';
+import routesAssinatura from './src/routes/pagamento/assinaturaRoute';
+import routesFatura from './src/routes/pagamento/faturaRoute';
+import routesPagamento from './src/routes/pagamento/pagamentoRoute';
+import asaasRoutes from './src/routes/asaas/asaasRoutes';
+import asaasWebhook from './src/routes/asaas/webhooksAsaas';
 
 import cors from 'cors'
 
-
 const app = express()
 const port = 3003
+app.use(express.json());
 
 app.use(cors(
   {
@@ -26,8 +28,8 @@ app.use("/planos", routesPlanos)
 app.use("/assinatura", routesAssinatura)
 app.use("/fatura", routesFatura)
 app.use("/pagamento", routesPagamento)
-
-
+app.use("/asaas", asaasRoutes);
+app.use(asaasWebhook);
 
 app.get('/', (req, res) => {
   res.send('API central de torcedores!')

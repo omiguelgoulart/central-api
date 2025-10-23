@@ -2,8 +2,8 @@ import { PrismaClient } from "@prisma/client"
 import bcrypt from 'bcrypt'
 import { z } from 'zod'
 import { Router } from "express";
-import { validaSenha } from "../utils/validaSenha";
-import { gerarMatricula } from "../utils/matricula";
+import { validaSenha } from "../../utils/validaSenha";
+import { gerarMatricula } from "../../utils/matricula";
 
 const router = Router();
 const prisma = new PrismaClient()
@@ -42,7 +42,7 @@ router.post("/", async (req, res) => {
         if (error instanceof z.ZodError) {
             res.status(400).json({ errors: error.errors });
             return;
-        }   
+        }
         console.error(error);
         res.status(500).json({ error: 'Erro ao criar usuário' });
     }
@@ -80,7 +80,7 @@ router.get("/:id", async (req, res) => {
         if (!usuario) {
             res.status(404).json({ error: 'Usuário não encontrado' });
             return;
-        }   
+        }
         res.status(200).json(usuario);
     } catch (error) {
         console.error(error);
@@ -149,7 +149,7 @@ router.delete("/matricula/:matricula", async (req, res) => {
     catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Erro ao deletar usuário' });
-    } 
+    }
 });
 
 router.patch("/:id", async (req, res) => {
@@ -161,7 +161,7 @@ router.patch("/:id", async (req, res) => {
         if (!usuarioExistente) {
             res.status(404).json({ error: 'Usuário não encontrado' });
             return;
-        }   
+        }
         const { nome, email, senha } = usuarioSchema.partial().parse(req.body);
         if (senha) {
             validaSenha(senha);
@@ -199,7 +199,7 @@ router.patch("/matricula/:matricula", async (req, res) => {
         const { nome, email, senha } = usuarioSchema.partial().parse(req.body);
         if (senha) {
             validaSenha(senha);
-        } 
+        }
         const senhaHash = senha ? await bcrypt.hash(senha, 10) : undefined;
         await prisma.torcedor.update({
             where: { matricula },

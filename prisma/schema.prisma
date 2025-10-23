@@ -226,8 +226,9 @@ model Pagamento {
   metodo         MetodoPagamento
   descricao      String?
 
-  // 🔹 Vínculos opcionais (um OU outro)
   faturaId       String?
+
+  gatewayPaymentId String? 
 
   torcedor Torcedor @relation("TorcedorPagamentos", fields: [torcedorId], references: [id])
   fatura   Fatura?  @relation(fields: [faturaId], references: [id], onDelete: SetNull, onUpdate: Cascade)
@@ -241,7 +242,6 @@ model Pagamento {
   @@index([status, dataVencimento, metodo])
   @@map("pagamentos")
 }
-
 
 model Jogo {
   id        String   @id @default(uuid())
