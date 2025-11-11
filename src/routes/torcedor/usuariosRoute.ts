@@ -65,29 +65,6 @@ router.get("/", async (req, res) => {
     }
 });
 
-router.get("/:id", async (req, res) => {
-    const { id } = req.params;
-    try {
-        const usuario = await prisma.torcedor.findUnique({
-            where: { id },
-            select: {
-                id: true,
-                nome: true,
-                email: true,
-                matricula: true
-            }
-        });
-        if (!usuario) {
-            res.status(404).json({ error: 'Usuário não encontrado' });
-            return;
-        }
-        res.status(200).json(usuario);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Erro ao buscar usuário' });
-    }
-});
-
 router.get("/matricula/:matricula", async (req, res) => {
     const { matricula } = req.params;
     try {
@@ -111,26 +88,6 @@ router.get("/matricula/:matricula", async (req, res) => {
     }
 });
 
-router.delete("/:id", async (req, res) => {
-    const { id } = req.params;
-    try {
-        const usuario = await prisma.torcedor.findUnique({
-            where: { id }
-        });
-        if (!usuario) {
-            res.status(404).json({ error: 'Usuário não encontrado' });
-            return;
-        }
-        await prisma.torcedor.delete({
-            where: { id }
-        });
-        res.status(200).json({ message: 'Usuário deletado com sucesso' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Erro ao deletar usuário' });
-    }
-});
-
 router.delete("/matricula/:matricula", async (req, res) => {
     const { matricula } = req.params;
     try {
@@ -149,6 +106,40 @@ router.delete("/matricula/:matricula", async (req, res) => {
     catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Erro ao deletar usuário' });
+    }
+});
+
+router.patch("/matricula/:matricula", async (req, res) => {
+    const { matricula } = req.params;
+    try {
+        const usuarioExistente = await prisma.torcedor.findUnique({
+            where: { matricula }
+        });
+        if (!usuarioExistente) {
+            res.status(404).json({ error: 'Usuário não encontrado' });
+            return;
+        }
+        const { nome, email, senha } = usuarioSchema.partial().parse(req.body);
+        if (senha) {
+            validaSenha(senha);
+        }
+        const senhaHash = senha ? await bcrypt.hash(senha, 10) : undefined;
+        await prisma.torcedor.update({
+            where: { matricula },
+            data: {
+                nome: nome ?? usuarioExistente.nome,
+                email: email ?? usuarioExistente.email,
+                senha: senhaHash ?? usuarioExistente.senha
+            }
+        });
+        res.status(200).json({ message: 'Usuário atualizado com sucesso' });
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            res.status(400).json({ errors: error.errors });
+            return;
+        }
+        console.error(error);
+        res.status(500).json({ error: 'Erro ao atualizar usuário' });
     }
 });
 
@@ -186,37 +177,46 @@ router.patch("/:id", async (req, res) => {
     }
 });
 
-router.patch("/matricula/:matricula", async (req, res) => {
-    const { matricula } = req.params;
+router.delete("/:id", async (req, res) => {
+    const { id } = req.params;
     try {
-        const usuarioExistente = await prisma.torcedor.findUnique({
-            where: { matricula }
+        const usuario = await prisma.torcedor.findUnique({
+            where: { id }
         });
-        if (!usuarioExistente) {
+        if (!usuario) {
             res.status(404).json({ error: 'Usuário não encontrado' });
             return;
         }
-        const { nome, email, senha } = usuarioSchema.partial().parse(req.body);
-        if (senha) {
-            validaSenha(senha);
-        }
-        const senhaHash = senha ? await bcrypt.hash(senha, 10) : undefined;
-        await prisma.torcedor.update({
-            where: { matricula },
-            data: {
-                nome: nome ?? usuarioExistente.nome,
-                email: email ?? usuarioExistente.email,
-                senha: senhaHash ?? usuarioExistente.senha
+        await prisma.torcedor.delete({
+            where: { id }
+        });
+        res.status(200).json({ message: 'Usuário deletado com sucesso' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erro ao deletar usuário' });
+    }
+});
+
+router.get("/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const usuario = await prisma.torcedor.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                nome: true,
+                email: true,
+                matricula: true
             }
         });
-        res.status(200).json({ message: 'Usuário atualizado com sucesso' });
-    } catch (error) {
-        if (error instanceof z.ZodError) {
-            res.status(400).json({ errors: error.errors });
+        if (!usuario) {
+            res.status(404).json({ error: 'Usuário não encontrado' });
             return;
         }
+        res.status(200).json(usuario);
+    } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Erro ao atualizar usuário' });
+        res.status(500).json({ error: 'Erro ao buscar usuário' });
     }
 });
 

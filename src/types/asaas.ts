@@ -20,3 +20,4 @@ export interface AsaasPixQrCode {
   description?: string;
   success?: boolean;
 }
+
