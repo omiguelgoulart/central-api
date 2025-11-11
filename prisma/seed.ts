@@ -1,4 +1,4 @@
-import { PrismaClient, Periodicidade } from "@prisma/client";
+import { PrismaClient, Periodicidade, StatusIngresso } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 import { hash } from "bcryptjs";
 
@@ -7,80 +7,83 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("🌱 Iniciando seed...");
 
-  // 1️⃣ ADMIN
-  const senhaHash = await hash("admin123", 8);
-  const admin = await prisma.admin.create({
-    data: {
+  /* 1️⃣ ADMIN */
+  const senhaHash = await hash("admin123!", 8);
+  const admin = await prisma.admin.upsert({
+    where: { email: "admin@brasildt.com" },
+    update: {},
+    create: {
       nome: "Administrador",
       email: "admin@brasildt.com",
       senha: senhaHash,
     },
   });
 
-  // 2️⃣ PLANOS (mantidos conforme solicitado)
-  const planosData = [
-    {
-      nome: "Torcedor",
-      valor: 19.9,
-      periodicidade: Periodicidade.MENSAL,
-      descricao:
-        "Plano de entrada para acesso a conteúdo e benefícios digitais exclusivos.",
-      isFeatured: false,
-      ordem: 1,
-    },
-    {
-      nome: "Arquibancada",
-      valor: 39.9,
-      periodicidade: Periodicidade.MENSAL,
-      descricao:
-        "Nível intermediário com descontos maiores e acesso antecipado a ingressos.",
-      isFeatured: false,
-      ordem: 2,
-    },
-    {
-      nome: "Cadeira",
-      valor: 69.9,
-      periodicidade: Periodicidade.MENSAL,
-      descricao:
-        "O plano mais popular, oferece prioridade na compra de ingressos e experiências VIP limitadas.",
-      isFeatured: true,
-      badgeLabel: "Mais Popular",
-      ordem: 3,
-    },
-    {
-      nome: "Camarote",
-      valor: 129.9,
-      periodicidade: Periodicidade.MENSAL,
-      descricao:
-        "Plano premium focado na experiência de jogo, incluindo ingresso garantido em casa.",
-      isFeatured: false,
-      ordem: 4,
-    },
-    {
-      nome: "Conselheiro",
-      valor: 249.9,
-      periodicidade: Periodicidade.MENSAL,
-      descricao:
-        "O nível mais alto de associação, oferecendo experiências exclusivas com a diretoria e participação em decisões.",
-      isFeatured: false,
-      ordem: 5,
-    },
-  ];
+  /* 2️⃣ PLANOS */
+  await prisma.plano.createMany({
+    data: [
+      {
+        nome: "Torcedor",
+        valor: new Decimal("19.90"),
+        periodicidade: Periodicidade.MENSAL,
+        descricao: "Plano de entrada com benefícios digitais exclusivos.",
+        isFeatured: false,
+        ordem: 1,
+      },
+      {
+        nome: "Arquibancada",
+        valor: new Decimal("39.90"),
+        periodicidade: Periodicidade.MENSAL,
+        descricao:
+          "Descontos maiores e acesso antecipado a ingressos.",
+        isFeatured: false,
+        ordem: 2,
+      },
+      {
+        nome: "Cadeira",
+        valor: new Decimal("69.90"),
+        periodicidade: Periodicidade.MENSAL,
+        descricao:
+          "Plano mais popular, com prioridade na compra de ingressos e experiências VIP.",
+        isFeatured: true,
+        badgeLabel: "Mais Popular",
+        ordem: 3,
+      },
+      {
+        nome: "Camarote",
+        valor: new Decimal("129.90"),
+        periodicidade: Periodicidade.MENSAL,
+        descricao:
+          "Plano premium com ingresso garantido e experiências exclusivas.",
+        isFeatured: false,
+        ordem: 4,
+      },
+      {
+        nome: "Conselheiro",
+        valor: new Decimal("249.90"),
+        periodicidade: Periodicidade.MENSAL,
+        descricao:
+          "Nível mais alto com experiências exclusivas e participação em decisões.",
+        isFeatured: false,
+        ordem: 5,
+      },
+    ],
+    skipDuplicates: true,
+  });
 
-  const planos = await prisma.plano.createMany({ data: planosData });
-  console.log(`✅ ${planos.count} planos criados.`);
-
-  const planoCadeira = await prisma.plano.findFirst({
+  const planoCadeira = await prisma.plano.findFirstOrThrow({
     where: { nome: "Cadeira" },
   });
 
-  // 3️⃣ TORCEDOR
-  const torcedor = await prisma.torcedor.create({
-    data: {
+  /* 3️⃣ TORCEDOR */
+  const torcedor = await prisma.torcedor.upsert({
+    where: { email: "joao@teste.com" },
+    update: {},
+    create: {
       matricula: "BR001",
       nome: "João da Silva",
       email: "joao@teste.com",
-      senha: await hash("123456", 8),
+      senha: await hash("Senha123!", 8),
       telefone: "51999999999",
       cpf: "12345678901",
       enderecoLogradouro: "Rua Bento Gonçalves",
@@ -93,50 +96,51 @@ async function main() {
     },
   });
 
-  // 4️⃣ BENEFÍCIOS
+  /* 4️⃣ BENEFÍCIOS */
   await prisma.beneficio.createMany({
     data: [
       {
         slug: "descontos-loja",
         titulo: "Descontos na Loja Oficial",
         descricao: "10% de desconto em todos os produtos oficiais.",
-        planoId: planoCadeira!.id,
+        planoId: planoCadeira.id,
       },
       {
         slug: "sorteios-exclusivos",
         titulo: "Sorteios Exclusivos",
-        descricao: "Participe de sorteios mensais de camisetas e ingressos.",
-        planoId: planoCadeira!.id,
+        descricao: "Sorteios mensais de camisetas e ingressos.",
+        planoId: planoCadeira.id,
         destaque: true,
       },
       {
         slug: "area-vip",
-        titulo: "Acesso à Área VIP do Estádio",
+        titulo: "Acesso à Área VIP",
         descricao:
-          "Assentos reservados e experiências exclusivas nos jogos do Brasil de Pelotas.",
-        planoId: planoCadeira!.id,
+          "Assentos reservados e experiências exclusivas nos jogos.",
+        planoId: planoCadeira.id,
       },
     ],
+    skipDuplicates: true,
   });
 
-  // 5️⃣ ASSINATURA
+  /* 5️⃣ ASSINATURA */
   const assinatura = await prisma.assinatura.create({
     data: {
       torcedorId: torcedor.id,
-      planoId: planoCadeira!.id,
+      planoId: planoCadeira.id,
       inicioEm: new Date("2025-01-01"),
       proximaCobrancaEm: new Date("2025-02-01"),
-      periodicidade: "MENSAL",
-      valorAtual: new Decimal(69.9),
+      periodicidade: Periodicidade.MENSAL,
+      valorAtual: new Decimal("69.90"),
     },
   });
 
-  // 6️⃣ FATURA
+  /* 6️⃣ FATURA */
   const fatura = await prisma.fatura.create({
     data: {
       assinaturaId: assinatura.id,
       competencia: "2025-01",
-      valor: new Decimal(69.9),
+      valor: new Decimal("69.90"),
       vencimentoEm: new Date("2025-01-10"),
       referencia: "FAT-202501-001",
       metodo: "PIX",
@@ -145,11 +149,11 @@ async function main() {
     },
   });
 
-  // 7️⃣ PAGAMENTO
+  /* 7️⃣ PAGAMENTO */
   await prisma.pagamento.create({
     data: {
       torcedorId: torcedor.id,
-      valor: new Decimal(69.9),
+      valor: new Decimal("69.90"),
       status: "PAGO",
       dataVencimento: new Date("2025-01-10"),
       pagoEm: new Date("2025-01-05"),
@@ -160,7 +164,7 @@ async function main() {
     },
   });
 
-  // 8️⃣ SETORES
+  /* 8️⃣ SETORES */
   const setorArquibancada = await prisma.setor.create({
     data: {
       nome: "Arquibancada Norte",
@@ -175,12 +179,7 @@ async function main() {
     },
   });
 
-  // 9️⃣ ASSENTO
-  const assento1 = await prisma.assento.create({
-    data: { setorId: setorCadeiras.id, numero: 1 },
-  });
-
-  // 🔟 JOGO
+  /* 9️⃣ JOGO */
   const jogo = await prisma.jogo.create({
     data: {
       nome: "Brasil de Pelotas x Grêmio",
@@ -191,38 +190,8 @@ async function main() {
     },
   });
 
-  // 1️⃣1️⃣ LOTE
-  const lote1 = await prisma.lote.create({
-    data: {
-      nome: "1º Lote",
-      quantidade: 100,
-      precoUnitario: new Decimal(50.0),
-      jogoId: jogo.id,
-      setorId: setorArquibancada.id,
-    },
-  });
 
-  // 1️⃣2️⃣ INGRESSO
-  const ingresso = await prisma.ingresso.create({
-    data: {
-      socioId: torcedor.id,
-      eventoId: jogo.id,
-      qrCode: "BRAS20251110-001",
-      valor: new Decimal(50.0),
-      status: "VALIDO",
-      loteId: lote1.id,
-      assentoId: assento1.id,
-    },
-  });
 
-  // 1️⃣3️⃣ CHECKIN
-  await prisma.checkin.create({
-    data: {
-      ingressoId: ingresso.id,
-      feitoPor: admin.id,
-      local: "Portão Principal",
-    },
-  });
 
   console.log("✅ Seed finalizado com sucesso!");
 }

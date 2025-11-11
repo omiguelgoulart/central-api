@@ -26,12 +26,6 @@ enum StatusPagamento {
   CANCELADO
 }
 
-enum StatusIngresso {
-  VALIDO
-  USADO
-  CANCELADO
-}
-
 enum Periodicidade {
   MENSAL
   TRIMESTRAL
@@ -243,21 +237,46 @@ model Pagamento {
   @@map("pagamentos")
 }
 
+enum StatusIngresso {
+  PENDENTE
+  VALIDO
+  USADO
+  CANCELADO
+  EXPIRADO
+  ESTORNADO
+}
+
+enum TipoLote {
+  INTEIRA
+  MEIA
+  CORTESIA
+  PROMO
+}
+
+enum TipoSetor {
+  ARQUIBANCADA
+  CADEIRA
+  CAMAROTE
+  VISITANTE
+  ACESSIVEL
+}
+
+
 model Jogo {
   id        String   @id @default(uuid())
   nome      String
   data      DateTime
-  local     String
+  local String @default("Bento Freitas")
   descricao String?
 
-  ingressos Ingresso[]
   lotes     Lote[]
+  ingressos Ingresso[]
+  setores   JogoSetor[]
 
   criadoPorId     String?
   atualizadoPorId String?
-
-  criadoPor     Admin? @relation("JogoCriadoPor", fields: [criadoPorId], references: [id])
-  atualizadoPor Admin? @relation("JogoAtualizadoPor", fields: [atualizadoPorId], references: [id])
+  criadoPor       Admin? @relation("JogoCriadoPor", fields: [criadoPorId], references: [id])
+  atualizadoPor   Admin? @relation("JogoAtualizadoPor", fields: [atualizadoPorId], references: [id])
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
@@ -267,89 +286,95 @@ model Jogo {
 }
 
 model Setor {
-  id         String @id @default(uuid())
+  id         String  @id @default(uuid())
   nome       String
-  capacidade Int
+  capacidade Int          // capacidade estrutural do estádio (máximo físico)
 
   criadoEm     DateTime  @default(now())
   atualizadoEm DateTime  @updatedAt
-  Assentos     Assento[]
-  Lotes        Lote[]
+  jogos        JogoSetor[]
 
   @@unique([nome])
   @@map("setores")
 }
 
-model Assento {
-  id      String @id @default(uuid())
-  setorId String
-  numero  Int
+model JogoSetor {
+  id            String   @id @default(uuid())
+  jogoId        String
+  setorId       String
+  capacidade    Int
+  aberto        Boolean  @default(true)
+  tipo          TipoSetor @default(ARQUIBANCADA)
 
+  jogo  Jogo  @relation(fields: [jogoId], references: [id])
   setor Setor @relation(fields: [setorId], references: [id])
-
-  ingressos Ingresso[]
-
+  lotes Lote[]
+  
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
-  @@unique([setorId, numero])
-  @@index([setorId])
-  @@map("assentos")
-}
-
-model Ingresso {
-  id           String         @id @default(uuid())
-  socioId      String?
-  eventoId     String
-  qrCode       String         @unique
-  valor        Decimal
-  status       StatusIngresso @default(VALIDO)
-  criadoEm     DateTime       @default(now())
-  usadoEm      DateTime?
-  atualizadoEm DateTime       @updatedAt
-  loteId       String?
-  assentoId    String?
-  socio        Torcedor?      @relation("IngressoSocio", fields: [socioId], references: [id])
-  evento       Jogo           @relation(fields: [eventoId], references: [id])
-  lote         Lote?          @relation(fields: [loteId], references: [id])
-  assento      Assento?       @relation(fields: [assentoId], references: [id])
-  checkins     Checkin[]
-  pagamentoId  String?
-  pagamento    Pagamento? @relation(fields: [pagamentoId], references: [id])
-
-  @@index([eventoId, status, loteId, assentoId])
-  @@map("ingressos")
+  @@unique([jogoId, setorId])
+  @@index([jogoId, setorId])
+  @@map("jogos_setores")
 }
 
 model Lote {
-  id            String  @id @default(uuid())
-  nome          String
-  quantidade    Int
-  precoUnitario Decimal
-  jogoId        String
-  setorId       String?
+  id              String    @id @default(uuid())
+  nome            String
+  tipo            TipoLote  @default(INTEIRA)
+  quantidade      Int?      // opcional: sub-limite do lote dentro do setor
+  precoUnitario   Decimal   @db.Decimal(10,2)
+  inicioVendas    DateTime?
+  fimVendas       DateTime?
+  limitePorCPF    Int?
 
-  jogo      Jogo       @relation(fields: [jogoId], references: [id])
-  setor     Setor?     @relation(fields: [setorId], references: [id])
+  jogoId      String
+  jogoSetorId String
+
+  jogo      Jogo      @relation(fields: [jogoId], references: [id])
+  jogoSetor JogoSetor @relation(fields: [jogoSetorId], references: [id])
   ingressos Ingresso[]
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
   @@index([jogoId, nome])
+  @@index([jogoSetorId])
   @@map("lotes")
+}
+
+model Ingresso {
+  id           String         @id @default(uuid())
+  torcedorId   String?
+  jogoId       String
+  loteId       String?        // nullable para permitir remover/definir depois
+  qrCode       String         @unique
+  valor        Decimal        @db.Decimal(10, 2)
+  status       StatusIngresso @default(VALIDO)
+  criadoEm     DateTime       @default(now())
+  usadoEm      DateTime?
+  atualizadoEm DateTime       @updatedAt
+  pagamentoId  String?
+
+  socio        Torcedor?   @relation("IngressoSocio", fields: [torcedorId], references: [id])
+  jogo         Jogo        @relation(fields: [jogoId], references: [id])
+  lote         Lote?       @relation(fields: [loteId], references: [id])
+  pagamento    Pagamento?  @relation(fields: [pagamentoId], references: [id])
+  checkins     Checkin[]
+
+  @@index([jogoId, status, loteId])
+  @@map("ingressos")
 }
 
 model Checkin {
   id         String   @id @default(uuid())
   ingressoId String
   feitoEm    DateTime @default(now())
-  feitoPor   String? // id do conferente/admin, se houver
-  local      String? // catraca/portão
+  feitoPor   String?
+  local      String?
 
   ingresso Ingresso @relation(fields: [ingressoId], references: [id])
 
-  @@unique([ingressoId, feitoEm])
   @@index([ingressoId])
   @@map("checkins")
 }

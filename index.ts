@@ -8,6 +8,12 @@ import routesPagamento from './src/routes/pagamento/pagamentoRoute';
 import asaasRoutes from './src/routes/asaas/asaasRoutes';
 import asaasWebhook from './src/routes/asaas/webhooksAsaas';
 
+import routesSetor from './src/routes/ADMIN/estadio/setorRoute';
+import routesIngresso from './src/routes/ADMIN/jogo/ingressoRoute';
+import routesJogo from './src/routes/ADMIN/jogo/jogoRoute';
+import routesJogoSetor from './src/routes/ADMIN/jogo/jogoSetorRoute';
+import routesLote from './src/routes/ADMIN/jogo/loteRoute';
+
 import cors from 'cors'
 
 const app = express()
@@ -30,6 +36,13 @@ app.use("/fatura", routesFatura)
 app.use("/pagamento", routesPagamento)
 app.use("/asaas", asaasRoutes);
 app.use(asaasWebhook);
+
+//ADMIN
+app.use("/admin/setor", routesSetor)
+app.use("/admin/ingresso", routesIngresso)
+app.use("/admin/jogo", routesJogo)
+app.use("/admin/jogoSetor", routesJogoSetor)
+app.use("/admin/lote", routesLote)
 
 app.get('/', (req, res) => {
   res.send('API central de torcedores!')
