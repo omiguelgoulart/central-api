@@ -61,11 +61,13 @@ router.get("/", async (req, res) => {
 });
 
 router.get("/:id", async (req, res) => {
-    const id = req.params.id;
-    const planoId = parseInt(id);
+    const { id } = req.params;
     try {
         const plano = await prisma.plano.findUnique({
-            where: { id: planoId.toString() }
+            where: { id },
+            include: {
+                beneficios: true
+            }
         });
         if (!plano) {
             res.status(404).json({ error: 'Plano não encontrado' });

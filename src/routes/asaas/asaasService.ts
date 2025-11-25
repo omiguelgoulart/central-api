@@ -1,7 +1,8 @@
+import axios from "axios";
 import { asaas } from "../../lib/asaas";
+import { AsaasPayment, AsaasPixQrCode } from "../../types/asaas";
 
 export type BillingType = "PIX" | "BOLETO" | "CREDIT_CARD" | "DEBIT_CARD";
-import { AsaasPayment, AsaasPixQrCode } from "../../types/asaas";
 
 // ------------------------ modelos ------------------------
 
@@ -100,6 +101,7 @@ export async function criarPagamentoPix(p: CriarPagamentoPix): Promise<AsaasPaym
     description: p.descricao,
     dueDate: p.dueDate ?? toYmd(1),
   };
+
   const { data } = await asaas.post<AsaasPayment>("/payments", payload);
   return data;
 }
@@ -113,6 +115,7 @@ export async function criarPagamentoBoleto(p: CriarPagamentoBoleto): Promise<Asa
     description: p.descricao,
     dueDate: p.dueDate ?? toYmd(3),
   };
+
   const { data } = await asaas.post<AsaasPayment>("/payments", payload);
   return data;
 }
@@ -129,7 +132,10 @@ export async function criarPagamentoCredito(p: CriarPagamentoCredito): Promise<A
     remoteIp: p.ip,
   };
 
-  if (typeof p.capture === "boolean") payload.capture = p.capture;
+  if (typeof p.capture === "boolean") {
+    payload.capture = p.capture;
+  }
+
   if (p.installmentCount && p.installmentCount > 1) {
     payload.installmentCount = p.installmentCount;
   }
@@ -163,6 +169,7 @@ export async function obterQrCodePix(paymentId: string): Promise<AsaasPixQrCode>
 
 export async function obterBoletoInfo(paymentId: string) {
   const { data } = await asaas.get<AsaasPayment>(`/payments/${paymentId}`);
+
   return {
     id: data.id,
     status: data.status,
@@ -206,12 +213,62 @@ export async function criarCliente(params: { nome: string; email: string; cpfCnp
       name: params.nome,
       email: params.email,
     };
-    if (params.cpfCnpj) payload.cpfCnpj = cleanDigits(params.cpfCnpj);
+
+    if (params.cpfCnpj) {
+      payload.cpfCnpj = cleanDigits(params.cpfCnpj);
+    }
 
     const { data } = await asaas.post<any>("/customers", payload);
     return data;
   } catch (err: any) {
     const details = err?.response?.data ?? err?.message ?? err;
     throw new Error(`ASAAS_CLIENT_ERROR: ${JSON.stringify(details)}`);
+  }
+}
+
+// ------------------------ status ------------------------
+
+export async function obterStatusPagamento(paymentId: string) {
+  const { data } = await asaas.get<AsaasPayment>(`/payments/${paymentId}`);
+
+  return {
+    id: data.id,
+    status: data.status,           // ex: PENDING, CONFIRMED, RECEIVED, EXPIRED...
+    billingType: data.billingType, // PIX, BOLETO, CREDIT_CARD, DEBIT_CARD
+    value: data.value,
+    customer: data.customer,
+    description: data.description,
+    dueDate: data.dueDate,
+    confirmedDate: (data as any).confirmedDate,
+    paymentDate: (data as any).paymentDate,
+  };
+}
+
+// ------------------------ boleto PDF ------------------------
+
+export async function obterBoletoPdf(paymentId: string): Promise<Buffer> {
+  try {
+    // 1️⃣ Requisita o endpoint de boleto (vai devolver um redirect)
+    const response = await asaas.get(`/payments/${paymentId}/boleto`, {
+      maxRedirects: 0, // não seguir o redirect automaticamente
+      validateStatus: (status: number) => status >= 200 && status < 400,
+    } as any);
+
+    // 2️⃣ Pega a URL real do PDF no header Location
+    const pdfUrl = response.headers["location"];
+    if (!pdfUrl) {
+      throw new Error("BOLETO_PDF_URL_NOT_FOUND");
+    }
+
+    // 3️⃣ Faz download real do PDF
+    const pdfResponse = await axios.get<ArrayBuffer>(pdfUrl, {
+      responseType: "arraybuffer",
+    });
+
+    // 4️⃣ Devolve o PDF cru (Buffer)
+    return Buffer.from(pdfResponse.data);
+  } catch (err: any) {
+    const details = err?.response?.data ?? err?.message ?? err;
+    throw new Error(`ASAAS_BOLETO_PDF_ERROR: ${JSON.stringify(details)}`);
   }
 }

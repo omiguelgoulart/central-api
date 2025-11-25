@@ -1,12 +1,10 @@
 import { Router } from "express";
 import { z } from "zod";
-import { criarCliente, criarPagamento, obterQrCodePix } from "./asaasService";
+import { criarCliente, criarPagamento, obterBoletoPdf, obterQrCodePix, obterStatusPagamento } from "./asaasService";
 
 const router = Router();
 
-/**
- * Helpers
- */
+
 function getClientIp(req: any): string | undefined {
   const xf = req.headers["x-forwarded-for"];
   if (Array.isArray(xf)) return xf[0];
@@ -14,9 +12,6 @@ function getClientIp(req: any): string | undefined {
   return req.ip;
 }
 
-/**
- * Schemas
- */
 const cartaoSchema = z.object({
   holderName: z.string().min(1),
   number: z.string().min(12),
@@ -45,7 +40,9 @@ const pagamentoBase = z.object({
 
 // Discriminadas por tipo
 const pagamentoPix = pagamentoBase.extend({ tipo: z.literal("PIX") });
+
 const pagamentoBoleto = pagamentoBase.extend({ tipo: z.literal("BOLETO") });
+
 const pagamentoCredito = pagamentoBase.extend({
   tipo: z.literal("CREDIT_CARD"),
   cartao: cartaoSchema,
@@ -53,6 +50,7 @@ const pagamentoCredito = pagamentoBase.extend({
   installmentCount: z.number().int().min(1).optional(),
   capture: z.boolean().optional(),
 });
+
 const pagamentoDebito = pagamentoBase.extend({
   tipo: z.literal("DEBIT_CARD"),
   cartao: cartaoSchema,
@@ -66,9 +64,6 @@ const pagamentoUnion = z.discriminatedUnion("tipo", [
   pagamentoDebito,
 ]);
 
-/**
- * Rotas
- */
 
 // Criar cliente
 router.post("/clientes", async (req, res) => {
@@ -155,5 +150,33 @@ router.get("/pagamentos/:paymentId/pixQrCode", async (req, res) => {
     return res.status(502).json({ error: "Erro ao obter QR Code Pix no Asaas", details });
   }
 });
+
+router.get("/pagamentos/:id/status", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const info = await obterStatusPagamento(id);
+    res.json(info);
+  } catch (err: any) {
+    const details = err?.response?.data ?? err?.message ?? err;
+    res.status(400).json({ error: "ASAAS_STATUS_ERROR", details });
+  }
+});
+
+router.get("/pagamentos/:id/pdfBoleto", async (req, res) => {
+  try {
+    const pdf = await obterBoletoPdf(req.params.id);
+
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `inline; filename="boleto-${req.params.id}.pdf"`,
+    });
+
+    return res.send(pdf);
+  } catch (err: any) {
+    const details = err?.message ?? "Erro ao obter PDF";
+    return res.status(400).json({ error: details });
+  }
+});
+
 
 export default router;

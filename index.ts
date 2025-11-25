@@ -8,6 +8,10 @@ import routesPagamento from './src/routes/pagamento/pagamentoRoute';
 import asaasRoutes from './src/routes/asaas/asaasRoutes';
 import asaasWebhook from './src/routes/asaas/webhooksAsaas';
 
+import reservasRoute from './src/routes/reserva/reservaRoute';
+import checkoutRoute from './src/routes/reserva/checkoutRoute';
+import pedidoRoute from './src/routes/reserva/pedidoRoute';
+
 import routesSetor from './src/routes/ADMIN/estadio/setorRoute';
 import routesIngresso from './src/routes/ADMIN/jogo/ingressoRoute';
 import routesJogo from './src/routes/ADMIN/jogo/jogoRoute';
@@ -36,6 +40,10 @@ app.use("/fatura", routesFatura)
 app.use("/pagamento", routesPagamento)
 app.use("/asaas", asaasRoutes);
 app.use(asaasWebhook);
+
+app.use("/reservas", reservasRoute);
+app.use("/checkout", checkoutRoute);
+app.use("/pedidos", pedidoRoute);
 
 //ADMIN
 app.use("/admin/setor", routesSetor)
