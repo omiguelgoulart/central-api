@@ -10,13 +10,7 @@ const jogoSetorSchema = z.object({
   setorId: z.string().uuid("ID do setor inválido"),
   capacidade: z.number().min(1, "A capacidade deve ser pelo menos 1"),
   aberto: z.boolean().default(true),
-  tipo: z.enum([
-    "ARQUIBANCADA",
-    "CADEIRA",
-    "CAMAROTE",
-    "VISITANTE",
-    "ACESSIVEL",
-  ]).default("ARQUIBANCADA"),
+  tipo: z.enum(["ARQUIBANCADA","CADEIRA", "CAMAROTE", "VISITANTE", "ACESSIVEL" ]).default("ARQUIBANCADA"),
 });
 
 router.post("/", async (req, res) => {
