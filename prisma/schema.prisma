@@ -55,13 +55,21 @@ enum StatusFatura {
   CANCELADA
 }
 
+enum AdminRole {
+  SUPER_ADMIN
+  OPERACIONAL
+  PORTARIA
+}
+
 model Admin {
   id           String   @id @default(uuid())
   nome         String
   email        String   @unique
   senha        String
-  criadoEm     DateTime @default(now())
-  atualizadoEm DateTime @updatedAt
+  role         AdminRole? @default(OPERACIONAL)
+  ativo        Boolean   @default(true)
+  criadoEm     DateTime  @default(now())
+  atualizadoEm DateTime  @updatedAt
 
   jogosCriados     Jogo[] @relation("JogoCriadoPor")
   jogosAtualizados Jogo[] @relation("JogoAtualizadoPor")
@@ -138,11 +146,10 @@ model Beneficio {
   icone     String?
   ativo     Boolean @default(true)
 
-  // relação com plano
   planoId String
   plano   Plano  @relation(fields: [planoId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-  // controle visual/ordem dentro do card do plano
+
   ordem      Int     @default(0)
   destaque   Boolean @default(false)
   observacao String?

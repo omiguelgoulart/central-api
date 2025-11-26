@@ -14,25 +14,56 @@ const jogoSchema = z.object({
 });
 
 router.post("/", async (req, res) => {
-    try {
-        const { nome, data, local, descricao } = jogoSchema.parse(req.body);
-        const novoJogo = await prisma.jogo.create({
-            data: {
-                nome,
-                data: new Date(data),
-                local,
-                descricao
-            }
+  try {
+    const { nome, data, local, descricao } = jogoSchema.parse(req.body);
+
+    const resultado = await prisma.$transaction(async (tx) => {
+      const novoJogo = await tx.jogo.create({
+        data: {
+          nome,
+          data: new Date(data),
+          local,
+          descricao,
+        },
+      });
+
+      const setores = await tx.setor.findMany();
+
+      if (setores.length > 0) {
+        await tx.jogoSetor.createMany({
+          data: setores.map((setor) => ({
+            jogoId: novoJogo.id,
+            setorId: setor.id,
+            capacidade: setor.capacidade,
+            aberto: true,
+            tipo: "ARQUIBANCADA",
+          })),
         });
-        res.status(201).json({ message: 'Jogo criado com sucesso', jogoId: novoJogo.id });
-    } catch (error) {
-        if (error instanceof z.ZodError) {
-            res.status(400).json({ errors: error.errors });
-            return;
-        }
-        console.error(error);
-        res.status(500).json({ error: 'Erro ao criar jogo' });
+      }
+
+      const jogoComSetores = await tx.jogo.findUnique({
+        where: { id: novoJogo.id },
+        include: {
+          setores: {
+            include: {
+              setor: true,
+            },
+          },
+        },
+      });
+
+      return jogoComSetores;
+    });
+
+    res.status(201).json(resultado);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ errors: error.errors });
+      return;
     }
+    console.error(error);
+    res.status(500).json({ error: "Erro ao criar jogo" });
+  }
 });
 
 router.get("/", async (req, res) => {
@@ -45,22 +76,70 @@ router.get("/", async (req, res) => {
     }
 });
 
-router.get("/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const jogo = await prisma.jogo.findUnique({
-            where: { id: id }
-        });
-        if (!jogo) {
-            res.status(404).json({ error: 'Jogo não encontrado' });
-            return;
-        }
-        res.status(200).json(jogo);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Erro ao buscar jogo' });
+router.get("/:id/full", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const jogo = await prisma.jogo.findUnique({
+      where: { id },
+      include: {
+        criadoPor: true,
+        atualizadoPor: true,
+        setores: {
+          include: {
+            setor: true,
+            lotes: {
+              include: {
+                ingressos: {
+                  include: {
+                    socio: true,
+                    lote: true,
+                    pagamento: true,
+                    checkins: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        lotes: {
+          include: {
+            jogoSetor: {
+              include: {
+                setor: true,
+              },
+            },
+            ingressos: {
+              include: {
+                socio: true,
+                lote: true,
+                pagamento: true,
+                checkins: true,
+              },
+            },
+          },
+        },
+        ingressos: {
+          include: {
+            socio: true,
+            lote: true,
+            pagamento: true,
+            checkins: true,
+          },
+        },
+      },
+    });
+
+    if (!jogo) {
+      return res.status(404).json({ error: "Jogo não encontrado" });
     }
+
+    res.json(jogo);
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao buscar jogo" });
+  }
 });
+
 
 router.delete("/:id", async (req, res) => {
     try {
@@ -112,5 +191,7 @@ router.patch("/:id", async (req, res) => {
         res.status(500).json({ error: 'Erro ao atualizar jogo' });
     }
 });
+
+
 
 export default router;

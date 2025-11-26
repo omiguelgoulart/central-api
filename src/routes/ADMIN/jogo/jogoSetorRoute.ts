@@ -1,124 +1,165 @@
-import { PrismaClient } from "@prisma/client"
-import { z } from 'zod'
+import { PrismaClient } from "@prisma/client";
+import { z } from "zod";
 import { Router } from "express";
 
 const router = Router();
-
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 const jogoSetorSchema = z.object({
-    jogoId: z.string().uuid("ID do jogo inválido"),
-    setorId: z.string().uuid("ID do setor inválido"),
-    capacidade: z.number().min(1, "A capacidade deve ser pelo menos 1"),
-    aberto: z.boolean().optional().default(true),
-    tipo: z.enum(['ARQUIBANCADA', 'CADEIRA', 'CAMAROTE', 'VISITANTE', 'ACESSIVEL']).optional().default('ARQUIBANCADA'),
+  jogoId: z.string().uuid("ID do jogo inválido"),
+  setorId: z.string().uuid("ID do setor inválido"),
+  capacidade: z.number().min(1, "A capacidade deve ser pelo menos 1"),
+  aberto: z.boolean().default(true),
+  tipo: z.enum([
+    "ARQUIBANCADA",
+    "CADEIRA",
+    "CAMAROTE",
+    "VISITANTE",
+    "ACESSIVEL",
+  ]).default("ARQUIBANCADA"),
 });
 
 router.post("/", async (req, res) => {
-    try {
-        const { jogoId, setorId, capacidade, aberto, tipo } = jogoSetorSchema.parse(req.body);
-        const jogoSetorExistente = await prisma.jogoSetor.findFirst({
-            where: { jogoId, setorId }
-        });
-        if (jogoSetorExistente) {
-            res.status(400).json({ error: 'Setor já cadastrado para este jogo' });
-            return;
-        }
-        const novoJogoSetor = await prisma.jogoSetor.create({
-            data: {
-                jogoId,
-                setorId,
-                capacidade,
-                aberto,
-                tipo
-            }
-        });
-        res.status(201).json({ message: 'Setor do jogo criado com sucesso', jogoSetorId: novoJogoSetor.id });
-    } catch (error) {
-        if (error instanceof z.ZodError) {
-            res.status(400).json({ errors: error.errors });
-            return;
-        }
-        console.error(error);
-        res.status(500).json({ error: 'Erro ao criar setor do jogo' });
+  try {
+    const data = jogoSetorSchema.parse(req.body);
+
+    const existente = await prisma.jogoSetor.findFirst({
+      where: {
+        jogoId: data.jogoId,
+        setorId: data.setorId,
+      },
+    });
+
+    if (existente) {
+      return res.status(400).json({
+        error: "Este setor já está vinculado ao jogo",
+      });
     }
+
+    const novo = await prisma.jogoSetor.create({
+      data,
+      include: {
+        setor: true,
+        jogo: true,
+      },
+    });
+
+    res.status(201).json(novo);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ errors: error.errors });
+    }
+    console.error(error);
+    res.status(500).json({ error: "Erro ao criar setor do jogo" });
+  }
 });
 
-router.get("/", async (req, res) => {
-    try {
-        const jogoSetores = await prisma.jogoSetor.findMany();
-        res.status(200).json(jogoSetores);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Erro ao buscar setores dos jogos' });
-    }
+router.get("/", async (_req, res) => {
+  try {
+    const itens = await prisma.jogoSetor.findMany({
+      include: {
+        setor: true,
+        jogo: true,
+      },
+    });
+
+    res.status(200).json(itens);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao buscar setores dos jogos" });
+  }
+});
+
+router.get("/jogo/:jogoId", async (req, res) => {
+  try {
+    const { jogoId } = req.params;
+
+    const setores = await prisma.jogoSetor.findMany({
+      where: { jogoId },
+      include: {
+        setor: true,
+        jogo: true,
+      },
+      orderBy: { setor: { nome: "asc" } },
+    });
+
+    res.status(200).json(setores);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao buscar setores do jogo" });
+  }
 });
 
 router.get("/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const jogoSetor = await prisma.jogoSetor.findUnique({
-            where: { id: id }
-        });
-        if (!jogoSetor) {
-            res.status(404).json({ error: 'Setor do jogo não encontrado' });
-            return;
-        }
-        res.status(200).json(jogoSetor);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Erro ao buscar setor do jogo' });
-    }
-});
+  try {
+    const item = await prisma.jogoSetor.findUnique({
+      where: { id: req.params.id },
+      include: {
+        setor: true,
+        jogo: true,
+      },
+    });
 
-router.delete("/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const jogoSetor = await prisma.jogoSetor.findUnique({
-            where: { id: id }
-        });
-        if (!jogoSetor) {
-            res.status(404).json({ error: 'Setor do jogo não encontrado' });
-            return;
-        }
-        await prisma.jogoSetor.delete({
-            where: { id: id }
-        });
-        res.status(200).json({ message: 'Setor do jogo deletado com sucesso' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Erro ao deletar setor do jogo' });
+    if (!item) {
+      return res.status(404).json({ error: "Setor do jogo não encontrado" });
     }
+
+    res.status(200).json(item);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao buscar setor do jogo" });
+  }
 });
 
 router.patch("/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { capacidade, aberto, tipo } = jogoSetorSchema.partial().parse(req.body);
-        const jogoSetorExistente = await prisma.jogoSetor.findUnique({
-            where: { id }
-        });
-        if (!jogoSetorExistente) {
-            res.status(404).json({ error: 'Setor do jogo não encontrado' });
-            return;
-        }
-        const jogoSetorAtualizado = await prisma.jogoSetor.update({
-            where: { id },
-            data: {
-                capacidade,
-                aberto,
-                tipo
-            }
-        });
-        res.status(200).json(jogoSetorAtualizado);
-    } catch (error) {
-        if (error instanceof z.ZodError) {
-            res.status(400).json({ errors: error.errors });
-            return;
-        }
-        console.error(error);
-        res.status(500).json({ error: 'Erro ao atualizar setor do jogo' });
+  try {
+    const data = jogoSetorSchema.partial().parse(req.body);
+    const { id } = req.params;
+
+    const existente = await prisma.jogoSetor.findUnique({ where: { id } });
+
+    if (!existente) {
+      return res.status(404).json({ error: "Setor do jogo não encontrado" });
     }
+
+    const atualizado = await prisma.jogoSetor.update({
+      where: { id },
+      data,
+      include: {
+        setor: true,
+        jogo: true,
+      },
+    });
+
+    res.status(200).json(atualizado);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ errors: error.errors });
+    }
+    console.error(error);
+    res.status(500).json({ error: "Erro ao atualizar setor do jogo" });
+  }
+});
+
+router.delete("/:id", async (req, res) => {
+  try {
+    const existente = await prisma.jogoSetor.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!existente) {
+      return res.status(404).json({ error: "Setor do jogo não encontrado" });
+    }
+
+    await prisma.jogoSetor.delete({
+      where: { id: req.params.id },
+    });
+
+    res.status(200).json({ message: "Setor do jogo deletado com sucesso" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao deletar setor do jogo" });
+  }
 });
 
 export default router;

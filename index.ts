@@ -7,6 +7,7 @@ import routesFatura from './src/routes/pagamento/faturaRoute';
 import routesPagamento from './src/routes/pagamento/pagamentoRoute';
 import asaasRoutes from './src/routes/asaas/asaasRoutes';
 import asaasWebhook from './src/routes/asaas/webhooksAsaas';
+import routesBeneficio from './src/routes/plano/beneficiosRoute';
 
 import reservasRoute from './src/routes/reserva/reservaRoute';
 import checkoutRoute from './src/routes/reserva/checkoutRoute';
@@ -17,6 +18,8 @@ import routesIngresso from './src/routes/ADMIN/jogo/ingressoRoute';
 import routesJogo from './src/routes/ADMIN/jogo/jogoRoute';
 import routesJogoSetor from './src/routes/ADMIN/jogo/jogoSetorRoute';
 import routesLote from './src/routes/ADMIN/jogo/loteRoute';
+import routesAdmin from './src/routes/ADMIN/adminRoute';
+import routesAdminLogin from './src/routes/ADMIN/adminLoginRoute';
 
 import cors from 'cors'
 
@@ -35,6 +38,7 @@ app.use(express.json())
 app.use("/usuario", routesUsuarios)
 app.use("/login", routesLogin)
 app.use("/planos", routesPlanos)
+app.use("/beneficio", routesBeneficio)
 app.use("/assinatura", routesAssinatura)
 app.use("/fatura", routesFatura)
 app.use("/pagamento", routesPagamento)
@@ -46,6 +50,8 @@ app.use("/checkout", checkoutRoute);
 app.use("/pedidos", pedidoRoute);
 
 //ADMIN
+app.use("/admin/user", routesAdmin)
+app.use("/admin/login", routesAdminLogin)
 app.use("/admin/setor", routesSetor)
 app.use("/admin/ingresso", routesIngresso)
 app.use("/admin/jogo", routesJogo)

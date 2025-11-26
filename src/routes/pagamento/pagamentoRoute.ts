@@ -53,14 +53,44 @@ router.post("/", async (req, res) => {
   }
 });
 
+// routes/pagamento.ts (apenas o GET / atualizado)
+
+// routes/pagamento.ts (apenas o GET / atualizado)
 router.get("/", async (req, res) => {
-    try {
-        const pagamentos = await prisma.pagamento.findMany();
-        res.status(200).json(pagamentos);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Erro ao buscar pagamentos' });
-    }
+  try {
+    const pagamentos = await prisma.pagamento.findMany({
+      include: {
+        torcedor: {
+          select: { nome: true },
+        },
+        ingressos: {
+          select: { id: true },
+        },
+        pedidos: {
+          select: { id: true },
+        },
+        fatura: {
+          include: {
+            assinatura: {
+              include: {
+                plano: {
+                  select: { nome: true },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        dataVencimento: "desc",
+      },
+    });
+
+    res.status(200).json(pagamentos);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao buscar pagamentos" });
+  }
 });
 
 router.get("/:id", async (req, res) => {
