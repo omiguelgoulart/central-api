@@ -1,6 +1,16 @@
 import { Router } from "express";
 import { z } from "zod";
-import { criarCliente, criarPagamento, obterBoletoPdf, obterQrCodePix, obterStatusPagamento } from "./asaasService";
+import {
+  criarCliente,
+  criarPagamento,
+  obterBoletoPdf,
+  obterQrCodePix,
+  obterStatusPagamento,
+  CriarPagamentoPix,
+  CriarPagamentoBoleto,
+  CriarPagamentoCredito,
+  CriarPagamentoDebito,
+} from "./asaasService";
 
 const router = Router();
 
@@ -112,16 +122,16 @@ router.post("/pagamentos", async (req, res) => {
     let pagamento;
     switch (p.tipo) {
       case "PIX":
-        pagamento = await criarPagamento({ ...p });
+        pagamento = await criarPagamento({ ...p } as CriarPagamentoPix);
         break;
       case "BOLETO":
-        pagamento = await criarPagamento({ ...p });
+        pagamento = await criarPagamento({ ...p } as CriarPagamentoBoleto);
         break;
       case "CREDIT_CARD":
-        pagamento = await criarPagamento({ ...p, ip });
+        pagamento = await criarPagamento({ ...(p as any), ip } as CriarPagamentoCredito);
         break;
       case "DEBIT_CARD":
-        pagamento = await criarPagamento({ ...p, ip });
+        pagamento = await criarPagamento({ ...(p as any), ip } as CriarPagamentoDebito);
         break;
     }
 
