@@ -10,7 +10,7 @@ const jogoSetorSchema = z.object({
   setorId: z.string().uuid("ID do setor inválido"),
   capacidade: z.number().min(1, "A capacidade deve ser pelo menos 1"),
   aberto: z.boolean().default(true),
-  tipo: z.enum(["ARQUIBANCADA","CADEIRA", "CAMAROTE", "VISITANTE", "ACESSIVEL" ]).default("ARQUIBANCADA"),
+  tipo: z.enum(["ARQUIBANCADA", "CADEIRA", "CAMAROTE", "VISITANTE", "ACESSIVEL"]).default("ARQUIBANCADA"),
 });
 
 router.post("/", async (req, res) => {
@@ -30,8 +30,17 @@ router.post("/", async (req, res) => {
       });
     }
 
+    // Prisma espera operações de relacionamento no formato nested (connect),
+    // então convertemos `jogoId` e `setorId` para `jogo: { connect: { id } }` e
+    // `setor: { connect: { id } }` para satisfazer `JogoSetorCreateInput`.
     const novo = await prisma.jogoSetor.create({
-      data,
+      data: {
+        capacidade: data.capacidade,
+        aberto: data.aberto,
+        tipo: data.tipo,
+        jogo: { connect: { id: data.jogoId } },
+        setor: { connect: { id: data.setorId } },
+      },
       include: {
         setor: true,
         jogo: true,
@@ -116,9 +125,18 @@ router.patch("/:id", async (req, res) => {
       return res.status(404).json({ error: "Setor do jogo não encontrado" });
     }
 
+    // Para update, se vierem `jogoId` ou `setorId` convertemos para operações de
+    // relacionamento; caso contrário aplicamos os campos diretos.
+    const updateData: any = {};
+    if (typeof data.capacidade !== "undefined") updateData.capacidade = data.capacidade;
+    if (typeof data.aberto !== "undefined") updateData.aberto = data.aberto;
+    if (typeof data.tipo !== "undefined") updateData.tipo = data.tipo;
+    if (typeof data.jogoId !== "undefined") updateData.jogo = { connect: { id: data.jogoId } };
+    if (typeof data.setorId !== "undefined") updateData.setor = { connect: { id: data.setorId } };
+
     const atualizado = await prisma.jogoSetor.update({
       where: { id },
-      data,
+      data: updateData,
       include: {
         setor: true,
         jogo: true,
