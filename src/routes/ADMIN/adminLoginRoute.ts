@@ -1,4 +1,3 @@
-// src/routes/adminLogin.routes.ts (por exemplo)
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
@@ -21,7 +20,7 @@ router.post("/", async (req, res) => {
     const admin = await prisma.admin.findFirst({
       where: {
         email,
-        ativo: true, // só loga se estiver ativo
+        ativo: true, 
       },
     });
 
