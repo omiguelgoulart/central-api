@@ -21,9 +21,15 @@ router.post("/", async (req, res) => {
             res.status(400).json({ error: 'Setor já cadastrado' });
             return;
         }
+        const slug = nome.toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/[^\w-]+/g, '');
         const novoSetor = await prisma.setor.create({
             data: {
                 nome,
+                slug,
                 capacidade
             }
         });

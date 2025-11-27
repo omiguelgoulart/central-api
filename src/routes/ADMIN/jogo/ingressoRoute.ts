@@ -75,7 +75,6 @@ router.post("/", async (req, res) => {
               qrCode: qrToken,
               status: StatusIngresso.VALIDO,
               torcedorId: torcedorId ?? null,
-              pagamentoId: pagamentoId ?? null,
             },
             select: { id: true, qrCode: true },
           });
@@ -106,12 +105,12 @@ router.post("/", async (req, res) => {
       qrPngDataUrl: result.dataUrl,
       qrPngUrl: `/ingressos/${result.ingresso.id}/qrcode.png`,
     });
-  } catch (err: any) {
-    if (err instanceof z.ZodError)
-      return res.status(400).json({ errors: err.errors });
-    if (err?.message === "Valor inválido")
+  } catch (e) {
+    if (e instanceof z.ZodError)
+      return res.status(400).json({ errors: e.errors });
+    if ((e as any)?.message === "Valor inválido")
       return res.status(400).json({ error: "Valor inválido" });
-    console.error(err);
+    console.error(e);
     return res.status(500).json({ error: "Erro ao criar ingresso" });
   }
 });
