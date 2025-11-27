@@ -102,6 +102,33 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/cpf/:cpf", async (req, res) => {
+  const { cpf } = req.params;
+
+  const cpfLimpo = cpf.replace(/\D/g, "");
+
+  try {
+    const usuario = await prisma.torcedor.findUnique({
+      where: { cpf: cpfLimpo },
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        cpf: true,
+      },
+    });
+
+    if (!usuario) {
+      return res.status(404).json({ error: "Torcedor não encontrado" });
+    }
+
+    return res.status(200).json(usuario);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Erro ao buscar torcedor" });
+  }
+});
+
 router.get("/matricula/:matricula", async (req, res) => {
   const { matricula } = req.params;
   try {
