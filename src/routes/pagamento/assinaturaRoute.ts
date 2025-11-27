@@ -9,7 +9,7 @@ const assinaturaSchema = z.object({
     torcedorId: z.string().uuid("ID do torcedor inválido"),
     planoId: z.string().uuid("ID do plano inválido"),
     status: z.enum(['ATIVA', 'CANCELADA', 'SUSPENSA', 'EXPIRADA'], { required_error: "Informe o status da assinatura" }),
-    inicioEm: z.string(),
+    inicioEm: z.string().default(() => new Date().toISOString()),
     expiraEm: z.string().optional().nullable(),
     proximaCobrancaEm: z.string().optional().nullable(),
     canceladaEm: z.string().optional().nullable(),
