@@ -124,12 +124,10 @@ model Plano {
   valor         Decimal
   periodicidade Periodicidade
 
-  // extras pro card
   isFeatured Boolean @default(false)
   badgeLabel String?
   ordem      Int     @default(0)
 
-  // relações
   assinaturas  Assinatura[]
   beneficios   Beneficio[]
   criadoEm     DateTime     @default(now())
@@ -167,21 +165,19 @@ model Assinatura {
   planoId           String
   status            StatusAssinatura @default(ATIVA)
   inicioEm          DateTime
-  expiraEm          DateTime? // ok ser opcional (plano sem prazo fixo)
+  expiraEm          DateTime? 
   proximaCobrancaEm DateTime?
 
-  // Auditoria de ciclo de vida
   canceladaEm        DateTime?
   motivoCancelamento String?
   suspensaEm         DateTime?
   retomadaEm         DateTime?
 
-  // Cobrança
-  periodicidade       Periodicidade @default(MENSAL) // crie o enum (MENSAL/TRIMESTRAL/ANUAL...)
+  periodicidade       Periodicidade @default(MENSAL) 
   valorAtual          Decimal?      @db.Decimal(10, 2)
   moeda               String?       @default("BRL")
-  gatewayClienteId    String? // id do cliente no gateway (ex.: ASAAS/Stripe)
-  gatewayAssinaturaId String? // id da assinatura no gateway
+  gatewayClienteId    String?
+  gatewayAssinaturaId String?
 
   torcedor Torcedor @relation(fields: [torcedorId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   plano    Plano    @relation(fields: [planoId], references: [id], onDelete: Restrict, onUpdate: Cascade)
@@ -190,7 +186,6 @@ model Assinatura {
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
-  // Índices que ajudam MUITO no dia a dia
   @@index([torcedorId, status])
   @@index([planoId])
   @@index([status, proximaCobrancaEm])
@@ -200,7 +195,7 @@ model Assinatura {
 model Fatura {
   id           String           @id @default(uuid())
   assinaturaId String
-  competencia  String // "2025-09" por ex.
+  competencia  String
   valor        Decimal
   status       StatusFatura     @default(ABERTA)
   vencimentoEm DateTime
@@ -297,7 +292,7 @@ model Jogo {
 model Setor {
   id         String  @id @default(uuid())
   nome       String
-  capacidade Int          // capacidade estrutural do estádio (máximo físico)
+  capacidade Int
 
   criadoEm     DateTime  @default(now())
   atualizadoEm DateTime  @updatedAt

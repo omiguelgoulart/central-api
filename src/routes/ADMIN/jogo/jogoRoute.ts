@@ -164,6 +164,7 @@ router.get("/:id/jogo", async (req, res) => {
             lotes: {
               select: {
                 id: true,
+                precoUnitario: true,
                 ingressos: {
                   select: {
                     id: true,
@@ -180,12 +181,13 @@ router.get("/:id/jogo", async (req, res) => {
       return res.status(404).json({ error: "Jogo não encontrado" });
     }
 
-    res.json(jogo);
+    return res.json(jogo);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Erro ao buscar jogo básico" });
+    return res.status(500).json({ error: "Erro ao buscar jogo" });
   }
 });
+
 
 
 router.delete("/:id", async (req, res) => {

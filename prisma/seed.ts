@@ -44,9 +44,10 @@ async function main() {
   // 3. SETORES (BENTO FREITAS)
   console.log('🏟️  Construindo o Bento Freitas...')
   const setoresData = [
-    { nome: 'Arquibancada Norte', capacidade: 3500, tipo: TipoSetor.ARQUIBANCADA },
+    { nome: 'Arquibancada Norte', capacidade: 2500, tipo: TipoSetor.ARQUIBANCADA },
     { nome: 'Arquibancada Sul', capacidade: 2500, tipo: TipoSetor.ARQUIBANCADA },
-    { nome: 'Cadeira Cativa', capacidade: 1500, tipo: TipoSetor.CADEIRA },
+    { nome: 'Arquibancada JK (Juscelino)', capacidade: 4000, tipo: TipoSetor.ARQUIBANCADA},
+    { nome: 'Cadeira Cativas', capacidade: 1500, tipo: TipoSetor.CADEIRA },
     { nome: 'Arquibancada Norte (Visitante)', capacidade: 1000, tipo: TipoSetor.VISITANTE },
   ]
 
