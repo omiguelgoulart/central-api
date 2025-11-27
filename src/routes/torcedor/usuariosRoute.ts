@@ -14,6 +14,13 @@ const usuarioSchema = z.object({
   email: z.string().email("E-mail inválido"),
   senha: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
   cpf: z.string().optional(),
+  telefone: z.string().optional(),
+  enderecoLogradouro: z.string().optional(),
+  enderecoNumero: z.string().optional(),
+  enderecoBairro: z.string().optional(),
+  enderecoCidade: z.string().optional(),
+  enderecoUF: z.string().optional(),
+  enderecoCEP: z.string().optional(),
 });
 
 function validarSenhaOu400(senha: string, res: any): boolean {
@@ -47,7 +54,19 @@ function tratarErroPrisma(e: unknown, res: any) {
 
 router.post("/", async (req, res) => {
   try {
-    const { nome, email, senha } = usuarioSchema.parse(req.body);
+    const {
+      nome,
+      email,
+      senha,
+      cpf,
+      telefone,
+      enderecoLogradouro,
+      enderecoNumero,
+      enderecoBairro,
+      enderecoCidade,
+      enderecoUF,
+      enderecoCEP,
+    } = usuarioSchema.parse(req.body);
 
     if (!validarSenhaOu400(senha, res)) return;
 
@@ -69,7 +88,14 @@ router.post("/", async (req, res) => {
         email,
         senha: senhaHash,
         matricula,
-        cpf: (req.body.cpf as string) || null,
+        cpf: cpf ?? null,
+        telefone: telefone ?? null,
+        enderecoLogradouro: enderecoLogradouro ?? null,
+        enderecoNumero: enderecoNumero ?? null,
+        enderecoBairro: enderecoBairro ?? null,
+        enderecoCidade: enderecoCidade ?? null,
+        enderecoUF: enderecoUF ?? null,
+        enderecoCEP: enderecoCEP ?? null,
       },
     });
 
@@ -189,7 +215,19 @@ router.patch("/matricula/:matricula", async (req, res) => {
       return;
     }
 
-    const { nome, email, senha } = usuarioSchema.partial().parse(req.body);
+    const {
+      nome,
+      email,
+      senha,
+      cpf,
+      telefone,
+      enderecoLogradouro,
+      enderecoNumero,
+      enderecoBairro,
+      enderecoCidade,
+      enderecoUF,
+      enderecoCEP,
+    } = usuarioSchema.partial().parse(req.body);
 
     if (senha && !validarSenhaOu400(senha, res)) return;
 
@@ -201,6 +239,14 @@ router.patch("/matricula/:matricula", async (req, res) => {
         nome: nome ?? usuarioExistente.nome,
         email: email ?? usuarioExistente.email,
         senha: senhaHash ?? usuarioExistente.senha,
+        cpf: cpf ?? usuarioExistente.cpf,
+        telefone: telefone ?? usuarioExistente.telefone,
+        enderecoLogradouro: enderecoLogradouro ?? usuarioExistente.enderecoLogradouro,
+        enderecoNumero: enderecoNumero ?? usuarioExistente.enderecoNumero,
+        enderecoBairro: enderecoBairro ?? usuarioExistente.enderecoBairro,
+        enderecoCidade: enderecoCidade ?? usuarioExistente.enderecoCidade,
+        enderecoUF: enderecoUF ?? usuarioExistente.enderecoUF,
+        enderecoCEP: enderecoCEP ?? usuarioExistente.enderecoCEP,
       },
     });
 
@@ -226,7 +272,19 @@ router.patch("/:id", async (req, res) => {
       return;
     }
 
-    const { nome, email, senha } = usuarioSchema.partial().parse(req.body);
+    const {
+      nome,
+      email,
+      senha,
+      cpf,
+      telefone,
+      enderecoLogradouro,
+      enderecoNumero,
+      enderecoBairro,
+      enderecoCidade,
+      enderecoUF,
+      enderecoCEP,
+    } = usuarioSchema.partial().parse(req.body);
 
     if (senha && !validarSenhaOu400(senha, res)) return;
 
@@ -238,6 +296,14 @@ router.patch("/:id", async (req, res) => {
         nome: nome ?? usuarioExistente.nome,
         email: email ?? usuarioExistente.email,
         senha: senhaHash ?? usuarioExistente.senha,
+        cpf: cpf ?? usuarioExistente.cpf,
+        telefone: telefone ?? usuarioExistente.telefone,
+        enderecoLogradouro: enderecoLogradouro ?? usuarioExistente.enderecoLogradouro,
+        enderecoNumero: enderecoNumero ?? usuarioExistente.enderecoNumero,
+        enderecoBairro: enderecoBairro ?? usuarioExistente.enderecoBairro,
+        enderecoCidade: enderecoCidade ?? usuarioExistente.enderecoCidade,
+        enderecoUF: enderecoUF ?? usuarioExistente.enderecoUF,
+        enderecoCEP: enderecoCEP ?? usuarioExistente.enderecoCEP,
       },
     });
 
