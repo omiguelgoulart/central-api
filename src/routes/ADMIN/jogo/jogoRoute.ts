@@ -140,6 +140,53 @@ router.get("/:id/full", async (req, res) => {
   }
 });
 
+router.get("/:id/jogo", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const jogo = await prisma.jogo.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        nome: true,
+        data: true,
+        local: true,
+        setores: {
+          select: {
+            id: true,
+            capacidade: true,
+            setor: {
+              select: {
+                id: true,
+                nome: true,
+              },
+            },
+            lotes: {
+              select: {
+                id: true,
+                ingressos: {
+                  select: {
+                    id: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!jogo) {
+      return res.status(404).json({ error: "Jogo não encontrado" });
+    }
+
+    res.json(jogo);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao buscar jogo básico" });
+  }
+});
+
 
 router.delete("/:id", async (req, res) => {
     try {
