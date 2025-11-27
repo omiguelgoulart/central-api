@@ -291,6 +291,7 @@ model Jogo {
 
 model Setor {
   id         String  @id @default(uuid())
+  slug       String  @unique
   nome       String
   capacidade Int
 

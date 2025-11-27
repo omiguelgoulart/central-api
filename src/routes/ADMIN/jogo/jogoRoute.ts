@@ -159,6 +159,7 @@ router.get("/:id/jogo", async (req, res) => {
               select: {
                 id: true,
                 nome: true,
+                slug: true,
               },
             },
             lotes: {

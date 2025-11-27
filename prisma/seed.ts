@@ -43,17 +43,48 @@ async function main() {
 
   // 3. SETORES (BENTO FREITAS)
   console.log('🏟️  Construindo o Bento Freitas...')
-  const setoresData = [
-    { nome: 'Arquibancada Norte', capacidade: 2500, tipo: TipoSetor.ARQUIBANCADA },
-    { nome: 'Arquibancada Sul', capacidade: 2500, tipo: TipoSetor.ARQUIBANCADA },
-    { nome: 'Arquibancada JK (Juscelino)', capacidade: 4000, tipo: TipoSetor.ARQUIBANCADA},
-    { nome: 'Cadeira Cativas', capacidade: 1500, tipo: TipoSetor.CADEIRA },
-    { nome: 'Arquibancada Norte (Visitante)', capacidade: 1000, tipo: TipoSetor.VISITANTE },
-  ]
+const setoresData = [
+  {
+    nome: "Arquibancada JK (Juscelino)",
+    slug: "jk",
+    capacidade: 4000,
+    tipo: TipoSetor.ARQUIBANCADA,
+  },
+  {
+    nome: "Arquibancada Social",
+    slug: "social",
+    capacidade: 2000,
+    tipo: TipoSetor.ARQUIBANCADA,
+  },
+  {
+    nome: "Arquibancada Norte",
+    slug: "norte",
+    capacidade: 2500,
+    tipo: TipoSetor.ARQUIBANCADA,
+  },
+  {
+    nome: "Arquibancada Sul",
+    slug: "sul",
+    capacidade: 2500,
+    tipo: TipoSetor.ARQUIBANCADA,
+  },
+  {
+    nome: "Cadeiras Cativas",
+    slug: "cativas",
+    capacidade: 1500,
+    tipo: TipoSetor.CADEIRA,
+  },
+  {
+    nome: "Arquibancada Norte (Visitante)",
+    slug: "norte-visitante",
+    capacidade: 1000,
+    tipo: TipoSetor.VISITANTE,
+  },
+];
 
   const setoresMap = new Map()
   for (const s of setoresData) {
-    const setor = await prisma.setor.create({ data: { nome: s.nome, capacidade: s.capacidade } })
+    const setor = await prisma.setor.create({ data: { slug: s.slug ,nome: s.nome, capacidade: s.capacidade } })
     setoresMap.set(s.nome, setor)
   }
 
@@ -77,6 +108,24 @@ async function main() {
       valor: 159.90,
       periodicidade: Periodicidade.MENSAL,
       beneficios: ['Cadeira Cativa Garantida', 'Acesso VIP', 'Estacionamento', 'Kit Boas-vindas']
+    },
+    {
+      nome: 'Sócio Torcedor Vitalício',
+      valor: 999.90,
+      periodicidade: Periodicidade.ANUAL,
+      beneficios: ['Cadeira Cativa Vitalícia', 'Acesso VIP + Lounge', 'Estacionamento Premium', 'Camisa Autografada', 'Visita ao Clube']
+    },
+    {
+      nome: 'Sócio Estudante Xavante',
+      valor: 29.90,
+      periodicidade: Periodicidade.MENSAL,
+      beneficios: ['Acesso Arquibancada Norte', 'Carteirinha Digital', 'Desconto em Lojas Parceiras']
+    },
+    {
+      nome: 'Sócio Xavante Social',
+      valor: 9.90,
+      periodicidade: Periodicidade.MENSAL,
+      beneficios: ['Acesso a Eventos Exclusivos', 'Descontos em Produtos Oficiais', 'Carteirinha Digital' ]
     }
   ]
 
