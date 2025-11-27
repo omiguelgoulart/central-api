@@ -177,6 +177,9 @@ router.get("/:id", async (req, res) => {
       return res.status(404).json({ error: "Ingresso não encontrado" });
     }
 
+    const payload = buildQrPayload(ingresso.id, ingresso.qrCode);
+    const dataUrl = await toDataURL(payload);
+
     const response = {
       id: ingresso.id,
       torcedorId: ingresso.torcedorId,
@@ -190,26 +193,26 @@ router.get("/:id", async (req, res) => {
       atualizadoEm: ingresso.atualizadoEm,
       pagamentoId: ingresso.pagamentoId,
 
-      // 👇 estrutura compatível com a página (ingressoItf)
       jogo: ingresso.jogo
         ? {
             id: ingresso.jogo.id,
             nome: ingresso.jogo.nome,
-            dataHora: ingresso.jogo.data,   // a página usa dataHora
-            estadio: ingresso.jogo.local,   // a página usa estadio
+            dataHora: ingresso.jogo.data,
+            estadio: ingresso.jogo.local,
           }
         : null,
 
       lote: ingresso.lote
         ? {
             id: ingresso.lote.id,
-            nome: ingresso.lote.nome, // Portaria
+            nome: ingresso.lote.nome,
             setor:
               ingresso.lote.jogoSetor?.setor?.nome ??
-              null, // nome do setor do estádio
+              null,
           }
         : null,
 
+      qrPngDataUrl: dataUrl,
       qrPngUrl: `/ingressos/${ingresso.id}/qrcode.png`,
     };
 
@@ -222,6 +225,7 @@ router.get("/:id", async (req, res) => {
     return res.status(500).json({ error: "Erro ao buscar ingresso" });
   }
 });
+
 
 
 router.get("/:id/qrcode.png", async (req, res) => {
