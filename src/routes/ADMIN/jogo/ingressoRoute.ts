@@ -226,8 +226,6 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-
-
 router.get("/:id/qrcode.png", async (req, res) => {
   try {
     const { id } = idParamSchema.parse(req.params);
