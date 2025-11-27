@@ -156,17 +156,72 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const { id } = idParamSchema.parse(req.params);
-    const ingresso = await prisma.ingresso.findUnique({ where: { id } });
-    if (!ingresso)
+
+    const ingresso = await prisma.ingresso.findUnique({
+      where: { id },
+      include: {
+        jogo: true,
+        lote: {
+          include: {
+            jogoSetor: {
+              include: {
+                setor: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!ingresso) {
       return res.status(404).json({ error: "Ingresso não encontrado" });
-    res.json(ingresso);
+    }
+
+    const response = {
+      id: ingresso.id,
+      torcedorId: ingresso.torcedorId,
+      jogoId: ingresso.jogoId,
+      loteId: ingresso.loteId,
+      qrCode: ingresso.qrCode,
+      valor: ingresso.valor,
+      status: ingresso.status,
+      criadoEm: ingresso.criadoEm,
+      usadoEm: ingresso.usadoEm,
+      atualizadoEm: ingresso.atualizadoEm,
+      pagamentoId: ingresso.pagamentoId,
+
+      // 👇 estrutura compatível com a página (ingressoItf)
+      jogo: ingresso.jogo
+        ? {
+            id: ingresso.jogo.id,
+            dataHora: ingresso.jogo.data,   // a página usa dataHora
+            estadio: ingresso.jogo.local,   // a página usa estadio
+          }
+        : null,
+
+      lote: ingresso.lote
+        ? {
+            id: ingresso.lote.id,
+            nome: ingresso.lote.nome, // Portaria
+            setor:
+              ingresso.lote.jogoSetor?.setor?.nome ??
+              null, // nome do setor do estádio
+          }
+        : null,
+
+      qrPngUrl: `/ingressos/${ingresso.id}/qrcode.png`,
+    };
+
+    return res.json(response);
   } catch (e) {
-    if (e instanceof z.ZodError)
+    if (e instanceof z.ZodError) {
       return res.status(400).json({ errors: e.errors });
+    }
     console.error(e);
-    res.status(500).json({ error: "Erro ao buscar ingresso" });
+    return res.status(500).json({ error: "Erro ao buscar ingresso" });
   }
 });
+
 
 router.get("/:id/qrcode.png", async (req, res) => {
   try {
