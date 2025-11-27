@@ -32,10 +32,7 @@ const ingressoCreateSchema = z.object({
 const ingressoUpdateSchema = z.object({
   jogoId: z.string().uuid().optional(),
   loteId: z.string().uuid().nullable().optional(),
-  valor: z
-    .union([z.string(), z.number()])
-    .optional()
-    .transform((v) => (v == null ? v : toDecimalStringTwoPlaces(v))),
+  valor: z.union([z.string(), z.number()]).optional().transform((v) => (v == null ? v : toDecimalStringTwoPlaces(v))),
   status: z.nativeEnum(StatusIngresso).optional(),
   usadoEm: z.union([z.string(), z.date()]).optional(),
   pagamentoId: z.string().min(1, "pagamentoId vazio").nullable().optional(),
