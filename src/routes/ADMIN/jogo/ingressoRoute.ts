@@ -194,6 +194,7 @@ router.get("/:id", async (req, res) => {
       jogo: ingresso.jogo
         ? {
             id: ingresso.jogo.id,
+            nome: ingresso.jogo.nome,
             dataHora: ingresso.jogo.data,   // a página usa dataHora
             estadio: ingresso.jogo.local,   // a página usa estadio
           }
