@@ -292,4 +292,18 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+router.get("/jogo/:jogoId", async (req, res) => {
+  try {
+    const paramsSchema = z.object({ jogoId: z.string().uuid("ID do jogo inválido") });
+    const { jogoId } = paramsSchema.parse(req.params);
+    const ingressos = await prisma.ingresso.findMany({
+      where: { jogoId },
+    });
+    res.json({ ingressos });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao buscar ingressos por jogo" });
+  }
+});
+
 export default router;

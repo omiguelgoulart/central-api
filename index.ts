@@ -20,6 +20,7 @@ import routesJogoSetor from './src/routes/ADMIN/jogo/jogoSetorRoute';
 import routesLote from './src/routes/ADMIN/jogo/loteRoute';
 import routesAdmin from './src/routes/ADMIN/adminRoute';
 import routesAdminLogin from './src/routes/ADMIN/adminLoginRoute';
+import { checkinRouter } from './src/routes/ADMIN/check-in/checkinRoute';
 
 import cors from 'cors'
 
@@ -57,6 +58,7 @@ app.use("/admin/ingresso", routesIngresso)
 app.use("/admin/jogo", routesJogo)
 app.use("/admin/jogoSetor", routesJogoSetor)
 app.use("/admin/lote", routesLote)
+app.use("/admin/checkin/",checkinRouter);
 
 app.get('/', (req, res) => {
   res.send('API central de torcedores!')
