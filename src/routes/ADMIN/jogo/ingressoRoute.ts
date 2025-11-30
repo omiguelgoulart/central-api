@@ -298,6 +298,9 @@ router.get("/jogo/:jogoId", async (req, res) => {
     const { jogoId } = paramsSchema.parse(req.params);
     const ingressos = await prisma.ingresso.findMany({
       where: { jogoId },
+      include: {
+        jogo: true,
+      },
     });
     res.json({ ingressos });
   } catch (error) {
