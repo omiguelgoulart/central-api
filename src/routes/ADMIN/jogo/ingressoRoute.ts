@@ -59,6 +59,13 @@ router.post("/", async (req, res) => {
       if (!torcedor)
         return res.status(400).json({ error: "Torcedor inválido" });
     }
+    const ingressoExistente = await prisma.ingresso.findFirst({
+      where: { pagamentoId },
+    });
+
+    if (ingressoExistente) {
+      return res.status(409).json({ error: "Já existe um ingresso para este pagamento." });
+    }
 
     const result = await prisma.$transaction(async (tx) => {
       let qrToken = genQrToken();
@@ -195,21 +202,21 @@ router.get("/:id", async (req, res) => {
 
       jogo: ingresso.jogo
         ? {
-            id: ingresso.jogo.id,
-            nome: ingresso.jogo.nome,
-            dataHora: ingresso.jogo.data,
-            estadio: ingresso.jogo.local,
-          }
+          id: ingresso.jogo.id,
+          nome: ingresso.jogo.nome,
+          dataHora: ingresso.jogo.data,
+          estadio: ingresso.jogo.local,
+        }
         : null,
 
       lote: ingresso.lote
         ? {
-            id: ingresso.lote.id,
-            nome: ingresso.lote.nome,
-            setor:
-              ingresso.lote.jogoSetor?.setor?.nome ??
-              null,
-          }
+          id: ingresso.lote.id,
+          nome: ingresso.lote.nome,
+          setor:
+            ingresso.lote.jogoSetor?.setor?.nome ??
+            null,
+        }
         : null,
 
       qrPngDataUrl: dataUrl,

@@ -265,7 +265,6 @@ enum TipoSetor {
   ACESSIVEL
 }
 
-
 model Jogo {
   id        String   @id @default(uuid())
   nome      String
