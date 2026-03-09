@@ -2,6 +2,8 @@ import { PrismaClient, StatusIngresso } from "@prisma/client";
 import { z } from "zod";
 import { Router } from "express";
 import { buildQrPayload, genQrToken, toDataURL, toPNG } from "../../../lib/qr";
+import { sendEmail } from "../../../emails/service/email.service";
+import { emailCompraConfirmada } from "../../../emails/templates/compraConfirmada";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -105,6 +107,26 @@ router.post("/", async (req, res) => {
 
       return { ingresso: created, dataUrl };
     });
+
+    if (torcedorId) {
+      const torcedor = await prisma.torcedor.findUnique({ where: { id: torcedorId }, select: { nome: true, email: true } });
+      if (torcedor?.email) {
+        sendEmail({
+          to: torcedor.email,
+          subject: "Compra de Ingresso Confirmada!",
+          html: emailCompraConfirmada({
+            nomeTorcedor: torcedor.nome,
+            email: torcedor.email,
+            numeroIngresso: result.ingresso.id,
+            evento: jogo.nome,
+            data: jogo.data.toLocaleDateString("pt-BR"),
+            local: jogo.local,
+            valor: Number(valor),
+            pedidoId: pagamentoId ?? result.ingresso.id,
+          }),
+        }).catch((err) => console.error("Erro email compra confirmada:", err));
+      }
+    }
 
     return res.status(201).json({
       message: "Ingresso criado com sucesso",

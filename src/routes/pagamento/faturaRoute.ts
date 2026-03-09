@@ -1,13 +1,15 @@
 import { PrismaClient } from "@prisma/client"
 import { z } from 'zod'
 import { Router } from "express";
+import { sendEmail } from "../../emails/service/email.service";
+import { emailFaturaGerada } from "../../emails/templates/faturaGerada";
 
 const router = Router();
 const prisma = new PrismaClient()
 
 const faturaSchema = z.object({
     assinaturaId: z.string().uuid(),
-    competencia: z.string(), 
+    competencia: z.string(),
     valor: z.number(), // ou z.number().transform(val => new Prisma.Decimal(val)) se usar Decimal do Prisma
     status: z.enum(['ABERTA', 'PAGA', 'CANCELADA']).optional(),
     vencimentoEm: z.coerce.date(),
@@ -23,7 +25,7 @@ router.post("/", async (req, res) => {
         const { assinaturaId, competencia, valor, status, vencimentoEm, pagoEm, referencia, metodo } = faturaSchema.parse(req.body);
         const assinaturaExistente = await prisma.assinatura.findUnique({
             where: { id: assinaturaId }
-        }); 
+        });
         if (!assinaturaExistente) {
             res.status(400).json({ error: 'Assinatura não encontrada' });
             return;
@@ -39,6 +41,29 @@ router.post("/", async (req, res) => {
                 referencia: referencia || null,
             }
         });
+
+        // Envia email de fatura gerada ao torcedor
+        const assinaturaComTorcedor = await prisma.assinatura.findUnique({
+            where: { id: assinaturaId },
+            include: {
+                torcedor: { select: { nome: true, email: true } },
+                plano: { select: { nome: true } },
+            },
+        });
+        if (assinaturaComTorcedor?.torcedor?.email) {
+            sendEmail({
+                to: assinaturaComTorcedor.torcedor.email,
+                subject: `Fatura ${competencia} - ${assinaturaComTorcedor.plano.nome}`,
+                html: emailFaturaGerada({
+                    nome: assinaturaComTorcedor.torcedor.nome,
+                    plano: assinaturaComTorcedor.plano.nome,
+                    competencia,
+                    valor: Number(valor),
+                    vencimentoEm: vencimentoEm.toLocaleDateString("pt-BR"),
+                }),
+            }).catch((err) => console.error("Erro email fatura gerada:", err));
+        }
+
         res.status(201).json({ message: 'Fatura criada com sucesso', faturaId: novaFatura.id });
     } catch (error) {
         if (error instanceof z.ZodError) {

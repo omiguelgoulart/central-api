@@ -1,10 +1,13 @@
 import { PrismaClient, Prisma } from "@prisma/client";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import { z } from "zod";
 import { Router } from "express";
 import { validaSenha } from "../../utils/validaSenha";
 import { gerarMatricula } from "../../utils/matricula";
-import { cp } from "fs";
+import { sendEmail } from "../../emails/service/email.service";
+import { emailBoasVindas } from "../../emails/templates/boasVindas";
+import { emailVerificacao } from "../../emails/templates/verificacaoEmail";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -24,7 +27,7 @@ const usuarioSchema = z.object({
 });
 
 function validarSenhaOu400(senha: string, res: any): boolean {
-  const erros = validaSenha(senha); // assumindo que retorna array de erros
+  const erros = validaSenha(senha);
   if (Array.isArray(erros) && erros.length > 0) {
     res.status(400).json({
       error: "Senha inválida",
@@ -82,6 +85,9 @@ router.post("/", async (req, res) => {
     const senhaHash = await bcrypt.hash(senha, 10);
     const matricula = await gerarMatricula();
 
+    const emailToken = crypto.randomUUID();
+    const emailTokenExpiraEm = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
+
     const novoUsuario = await prisma.torcedor.create({
       data: {
         nome,
@@ -96,12 +102,33 @@ router.post("/", async (req, res) => {
         enderecoCidade: enderecoCidade ?? null,
         enderecoUF: enderecoUF ?? null,
         enderecoCEP: enderecoCEP ?? null,
+        emailVerificado: false,
+        emailToken,
+        emailTokenExpiraEm,
       },
     });
 
+    const baseUrl = process.env.FRONTEND_URL ?? process.env.BASE_URL ?? "http://localhost:3000";
+    const linkVerificacao = `${baseUrl}/verificar-email?token=${emailToken}`;
+
+    sendEmail({
+      to: email,
+      subject: "Confirme seu e-mail - Central de Torcedores",
+      html: emailVerificacao({ nome, linkVerificacao }),
+    }).catch((err) => console.error("Erro ao enviar email de verificação:", err));
+
+    sendEmail({
+      to: email,
+      subject: "Bem-vindo(a) à Central de Torcedores!",
+      html: emailBoasVindas({ nome, matricula }),
+    }).catch((err) => console.error("Erro ao enviar email de boas-vindas:", err));
+
     res
       .status(201)
-      .json({ message: "Usuário criado com sucesso", usuarioId: novoUsuario.id });
+      .json({
+        message: "Usuário criado com sucesso. Verifique seu e-mail para ativar a conta.",
+        usuarioId: novoUsuario.id,
+      });
   } catch (error) {
     if (error instanceof z.ZodError) {
       res.status(400).json({ errors: error.errors });
@@ -399,6 +426,89 @@ router.get("/id/:id", async (req, res) => {
   } catch (error) {
     console.error("Erro ao buscar usuário:", error);
     return res.status(500).json({ error: "Erro ao buscar usuário" });
+  }
+});
+
+// Verificar e-mail via token (o frontend redireciona aqui)
+router.get("/verificar-email", async (req, res) => {
+  try {
+    const token = z.string().uuid("Token inválido").parse(req.query.token);
+
+    const torcedor = await prisma.torcedor.findUnique({
+      where: { emailToken: token },
+    });
+
+    if (!torcedor) {
+      return res.status(400).json({ error: "Token inválido ou já utilizado" });
+    }
+
+    if (torcedor.emailVerificado) {
+      return res.status(200).json({ message: "E-mail já verificado" });
+    }
+
+    if (torcedor.emailTokenExpiraEm && torcedor.emailTokenExpiraEm < new Date()) {
+      return res.status(410).json({ error: "Token expirado. Solicite um novo e-mail de verificação." });
+    }
+
+    await prisma.torcedor.update({
+      where: { id: torcedor.id },
+      data: {
+        emailVerificado: true,
+        emailToken: null,
+        emailTokenExpiraEm: null,
+      },
+    });
+
+    return res.status(200).json({ message: "E-mail verificado com sucesso!" });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: "Token inválido" });
+    }
+    console.error(error);
+    return res.status(500).json({ error: "Erro ao verificar e-mail" });
+  }
+});
+
+// Reenviar e-mail de verificação
+router.post("/reenviar-verificacao", async (req, res) => {
+  try {
+    const { email } = z.object({ email: z.string().email() }).parse(req.body);
+
+    const torcedor = await prisma.torcedor.findUnique({ where: { email } });
+
+    if (!torcedor) {
+      // Não revela se o email existe
+      return res.status(200).json({ message: "Se o e-mail estiver cadastrado, enviaremos um novo link de verificação." });
+    }
+
+    if (torcedor.emailVerificado) {
+      return res.status(200).json({ message: "E-mail já verificado." });
+    }
+
+    const emailToken = crypto.randomUUID();
+    const emailTokenExpiraEm = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await prisma.torcedor.update({
+      where: { id: torcedor.id },
+      data: { emailToken, emailTokenExpiraEm },
+    });
+
+    const baseUrl = process.env.FRONTEND_URL ?? process.env.BASE_URL ?? "http://localhost:3000";
+    const linkVerificacao = `${baseUrl}/verificar-email?token=${emailToken}`;
+
+    sendEmail({
+      to: email,
+      subject: "Confirme seu e-mail - Central de Torcedores",
+      html: emailVerificacao({ nome: torcedor.nome, linkVerificacao }),
+    }).catch((err) => console.error("Erro ao reenviar email de verificação:", err));
+
+    return res.status(200).json({ message: "Se o e-mail estiver cadastrado, enviaremos um novo link de verificação." });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ errors: error.errors });
+    }
+    console.error(error);
+    return res.status(500).json({ error: "Erro ao reenviar verificação" });
   }
 });
 

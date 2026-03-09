@@ -1,6 +1,9 @@
 import { PrismaClient } from "@prisma/client"
 import { z } from 'zod'
 import { Router } from "express";
+import { sendEmail } from "../../emails/service/email.service";
+import { emailAssinaturaCriada } from "../../emails/templates/assinaturaCriada";
+import { emailAssinaturaCancelada } from "../../emails/templates/assinaturaCancelada";
 
 const router = Router();
 const prisma = new PrismaClient()
@@ -50,6 +53,22 @@ router.post("/", async (req, res) => {
                 proximaCobrancaEm: proximaCobrancaEm ? new Date(proximaCobrancaEm) : null
             }
         });
+
+        sendEmail({
+            to: torcedorExistente.email,
+            subject: "Assinatura Ativada!",
+            html: emailAssinaturaCriada({
+                nome: torcedorExistente.nome,
+                plano: planoExistente.nome,
+                valor: Number(planoExistente.valor),
+                periodicidade: planoExistente.periodicidade,
+                inicioEm: new Date(inicioEm).toLocaleDateString("pt-BR"),
+                proximaCobranca: proximaCobrancaEm
+                    ? new Date(proximaCobrancaEm).toLocaleDateString("pt-BR")
+                    : undefined,
+            }),
+        }).catch((err) => console.error("Erro email assinatura criada:", err));
+
         res.status(201).json(novaAssinatura);
     } catch (error) {
         if (error instanceof z.ZodError) {
@@ -141,6 +160,27 @@ router.patch("/:id", async (req, res) => {
             where: { id: assinaturaId },
             data: dadosAtualizados
         });
+
+        // Dispara email se status mudou para CANCELADA
+        if (dadosAtualizados.status === 'CANCELADA') {
+            const assinaturaCompleta = await prisma.assinatura.findUnique({
+                where: { id: assinaturaId },
+                include: { torcedor: { select: { nome: true, email: true } }, plano: { select: { nome: true } } },
+            });
+            if (assinaturaCompleta?.torcedor?.email) {
+                sendEmail({
+                    to: assinaturaCompleta.torcedor.email,
+                    subject: "Assinatura Cancelada",
+                    html: emailAssinaturaCancelada({
+                        nome: assinaturaCompleta.torcedor.nome,
+                        plano: assinaturaCompleta.plano.nome,
+                        canceladaEm: new Date().toLocaleDateString("pt-BR"),
+                        motivo: dadosAtualizados.motivoCancelamento ?? undefined,
+                    }),
+                }).catch((err) => console.error("Erro email assinatura cancelada:", err));
+            }
+        }
+
         res.status(200).json({ message: 'Assinatura atualizada com sucesso' });
     } catch (error) {
         if (error instanceof z.ZodError) {

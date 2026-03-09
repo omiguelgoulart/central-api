@@ -1,6 +1,8 @@
 import { PrismaClient } from "@prisma/client"
 import { Router, Request, Response } from "express";
 import redis from "../../lib/redis";
+import { sendEmail } from "../../emails/service/email.service";
+import { emailPedidoConfirmado } from "../../emails/templates/pedidoConfirmado";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -80,6 +82,28 @@ router.post("/confirmar", async (req: Request, res: Response) => {
             },
             include: { itens: true },
         });
+
+        // Envia email de pedido confirmado ao torcedor
+        const torcedor = await prisma.torcedor.findUnique({
+            where: { id: torcedorId },
+            select: { nome: true, email: true },
+        });
+        if (torcedor?.email) {
+            sendEmail({
+                to: torcedor.email,
+                subject: "Pedido Confirmado!",
+                html: emailPedidoConfirmado({
+                    nome: torcedor.nome,
+                    pedidoId: pedido.id,
+                    total,
+                    itens: pedido.itens.map((item: any) => ({
+                        setor: item.setorId,
+                        tipo: item.tipo,
+                        preco: Number(item.preco),
+                    })),
+                }),
+            }).catch((err) => console.error("Erro email pedido confirmado:", err));
+        }
 
         return res.status(201).json({ ok: true, pedidoId: pedido.id, total });
     } catch {

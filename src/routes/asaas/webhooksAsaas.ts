@@ -1,6 +1,9 @@
 // src/routes/webhooks.asaas.ts
 import { Router } from "express";
 import { PrismaClient, StatusPagamento } from "@prisma/client";
+import { sendEmail } from "../../emails/service/email.service";
+import { emailPagamentoConfirmado } from "../../emails/templates/pagamentoConfirmado";
+import { emailPagamentoAtrasado } from "../../emails/templates/pagamentoAtrasado";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -44,8 +47,8 @@ router.post("/webhooks/asaas", async (req, res) => {
         novoStatus === StatusPagamento.PAGO && pagamento.confirmedDate
           ? new Date(pagamento.confirmedDate)
           : novoStatus === StatusPagamento.PAGO
-          ? new Date()
-          : null;
+            ? new Date()
+            : null;
 
       // Se gatewayPaymentId não for único, pode deixar updateMany
       const resultado = await prisma.pagamento.updateMany({
@@ -57,6 +60,44 @@ router.post("/webhooks/asaas", async (req, res) => {
       });
 
       console.log("Registros atualizados:", resultado.count);
+
+      // Dispara email de notificação ao torcedor
+      if (resultado.count > 0) {
+        const pagamentoDb = await prisma.pagamento.findFirst({
+          where: { gatewayPaymentId: pagamento.id },
+          include: { torcedor: { select: { nome: true, email: true } } },
+        });
+
+        if (pagamentoDb?.torcedor?.email) {
+          const { nome, email } = pagamentoDb.torcedor;
+
+          if (novoStatus === StatusPagamento.PAGO) {
+            sendEmail({
+              to: email,
+              subject: "Pagamento Confirmado!",
+              html: emailPagamentoConfirmado({
+                nome,
+                valor: Number(pagamentoDb.valor),
+                descricao: pagamentoDb.descricao ?? "Pagamento",
+                metodo: pagamentoDb.metodo,
+                dataConfirmacao: new Date().toLocaleDateString("pt-BR"),
+                referencia: pagamentoDb.referencia ?? undefined,
+              }),
+            }).catch((err) => console.error("Erro email pgto confirmado:", err));
+          } else if (novoStatus === StatusPagamento.ATRASADO) {
+            sendEmail({
+              to: email,
+              subject: "Pagamento em Atraso",
+              html: emailPagamentoAtrasado({
+                nome,
+                valor: Number(pagamentoDb.valor),
+                descricao: pagamentoDb.descricao ?? "Pagamento",
+                dataVencimento: pagamentoDb.dataVencimento.toLocaleDateString("pt-BR"),
+              }),
+            }).catch((err) => console.error("Erro email pgto atrasado:", err));
+          }
+        }
+      }
     }
 
     // 4) Responder rápido (Asaas reenvia se != 200)

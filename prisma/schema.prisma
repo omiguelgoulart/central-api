@@ -61,14 +61,14 @@ enum AdminRole {
 }
 
 model Admin {
-  id           String   @id @default(uuid())
+  id           String     @id @default(uuid())
   nome         String
-  email        String   @unique
+  email        String     @unique
   senha        String
   role         AdminRole? @default(OPERACIONAL)
-  ativo        Boolean   @default(true)
-  criadoEm     DateTime  @default(now())
-  atualizadoEm DateTime  @updatedAt
+  ativo        Boolean    @default(true)
+  criadoEm     DateTime   @default(now())
+  atualizadoEm DateTime   @updatedAt
 
   jogosCriados     Jogo[] @relation("JogoCriadoPor")
   jogosAtualizados Jogo[] @relation("JogoAtualizadoPor")
@@ -103,6 +103,9 @@ model Torcedor {
   documentoVersoUrl  String?
   gatewayClienteId   String?
   faceId             String?
+  emailVerificado    Boolean      @default(false)
+  emailToken         String?      @unique
+  emailTokenExpiraEm DateTime?
   assinaturas        Assinatura[]
   pagamentos         Pagamento[]  @relation("TorcedorPagamentos")
   ingressos          Ingresso[]   @relation("IngressoSocio")
@@ -146,7 +149,6 @@ model Beneficio {
   planoId String
   plano   Plano  @relation(fields: [planoId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-
   ordem      Int     @default(0)
   destaque   Boolean @default(false)
   observacao String?
@@ -164,7 +166,7 @@ model Assinatura {
   planoId           String
   status            StatusAssinatura @default(ATIVA)
   inicioEm          DateTime
-  expiraEm          DateTime? 
+  expiraEm          DateTime?
   proximaCobrancaEm DateTime?
 
   canceladaEm        DateTime?
@@ -172,7 +174,7 @@ model Assinatura {
   suspensaEm         DateTime?
   retomadaEm         DateTime?
 
-  periodicidade       Periodicidade @default(MENSAL) 
+  periodicidade       Periodicidade @default(MENSAL)
   valorAtual          Decimal?      @db.Decimal(10, 2)
   moeda               String?       @default("BRL")
   gatewayClienteId    String?
@@ -214,20 +216,20 @@ model Fatura {
 model Pagamento {
   id             String          @id @default(uuid())
   torcedorId     String
-  valor          Decimal          @db.Decimal(10, 2)
-  status         StatusPagamento  @default(PENDENTE)
+  valor          Decimal         @db.Decimal(10, 2)
+  status         StatusPagamento @default(PENDENTE)
   dataVencimento DateTime
   pagoEm         DateTime?
-  referencia     String?          @unique
+  referencia     String?         @unique
   metodo         MetodoPagamento
   descricao      String?
 
-  faturaId       String?
+  faturaId String?
 
-  gatewayPaymentId String? 
+  gatewayPaymentId String?
 
-  torcedor Torcedor @relation("TorcedorPagamentos", fields: [torcedorId], references: [id])
-  fatura   Fatura?  @relation(fields: [faturaId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  torcedor  Torcedor   @relation("TorcedorPagamentos", fields: [torcedorId], references: [id])
+  fatura    Fatura?    @relation(fields: [faturaId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   ingressos Ingresso[]
   pedidos   Pedido[]
 
@@ -268,7 +270,7 @@ model Jogo {
   id        String   @id @default(uuid())
   nome      String
   data      DateTime
-  local String @default("Bento Freitas")
+  local     String   @default("Bento Freitas")
   descricao String?
 
   lotes     Lote[]
@@ -277,8 +279,8 @@ model Jogo {
 
   criadoPorId     String?
   atualizadoPorId String?
-  criadoPor       Admin? @relation("JogoCriadoPor", fields: [criadoPorId], references: [id])
-  atualizadoPor   Admin? @relation("JogoAtualizadoPor", fields: [atualizadoPorId], references: [id])
+  criadoPor       Admin?  @relation("JogoCriadoPor", fields: [criadoPorId], references: [id])
+  atualizadoPor   Admin?  @relation("JogoAtualizadoPor", fields: [atualizadoPorId], references: [id])
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
@@ -288,13 +290,13 @@ model Jogo {
 }
 
 model Setor {
-  id         String  @id @default(uuid())
-  slug       String  @unique
+  id         String @id @default(uuid())
+  slug       String @unique
   nome       String
   capacidade Int
 
-  criadoEm     DateTime  @default(now())
-  atualizadoEm DateTime  @updatedAt
+  criadoEm     DateTime     @default(now())
+  atualizadoEm DateTime     @updatedAt
   jogos        JogoSetor[]
   pedidos      ItemPedido[]
 
@@ -303,17 +305,17 @@ model Setor {
 }
 
 model JogoSetor {
-  id            String   @id @default(uuid())
-  jogoId        String
-  setorId       String
-  capacidade    Int
-  aberto        Boolean  @default(true)
-  tipo          TipoSetor @default(ARQUIBANCADA)
+  id         String    @id @default(uuid())
+  jogoId     String
+  setorId    String
+  capacidade Int
+  aberto     Boolean   @default(true)
+  tipo       TipoSetor @default(ARQUIBANCADA)
 
-  jogo  Jogo  @relation(fields: [jogoId], references: [id])
-  setor Setor @relation(fields: [setorId], references: [id])
+  jogo  Jogo   @relation(fields: [jogoId], references: [id])
+  setor Setor  @relation(fields: [setorId], references: [id])
   lotes Lote[]
-  
+
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
@@ -323,20 +325,20 @@ model JogoSetor {
 }
 
 model Lote {
-  id              String    @id @default(uuid())
-  nome            String
-  tipo            TipoLote  @default(INTEIRA)
-  quantidade      Int?      // opcional: sub-limite do lote dentro do setor
-  precoUnitario   Decimal   @db.Decimal(10,2)
-  inicioVendas    DateTime?
-  fimVendas       DateTime?
-  limitePorCPF    Int?
+  id            String    @id @default(uuid())
+  nome          String
+  tipo          TipoLote  @default(INTEIRA)
+  quantidade    Int? // opcional: sub-limite do lote dentro do setor
+  precoUnitario Decimal   @db.Decimal(10, 2)
+  inicioVendas  DateTime?
+  fimVendas     DateTime?
+  limitePorCPF  Int?
 
   jogoId      String
   jogoSetorId String
 
-  jogo      Jogo      @relation(fields: [jogoId], references: [id])
-  jogoSetor JogoSetor @relation(fields: [jogoSetorId], references: [id])
+  jogo      Jogo       @relation(fields: [jogoId], references: [id])
+  jogoSetor JogoSetor  @relation(fields: [jogoSetorId], references: [id])
   ingressos Ingresso[]
 
   criadoEm     DateTime @default(now())
@@ -360,11 +362,11 @@ model Ingresso {
   atualizadoEm DateTime       @updatedAt
   pagamentoId  String?
 
-  socio        Torcedor?   @relation("IngressoSocio", fields: [torcedorId], references: [id])
-  jogo         Jogo        @relation(fields: [jogoId], references: [id])
-  lote         Lote?       @relation(fields: [loteId], references: [id])
-  pagamento    Pagamento?  @relation(fields: [pagamentoId], references: [id])
-  checkins     Checkin[]
+  socio     Torcedor?  @relation("IngressoSocio", fields: [torcedorId], references: [id])
+  jogo      Jogo       @relation(fields: [jogoId], references: [id])
+  lote      Lote?      @relation(fields: [loteId], references: [id])
+  pagamento Pagamento? @relation(fields: [pagamentoId], references: [id])
+  checkins  Checkin[]
 
   @@index([jogoId, status, loteId])
   @@map("ingressos")
@@ -384,39 +386,39 @@ model Checkin {
 }
 
 model Pedido {
-  id            String        @id @default(uuid())
-  torcedorId    String
-  torcedor      Torcedor      @relation(fields: [torcedorId], references: [id])
+  id         String   @id @default(uuid())
+  torcedorId String
+  torcedor   Torcedor @relation(fields: [torcedorId], references: [id])
 
-  status        StatusPedido  @default(RASCUNHO)
-  total         Decimal       @default(0)
-  criadoEm      DateTime      @default(now())
-  atualizadoEm  DateTime      @updatedAt
-  expiraEm      DateTime?     // usado se quiser controlar tempo de reserva
+  status       StatusPedido @default(RASCUNHO)
+  total        Decimal      @default(0)
+  criadoEm     DateTime     @default(now())
+  atualizadoEm DateTime     @updatedAt
+  expiraEm     DateTime? // usado se quiser controlar tempo de reserva
 
-  itens         ItemPedido[]  // relação 1:N
-  pagamentoId   String?
-  pagamento     Pagamento?    @relation(fields: [pagamentoId], references: [id])
+  itens       ItemPedido[] // relação 1:N
+  pagamentoId String?
+  pagamento   Pagamento?   @relation(fields: [pagamentoId], references: [id])
 }
 
 model ItemPedido {
-  id            String      @id @default(uuid())
-  pedidoId      String
-  pedido        Pedido      @relation(fields: [pedidoId], references: [id])
+  id       String @id @default(uuid())
+  pedidoId String
+  pedido   Pedido @relation(fields: [pedidoId], references: [id])
 
-  setorId       String
-  setor         Setor       @relation(fields: [setorId], references: [id])
+  setorId String
+  setor   Setor  @relation(fields: [setorId], references: [id])
 
-  tipo          TipoIngresso // INTEIRA | MEIA
-  preco         Decimal
+  tipo  TipoIngresso // INTEIRA | MEIA
+  preco Decimal
 
-  nomeTitular   String?
-  torcedorCpf   String?
+  nomeTitular String?
+  torcedorCpf String?
 }
 
 enum StatusPedido {
-  RASCUNHO        
-  RESERVA_ATIVA    
+  RASCUNHO
+  RESERVA_ATIVA
   PENDENTE_PAGAMENTO
   PAGO
   CANCELADO
