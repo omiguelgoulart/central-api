@@ -13,12 +13,12 @@ const pedidoCreateSchema = z.object({
     itens: z.array(z.object({
         setorId: z.string().trim().min(1),
         tipo: z.nativeEnum(TipoIngresso),
-        preco: z.number().positive("Preço deve ser > 0"),
+        loteId: z.string().uuid("loteId inválido"),
         qtd: z.number().int().positive().default(1),
         titulares: z.array(z.object({
             nome: z.string().trim().min(1),
             cpf: z.string().trim().min(11).max(14),
-        })).optional(), // 1 por ingresso; se não vier agora, pode ser atribuído depois
+        })).optional(),
     })).min(1, "Inclua ao menos 1 item"),
 });
 
@@ -31,7 +31,7 @@ const pedidoPatchSchema = z.object({
 const itemCreateSchema = z.object({
     setorId: z.string().trim().min(1),
     tipo: z.nativeEnum(TipoIngresso),
-    preco: z.number().positive(),
+    loteId: z.string().uuid("loteId inválido"),
     qtd: z.number().int().positive().default(1),
     titulares: z.array(z.object({
         nome: z.string().trim().min(1),
@@ -41,7 +41,7 @@ const itemCreateSchema = z.object({
 
 const itemPatchSchema = z.object({
     tipo: z.nativeEnum(TipoIngresso).optional(),
-    preco: z.number().positive().optional(),
+    loteId: z.string().uuid().optional(),
     nomeTitular: z.string().trim().min(1).optional(),
     torcedorCpf: z.string().trim().min(11).max(14).optional(),
 });
@@ -73,7 +73,16 @@ router.post("/", async (req, res) => {
         const payload = pedidoCreateSchema.parse(req.body);
         const { torcedorId, expiraEm, itens } = payload;
 
-        const total = itens.reduce((sum, i) => sum + i.preco * i.qtd, 0);
+        // Busca preço real de cada item a partir do loteId no banco
+        const itensComPreco = await Promise.all(
+            itens.map(async (i) => {
+                const lote = await prisma.lote.findUnique({ where: { id: i.loteId } });
+                if (!lote) throw new Error(`Lote ${i.loteId} não encontrado`);
+                return { ...i, preco: Number(lote.precoUnitario) };
+            })
+        );
+
+        const total = itensComPreco.reduce((sum, i) => sum + i.preco * i.qtd, 0);
 
         const pedido = await prisma.pedido.create({
             data: {
@@ -82,7 +91,7 @@ router.post("/", async (req, res) => {
                 total,
                 expiraEm: expiraEm ? new Date(expiraEm) : undefined,
                 itens: {
-                    create: itens.flatMap((i) =>
+                    create: itensComPreco.flatMap((i) =>
                         Array.from({ length: i.qtd }).map((_, idx) => ({
                             setorId: i.setorId,
                             tipo: i.tipo,
@@ -180,9 +189,14 @@ router.delete("/:id", async (req, res) => {
 
 router.post("/:id/itens", async (req, res) => {
     try {
-        const { setorId, tipo, preco, qtd, titulares } = itemCreateSchema.parse(req.body);
+        const { setorId, tipo, loteId, qtd, titulares } = itemCreateSchema.parse(req.body);
         const pedido = await prisma.pedido.findUnique({ where: { id: req.params.id } });
         if (!pedido) { res.status(404).json({ error: "Pedido não encontrado" }); return; }
+
+        // Busca preço real do lote no banco
+        const lote = await prisma.lote.findUnique({ where: { id: loteId } });
+        if (!lote) { res.status(400).json({ error: "Lote não encontrado" }); return; }
+        const preco = Number(lote.precoUnitario);
 
         const itens = await prisma.itemPedido.createMany({
             data: Array.from({ length: qtd }).map((_, idx) => ({
@@ -221,11 +235,20 @@ router.patch("/:id/itens/:itemId", async (req, res) => {
             where: { id: req.params.itemId },
             data: {
                 tipo: patch.tipo,
-                preco: typeof patch.preco === "number" ? patch.preco : undefined,
                 nomeTitular: patch.nomeTitular,
                 torcedorCpf: patch.torcedorCpf,
             },
         });
+
+        // Se loteId foi atualizado, recalcula preço do item a partir do banco
+        if (patch.loteId) {
+            const lote = await prisma.lote.findUnique({ where: { id: patch.loteId } });
+            if (!lote) { res.status(400).json({ error: "Lote não encontrado" }); return; }
+            await prisma.itemPedido.update({
+                where: { id: req.params.itemId },
+                data: { preco: Number(lote.precoUnitario) },
+            });
+        }
 
         // recalcula total
         const itensPedido = await prisma.itemPedido.findMany({ where: { pedidoId: item.pedidoId } });

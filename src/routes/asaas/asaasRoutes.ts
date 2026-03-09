@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
+import { PrismaClient } from "@prisma/client";
 import {
   criarCliente,
   criarPagamento,
@@ -13,6 +14,7 @@ import {
 } from "./asaasService";
 
 const router = Router();
+const prisma = new PrismaClient();
 
 
 function getClientIp(req: any): string | undefined {
@@ -39,13 +41,15 @@ const portadorSchema = z.object({
   phone: z.string().min(8),
 });
 
-// Base
+// Base — valor é opcional; o backend recalcula a partir de loteId ou faturaId
 const pagamentoBase = z.object({
   customerId: z.string().min(1),
-  valor: z.number().positive(),
+  valor: z.number().positive().optional(),
   descricao: z.string().min(1).default(""),
-  dueDate: z.string().optional(), // YYYY-MM-DD (opcional para PIX/BOLETO; crédito/débito geralmente ignora)
+  dueDate: z.string().optional(),
   tipo: z.enum(["PIX", "BOLETO", "CREDIT_CARD", "DEBIT_CARD"]),
+  loteId: z.string().uuid().optional(),
+  faturaId: z.string().uuid().optional(),
 });
 
 // Discriminadas por tipo
@@ -98,7 +102,7 @@ router.post("/clientes", async (req, res) => {
   }
 });
 
-// Criar pagamento
+// Criar pagamento — valor real é sempre buscado no banco
 router.post("/pagamentos", async (req, res) => {
   // Converte valor string -> number se necessário
   if (typeof req.body?.valor === "string") {
@@ -116,28 +120,48 @@ router.post("/pagamentos", async (req, res) => {
 
   try {
     const ip = getClientIp(req);
-
-    // Monta o payload exato esperado pelo serviço (narrowing por tipo)
     const p = parsed.data;
+
+    // --- Recalcula valor real a partir do banco ---
+    let valorReal: number | undefined;
+
+    if (p.loteId) {
+      const lote = await prisma.lote.findUnique({ where: { id: p.loteId } });
+      if (!lote) return res.status(400).json({ error: "Lote não encontrado" });
+      valorReal = Number(lote.precoUnitario);
+    } else if (p.faturaId) {
+      const fatura = await prisma.fatura.findUnique({ where: { id: p.faturaId } });
+      if (!fatura) return res.status(400).json({ error: "Fatura não encontrada" });
+      valorReal = Number(fatura.valor);
+    }
+
+    if (!valorReal && !p.valor) {
+      return res.status(400).json({ error: "Informe loteId ou faturaId para calcular o valor" });
+    }
+
+    const valorFinal = valorReal ?? p.valor!;
+    const payload = { ...p, valor: valorFinal } as any;
+    delete payload.loteId;
+    delete payload.faturaId;
+
     let pagamento;
-    switch (p.tipo) {
+    switch (payload.tipo) {
       case "PIX":
-        pagamento = await criarPagamento({ ...p } as CriarPagamentoPix);
+        pagamento = await criarPagamento(payload as CriarPagamentoPix);
         break;
       case "BOLETO":
-        pagamento = await criarPagamento({ ...p } as CriarPagamentoBoleto);
+        pagamento = await criarPagamento(payload as CriarPagamentoBoleto);
         break;
       case "CREDIT_CARD":
-        pagamento = await criarPagamento({ ...(p as any), ip } as CriarPagamentoCredito);
+        pagamento = await criarPagamento({ ...payload, ip } as CriarPagamentoCredito);
         break;
       case "DEBIT_CARD":
-        pagamento = await criarPagamento({ ...(p as any), ip } as CriarPagamentoDebito);
+        pagamento = await criarPagamento({ ...payload, ip } as CriarPagamentoDebito);
         break;
     }
 
     return res.status(201).json(pagamento);
   } catch (error: any) {
-    // Se o Asaas respondeu algo, devolvemos como details e 502 (Bad Gateway)
     const details = error?.response?.data ?? error?.message ?? error;
     console.error("ASAAS ERROR:", details);
     return res.status(502).json({ error: "Erro ao criar pagamento no Asaas", details });

@@ -53,9 +53,6 @@ router.post("/", async (req, res) => {
   }
 });
 
-// routes/pagamento.ts (apenas o GET / atualizado)
-
-// routes/pagamento.ts (apenas o GET / atualizado)
 router.get("/", async (req, res) => {
   try {
     const pagamentos = await prisma.pagamento.findMany({

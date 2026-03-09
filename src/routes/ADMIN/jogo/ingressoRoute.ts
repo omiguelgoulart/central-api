@@ -24,7 +24,6 @@ function parseOptionalDate(v: unknown): Date | null {
 const ingressoCreateSchema = z.object({
   jogoId: z.string().uuid("ID do jogo inválido"),
   loteId: z.string().uuid("ID do lote inválido").optional(),
-  valor: z.union([z.string(), z.number()]).transform(toDecimalStringTwoPlaces),
   torcedorId: z.string().uuid("ID do torcedor inválido").optional(),
   pagamentoId: z.string().min(1, "pagamentoId vazio").optional(),
 });
@@ -41,15 +40,19 @@ const ingressoUpdateSchema = z.object({
 
 router.post("/", async (req, res) => {
   try {
-    const { jogoId, loteId, valor, torcedorId, pagamentoId } =
+    const { jogoId, loteId, torcedorId, pagamentoId } =
       ingressoCreateSchema.parse(req.body);
 
     const jogo = await prisma.jogo.findUnique({ where: { id: jogoId } });
     if (!jogo) return res.status(400).json({ error: "Jogo inválido" });
 
+    let valor: string;
     if (loteId) {
       const lote = await prisma.lote.findUnique({ where: { id: loteId } });
       if (!lote) return res.status(400).json({ error: "Lote inválido" });
+      valor = Number(lote.precoUnitario).toFixed(2);
+    } else {
+      return res.status(400).json({ error: "loteId é obrigatório para determinar o valor" });
     }
 
     if (torcedorId) {
@@ -71,7 +74,6 @@ router.post("/", async (req, res) => {
       let qrToken = genQrToken();
       let created: { id: string; qrCode: string } | null = null;
 
-      // tenta gerar um QR único até 5 vezes
       for (let i = 0; i < 5; i++) {
         try {
           const ingresso = await tx.ingresso.create({
@@ -88,7 +90,6 @@ router.post("/", async (req, res) => {
           created = ingresso;
           break;
         } catch (e: any) {
-          // P2002 = unique constraint (provavelmente qrCode duplicado)
           if (e?.code === "P2002") {
             qrToken = genQrToken();
             continue;
