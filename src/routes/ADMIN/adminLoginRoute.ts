@@ -1,10 +1,9 @@
 import { Router } from "express";
 import jwt from "jsonwebtoken";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../../lib/prisma";
 import bcrypt from "bcrypt";
 
 const router = Router();
-const prisma = new PrismaClient();
 
 const JWT_SECRET = process.env.JWT_KEY ?? "dev-secret";
 
@@ -20,7 +19,7 @@ router.post("/", async (req, res) => {
     const admin = await prisma.admin.findFirst({
       where: {
         email,
-        ativo: true, 
+        ativo: true,
       },
     });
 
@@ -38,7 +37,7 @@ router.post("/", async (req, res) => {
         adminId: admin.id,
         adminNome: admin.nome,
         adminEmail: admin.email,
-        adminRole: admin.role, 
+        adminRole: admin.role,
       },
       JWT_SECRET,
       { expiresIn: "8h" },

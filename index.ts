@@ -23,7 +23,6 @@ import routesAdminLogin from './src/routes/ADMIN/adminLoginRoute';
 import { checkinRouter } from './src/routes/ADMIN/check-in/checkinRoute';
 
 import cors from 'cors'
-import { startLembreteVencimentoJob } from './src/emails/jobs/lembreteVencimento.job';
 
 const app = express()
 const port = 3003
@@ -59,13 +58,19 @@ app.use("/admin/lote", routesLote)
 app.use("/admin/checkin/", checkinRouter);
 
 if (!process.env.VERCEL) {
-  startLembreteVencimentoJob();
+  import('./src/emails/jobs/lembreteVencimento.job').then(({ startLembreteVencimentoJob }) => {
+    startLembreteVencimentoJob();
+  });
 }
 
 app.get('/', (req, res) => {
   res.send('API central de torcedores!')
 })
 
-app.listen(port, () => {
-  console.log(`Servidor rodando na porta: ${port}`)
-})
+export default app
+
+if (!process.env.VERCEL) {
+  app.listen(port, () => {
+    console.log(`Servidor rodando na porta: ${port}`)
+  })
+}

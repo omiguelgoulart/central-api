@@ -1,12 +1,12 @@
 // src/routes/webhooks.asaas.ts
 import { Router } from "express";
-import { PrismaClient, StatusPagamento } from "@prisma/client";
+import { StatusPagamento } from "@prisma/client";
+import { prisma } from "../../lib/prisma";
 import { sendEmail } from "../../emails/service/email.service";
 import { emailPagamentoConfirmado } from "../../emails/templates/pagamentoConfirmado";
 import { emailPagamentoAtrasado } from "../../emails/templates/pagamentoAtrasado";
 
 const router = Router();
-const prisma = new PrismaClient();
 
 router.post("/webhooks/asaas", async (req, res) => {
   try {

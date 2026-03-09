@@ -1,11 +1,10 @@
-import { PrismaClient } from "@prisma/client"
+import { prisma } from "../../lib/prisma";
 import { z } from 'zod'
 import { Router } from "express";
 import { sendEmail } from "../../emails/service/email.service";
 import { emailFaturaGerada } from "../../emails/templates/faturaGerada";
 
 const router = Router();
-const prisma = new PrismaClient()
 
 const faturaSchema = z.object({
     assinaturaId: z.string().uuid(),

@@ -1,9 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../../../lib/prisma";
 import { z } from "zod";
 import { Router } from "express";
 
 const router = Router();
-const prisma = new PrismaClient();
 
 const jogoSetorSchema = z.object({
   jogoId: z.string().uuid("ID do jogo inválido"),

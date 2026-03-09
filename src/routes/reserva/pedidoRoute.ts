@@ -1,10 +1,10 @@
-import { PrismaClient, StatusPedido, TipoIngresso } from "@prisma/client";
+import { StatusPedido, TipoIngresso } from "@prisma/client";
+import { prisma } from "../../lib/prisma";
 import { z } from "zod";
 import { Router } from "express";
 import redis from "../../lib/redis";
 
 const router = Router();
-const prisma = new PrismaClient();
 
 
 const pedidoCreateSchema = z.object({

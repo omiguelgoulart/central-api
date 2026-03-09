@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { PrismaClient } from "@prisma/client";
+
 import {
   criarCliente,
   criarPagamento,
@@ -12,9 +12,9 @@ import {
   CriarPagamentoCredito,
   CriarPagamentoDebito,
 } from "./asaasService";
+import { prisma } from "../../lib/prisma";
 
 const router = Router();
-const prisma = new PrismaClient();
 
 
 function getClientIp(req: any): string | undefined {
@@ -41,7 +41,6 @@ const portadorSchema = z.object({
   phone: z.string().min(8),
 });
 
-// Base — valor é opcional; o backend recalcula a partir de loteId ou faturaId
 const pagamentoBase = z.object({
   customerId: z.string().min(1),
   valor: z.number().positive().optional(),
@@ -52,7 +51,6 @@ const pagamentoBase = z.object({
   faturaId: z.string().uuid().optional(),
 });
 
-// Discriminadas por tipo
 const pagamentoPix = pagamentoBase.extend({ tipo: z.literal("PIX") });
 
 const pagamentoBoleto = pagamentoBase.extend({ tipo: z.literal("BOLETO") });
@@ -79,7 +77,6 @@ const pagamentoUnion = z.discriminatedUnion("tipo", [
 ]);
 
 
-// Criar cliente
 router.post("/clientes", async (req, res) => {
   const bodySchema = z.object({
     nome: z.string().min(1),
@@ -102,9 +99,7 @@ router.post("/clientes", async (req, res) => {
   }
 });
 
-// Criar pagamento — valor real é sempre buscado no banco
 router.post("/pagamentos", async (req, res) => {
-  // Converte valor string -> number se necessário
   if (typeof req.body?.valor === "string") {
     const n = Number(req.body.valor);
     if (!Number.isFinite(n)) {
@@ -122,7 +117,6 @@ router.post("/pagamentos", async (req, res) => {
     const ip = getClientIp(req);
     const p = parsed.data;
 
-    // --- Recalcula valor real a partir do banco ---
     let valorReal: number | undefined;
 
     if (p.loteId) {

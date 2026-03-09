@@ -1,10 +1,8 @@
-import { PrismaClient } from "@prisma/client"
+import { prisma } from "../../../lib/prisma";
 import { z } from 'zod'
 import { Router } from "express";
 
 const router = Router();
-
-const prisma = new PrismaClient()
 
 const loteSchema = z.object({
     nome: z.string().trim().min(1, "Informe o nome do lote").max(100),

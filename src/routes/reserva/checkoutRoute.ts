@@ -1,11 +1,10 @@
-import { PrismaClient } from "@prisma/client"
+import { prisma } from "../../lib/prisma";
 import { Router, Request, Response } from "express";
 import redis from "../../lib/redis";
 import { sendEmail } from "../../emails/service/email.service";
 import { emailPedidoConfirmado } from "../../emails/templates/pedidoConfirmado";
 
 const router = Router();
-const prisma = new PrismaClient();
 
 function key(partidaId: string, setorId: string) {
     return `reserva:${partidaId}:${setorId}`;

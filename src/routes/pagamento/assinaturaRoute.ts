@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client"
+import { prisma } from "../../lib/prisma";
 import { z } from 'zod'
 import { Router } from "express";
 import { sendEmail } from "../../emails/service/email.service";
@@ -6,7 +6,6 @@ import { emailAssinaturaCriada } from "../../emails/templates/assinaturaCriada";
 import { emailAssinaturaCancelada } from "../../emails/templates/assinaturaCancelada";
 
 const router = Router();
-const prisma = new PrismaClient()
 
 const assinaturaSchema = z.object({
     torcedorId: z.string().uuid("ID do torcedor inválido"),

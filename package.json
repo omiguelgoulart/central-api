@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@faker-js/faker": "^9.9.0",
+    "@prisma/adapter-pg": "^7.4.2",
     "@prisma/client": "^7.4.2",
     "@types/bcrypt": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.7",
@@ -33,6 +34,7 @@
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
+    "dotenv": "^17.3.1",
     "express": "^4.19.2",
     "ioredis": "^5.8.2",
     "jsonwebtoken": "^9.0.2",

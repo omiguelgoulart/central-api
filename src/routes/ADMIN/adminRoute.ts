@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../../lib/prisma";
 import bcrypt from "bcrypt";
 import { z } from "zod";
 import { Router } from "express";
@@ -6,17 +6,15 @@ import { validaSenha } from "../../utils/validaSenha";
 
 const router = Router();
 
-const prisma = new PrismaClient();
-
 const adminSchema = z.object({
-  nome: z.string().min(1, "Nome é obrigatório"),
-  email: z.string().email("E-mail inválido"),
-  senha: z.string().min(8, "Senha deve ter no mínimo 8 caracteres"),
-  role: z.enum(["SUPER_ADMIN", "OPERACIONAL", "PORTARIA"]).optional(),
+    nome: z.string().min(1, "Nome é obrigatório"),
+    email: z.string().email("E-mail inválido"),
+    senha: z.string().min(8, "Senha deve ter no mínimo 8 caracteres"),
+    role: z.enum(["SUPER_ADMIN", "OPERACIONAL", "PORTARIA"]).optional(),
 });
 
 function validarSenhaOu400(senha: string, res: any): boolean {
-  const erros = validaSenha(senha);
+    const erros = validaSenha(senha);
     if (Array.isArray(erros) && erros.length > 0) {
         res.status(400).json({
             error: "Senha inválida",

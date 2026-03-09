@@ -1,9 +1,9 @@
-import { PrismaClient, Prisma } from "@prisma/client"
+import { Prisma } from "@prisma/client"
 import { z } from "zod"
 import { Router } from "express"
+import { prisma } from "../../lib/prisma"
 
 const router = Router()
-const prisma = new PrismaClient()
 
 const beneficioSchema = z.object({
   slug: z.string().trim().min(1, "Informe o slug do benefício").max(100),
@@ -28,7 +28,7 @@ router.post("/", async (req, res) => {
       return
     }
     const planoExistente = await prisma.plano.findUnique({
-        where: { id: planoId }, 
+      where: { id: planoId },
     })
     if (!planoExistente) {
       res.status(400).json({ error: "Plano não encontrado" })
@@ -133,7 +133,7 @@ router.patch("/:id", async (req, res) => {
       return
     }
 
-    const {slug, titulo, descricao, icone, ativo, planoId, destaque, observacao } = beneficioSchema.partial().parse(req.body)
+    const { slug, titulo, descricao, icone, ativo, planoId, destaque, observacao } = beneficioSchema.partial().parse(req.body)
 
     const dadosAtualizados: Prisma.BeneficioUpdateInput = {}
 

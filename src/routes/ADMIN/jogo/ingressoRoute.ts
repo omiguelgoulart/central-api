@@ -1,12 +1,12 @@
-import { PrismaClient, StatusIngresso } from "@prisma/client";
+import { StatusIngresso } from "@prisma/client";
 import { z } from "zod";
 import { Router } from "express";
 import { buildQrPayload, genQrToken, toDataURL, toPNG } from "../../../lib/qr";
 import { sendEmail } from "../../../emails/service/email.service";
 import { emailCompraConfirmada } from "../../../emails/templates/compraConfirmada";
+import { prisma } from "../../../lib/prisma";
 
 const router = Router();
-const prisma = new PrismaClient();
 
 const idParamSchema = z.object({ id: z.string().uuid("ID inválido") });
 

@@ -1,10 +1,9 @@
 import cron from 'node-cron';
 import { lembreteVencimentoTemplate } from '../templates/lembreteVencimento';
 
-import { PrismaClient } from "@prisma/client"
-import { sendEmail } from '../service/email.service';
 
-const prisma = new PrismaClient()
+import { sendEmail } from '../service/email.service';
+import { prisma } from '../../lib/prisma';
 
 export function startLembreteVencimentoJob(): void {
     cron.schedule('0 9 * * *', async () => {

@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { z } from "zod";
@@ -8,9 +8,9 @@ import { gerarMatricula } from "../../utils/matricula";
 import { sendEmail } from "../../emails/service/email.service";
 import { emailBoasVindas } from "../../emails/templates/boasVindas";
 import { emailVerificacao } from "../../emails/templates/verificacaoEmail";
+import { prisma } from "../../lib/prisma";
 
 const router = Router();
-const prisma = new PrismaClient();
 
 const usuarioSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório"),

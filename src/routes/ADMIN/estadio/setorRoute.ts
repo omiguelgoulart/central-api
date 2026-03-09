@@ -1,10 +1,9 @@
-import { PrismaClient } from "@prisma/client"
+
 import { z } from 'zod'
 import { Router } from "express";
+import { prisma } from '../../../lib/prisma';
 
 const router = Router();
-
-const prisma = new PrismaClient()
 
 const setorSchema = z.object({
     nome: z.string().trim().min(1, "Informe o nome do setor").max(100),
