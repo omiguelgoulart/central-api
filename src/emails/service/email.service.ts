@@ -6,26 +6,31 @@ type SendEmailParams = {
   html: string;
 };
 
-const resendApiKey = process.env.RESEND_API_KEY;
-const emailFrom = process.env.EMAIL_FROM;
+let resend: Resend | null = null;
 
-if (!resendApiKey) {
-  throw new Error('RESEND_API_KEY não configurada no arquivo .env');
+function getResend(): Resend {
+  if (!resend) {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      throw new Error('RESEND_API_KEY não configurada no arquivo .env');
+    }
+    resend = new Resend(apiKey);
+  }
+  return resend;
 }
-
-if (!emailFrom) {
-  throw new Error('EMAIL_FROM não configurado no arquivo .env');
-}
-
-const resend = new Resend(resendApiKey);
 
 export async function sendEmail({
   to,
   subject,
   html,
 }: SendEmailParams): Promise<string> {
-  const response = await resend.emails.send({
-    from: emailFrom!,
+  const emailFrom = process.env.EMAIL_FROM;
+  if (!emailFrom) {
+    throw new Error('EMAIL_FROM não configurado no arquivo .env');
+  }
+
+  const response = await getResend().emails.send({
+    from: emailFrom,
     to,
     subject,
     html,

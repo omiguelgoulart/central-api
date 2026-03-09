@@ -58,7 +58,9 @@ app.use("/admin/jogoSetor", routesJogoSetor)
 app.use("/admin/lote", routesLote)
 app.use("/admin/checkin/", checkinRouter);
 
-startLembreteVencimentoJob();
+if (!process.env.VERCEL) {
+  startLembreteVencimentoJob();
+}
 
 app.get('/', (req, res) => {
   res.send('API central de torcedores!')
