@@ -36,7 +36,7 @@ router.post("/recuperar-senha", async (req, res) => {
 
         const linkBase =
             (process.env.FRONTEND_URL ?? process.env.BASE_URL ?? "http://localhost:3000") +
-            "/redefinir-senha";
+            "/novaSenha";
 
         sendEmail({
             to: torcedor.email,
