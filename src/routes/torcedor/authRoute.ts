@@ -20,7 +20,6 @@ router.post("/recuperar-senha", async (req, res) => {
             select: { id: true, nome: true, email: true },
         });
 
-        // Resposta genérica para não revelar se o e-mail existe
         if (!torcedor) {
             return res.status(200).json({
                 message: "Se o e-mail estiver cadastrado, enviaremos um link de recuperação.",
@@ -28,7 +27,7 @@ router.post("/recuperar-senha", async (req, res) => {
         }
 
         const senhaToken = crypto.randomUUID();
-        const senhaTokenExpiraEm = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+        const senhaTokenExpiraEm = new Date(Date.now() + 60 * 60 * 1000); 
 
         await prisma.torcedor.update({
             where: { id: torcedor.id },
