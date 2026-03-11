@@ -67,10 +67,10 @@ app.get('/', (req, res) => {
   res.send('API central de torcedores!')
 })
 
+app.listen(port, () => {
+  console.log(`Servidor rodando em http://localhost:${port}`)
+})
+
 export default app
 
-if (!process.env.VERCEL) {
-  app.listen(port, () => {
-    console.log(`Servidor rodando na porta: ${port}`)
-  })
-}
+

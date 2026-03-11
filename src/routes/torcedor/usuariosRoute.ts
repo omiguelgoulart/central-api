@@ -111,17 +111,17 @@ router.post("/", async (req, res) => {
     const baseUrl = process.env.FRONTEND_URL ?? process.env.BASE_URL ?? "http://localhost:3000";
     const linkVerificacao = `${baseUrl}/verificar-email?token=${emailToken}`;
 
-    sendEmail({
+    await sendEmail({
       to: email,
       subject: "Confirme seu e-mail - Central de Torcedores",
       html: emailVerificacao({ nome, linkVerificacao }),
-    }).catch((err) => console.error("Erro ao enviar email de verificação:", err));
+    });
 
-    sendEmail({
+    await sendEmail({
       to: email,
       subject: "Bem-vindo(a) à Central de Torcedores!",
       html: emailBoasVindas({ nome, matricula }),
-    }).catch((err) => console.error("Erro ao enviar email de boas-vindas:", err));
+    });
 
     res
       .status(201)
@@ -429,7 +429,6 @@ router.get("/id/:id", async (req, res) => {
   }
 });
 
-// Verificar e-mail via token (o frontend redireciona aqui)
 router.get("/verificar-email", async (req, res) => {
   try {
     const token = z.string().uuid("Token inválido").parse(req.query.token);
@@ -469,7 +468,6 @@ router.get("/verificar-email", async (req, res) => {
   }
 });
 
-// Reenviar e-mail de verificação
 router.post("/reenviar-verificacao", async (req, res) => {
   try {
     const { email } = z.object({ email: z.string().email() }).parse(req.body);
@@ -509,6 +507,32 @@ router.post("/reenviar-verificacao", async (req, res) => {
     }
     console.error(error);
     return res.status(500).json({ error: "Erro ao reenviar verificação" });
+  }
+});
+
+router.post("/teste-email", async (req, res) => {
+  try {
+    const { email } = z.object({
+      email: z.string().email(),
+    }).parse(req.body);
+
+    const emailId = await sendEmail({
+      to: email,
+      subject: "Teste de envio",
+      html: "<h1>Teste</h1><p>O envio com Resend está funcionando.</p>",
+    });
+
+    return res.status(200).json({
+      message: "E-mail enviado com sucesso",
+      emailId,
+    });
+  } catch (error) {
+    console.error("Erro no teste de e-mail:", error);
+
+    return res.status(500).json({
+      error: "Erro ao enviar e-mail",
+      detalhes: error instanceof Error ? error.message : "Erro desconhecido",
+    });
   }
 });
 
