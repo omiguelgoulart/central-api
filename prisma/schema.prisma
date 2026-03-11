@@ -106,6 +106,8 @@ model Torcedor {
   emailVerificado    Boolean      @default(false)
   emailToken         String?      @unique
   emailTokenExpiraEm DateTime?
+  senhaToken         String?      @unique
+  senhaTokenExpiraEm DateTime?
   assinaturas        Assinatura[]
   pagamentos         Pagamento[]  @relation("TorcedorPagamentos")
   ingressos          Ingresso[]   @relation("IngressoSocio")

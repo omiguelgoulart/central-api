@@ -1,6 +1,7 @@
 import express from 'express'
 import routesUsuarios from './src/routes/torcedor/usuariosRoute';
 import routesLogin from './src/routes/torcedor/loginRoute';
+import routesAuth from './src/routes/torcedor/authRoute';
 import routesPlanos from './src/routes/plano/planosRoute';
 import routesAssinatura from './src/routes/pagamento/assinaturaRoute';
 import routesFatura from './src/routes/pagamento/faturaRoute';
@@ -34,6 +35,7 @@ app.use(cors({
 
 app.use("/usuario", routesUsuarios)
 app.use("/login", routesLogin)
+app.use("/auth", routesAuth)
 app.use("/planos", routesPlanos)
 app.use("/beneficio", routesBeneficio)
 app.use("/assinatura", routesAssinatura)
