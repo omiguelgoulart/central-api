@@ -20,16 +20,16 @@ Usamos **Gitmoji** para padronizar mensagens de commit. Formato recomendado:
 | Emoji | Código            | Quando usar                               |
 | ----- | ----------------- | ----------------------------------------- |
 | 🎉    | `:tada:`          | Primeira versão/commit inicial            |
-| ✨     | `:sparkles:`      | Nova funcionalidade (feature)             |
+| ✨    | `:sparkles:`      | Nova funcionalidade (feature)             |
 | 🐛    | `:bug:`           | Correção de bug                           |
 | ♻️    | `:recycle:`       | Refatoração (sem mudar comportamento)     |
 | 🎨    | `:art:`           | Melhorias de estilo/organização do código |
 | 🧪    | `:test_tube:`     | Testes (adicionar/ajustar)                |
 | 📝    | `:memo:`          | Documentação (README, docs)               |
 | 🔧    | `:wrench:`        | Configurações (lint, env, CI, etc.)       |
-| 🗃️   | `:card_file_box:` | Migrations/alterações de banco            |
+| 🗃️    | `:card_file_box:` | Migrations/alterações de banco            |
 | 🚚    | `:truck:`         | Mover/renomear arquivos/pastas            |
-| 🔥    | `:fire:`          | Remover código/arquivos                   |
+| 🔥     | `:fire:`          | Remover código/arquivos                   |
 | 🚀    | `:rocket:`        | Deploy/infra                              |
 | 🔒    | `:lock:`          | Correções de segurança                    |
 | 📦    | `:package:`       | Adicionar/atualizar dependências          |
