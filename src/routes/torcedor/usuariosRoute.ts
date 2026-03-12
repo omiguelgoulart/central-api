@@ -9,6 +9,9 @@ import { sendEmail } from "../../emails/service/email.service";
 import { emailBoasVindas } from "../../emails/templates/boasVindas";
 import { emailVerificacao } from "../../emails/templates/verificacaoEmail";
 import { prisma } from "../../lib/prisma";
+import { upload } from "../../middlewares/upload";
+import { uploadCloudinary } from "../../utils/uploadCloudinary";
+import { verificaToken } from "../../middlewares/verificaToken";
 
 const router = Router();
 
@@ -536,6 +539,40 @@ router.post("/teste-email", async (req, res) => {
   }
 });
 
+router.patch("/foto/url", verificaToken, upload.single("foto"), async (req: any, res) => {
+  try {
+    const id = req.userLogadoId;
+
+    const usuario = await prisma.torcedor.findUnique({ where: { id } });
+    if (!usuario) {
+      return res.status(404).json({ error: "Usuário não encontrado" });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({
+        error: "Nenhuma imagem enviada.",
+      });
+    }
+
+    const resultado = await uploadCloudinary(req.file.buffer, "torcedores/fotos");
+
+    await prisma.torcedor.update({
+      where: { id },
+      data: { fotoUrl: resultado.secure_url },
+    });
+
+    return res.status(200).json({
+      message: "Foto atualizada com sucesso",
+      fotoUrl: resultado.secure_url,
+    });
+  } catch (error: any) {
+    console.error("Erro ao processar upload da foto:", error?.message || error);
+    return res.status(500).json({
+      error: "Erro ao processar upload da foto",
+      detalhes: error?.message || "Erro desconhecido",
+    });
+  }
+});
 
 
 export default router;
