@@ -64,12 +64,14 @@ router.post("/", async (req, res) => {
       if (!torcedor)
         return res.status(400).json({ error: "Torcedor inválido" });
     }
-    const ingressoExistente = await prisma.ingresso.findFirst({
-      where: { pagamentoId },
-    });
 
-    if (ingressoExistente) {
-      return res.status(409).json({ error: "Já existe um ingresso para este pagamento." });
+    if (pagamentoId) {
+      const existente = await prisma.ingresso.findFirst({
+        where: { pagamentoId },
+      });
+      if (existente) {
+        return res.status(409).json({ error: "Já existe um ingresso para este pagamento." });
+      }
     }
 
     const result = await prisma.$transaction(async (tx) => {

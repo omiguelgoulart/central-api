@@ -362,7 +362,7 @@ model Ingresso {
   criadoEm     DateTime       @default(now())
   usadoEm      DateTime?
   atualizadoEm DateTime       @updatedAt
-  pagamentoId  String?
+  pagamentoId  String?        @unique
 
   socio     Torcedor?  @relation("IngressoSocio", fields: [torcedorId], references: [id])
   jogo      Jogo       @relation(fields: [jogoId], references: [id])
