@@ -4,6 +4,11 @@ import { Router } from "express";
 
 const router = Router();
 
+const listarJogosQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+});
+
 const jogoSchema = z.object({
   nome: z.string().trim().min(1, "Informe o nome do jogo").max(100),
   data: z.string().refine((date) => !isNaN(Date.parse(date)), "Data inválida"),
@@ -66,9 +71,30 @@ router.post("/", async (req, res) => {
 
 router.get("/", async (req, res) => {
   try {
-    const jogos = await prisma.jogo.findMany();
-    res.status(200).json(jogos);
+    const { page, limit } = listarJogosQuerySchema.parse(req.query);
+    const skip = (page - 1) * limit;
+
+    const [jogos, total] = await Promise.all([
+      prisma.jogo.findMany({
+        skip,
+        take: limit,
+        orderBy: { data: "asc" },
+      }),
+      prisma.jogo.count(),
+    ]);
+
+    res.status(200).json({
+      jogos,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ errors: error.errors });
+      return;
+    }
     console.error(error);
     res.status(500).json({ error: 'Erro ao buscar jogos' });
   }
