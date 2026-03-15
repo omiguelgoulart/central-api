@@ -29,8 +29,21 @@ const app = express()
 const port = 3003
 app.use(express.json());
 
+const allowedCorsOrigins = (process.env.CORS_ORIGINS ?? process.env.FRONTEND_URL ?? "http://localhost:3000")
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean)
+
 app.use(cors({
-  origin: '*'
+  origin: (origin, callback) => {
+    if (!origin || allowedCorsOrigins.includes(origin)) {
+      callback(null, true)
+      return
+    }
+
+    callback(null, false)
+  },
+  credentials: true,
 }))
 
 app.use("/usuario", routesUsuarios)

@@ -5,6 +5,17 @@ import bcrypt from "bcrypt";
 
 const router = Router();
 
+const TOKEN_COOKIE_NAME = "token";
+
+function getCookieOptions() {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict" as const,
+    maxAge: 60 * 60 * 1000, // 1h em milissegundos
+  };
+}
+
 router.post("/", async (req, res) => {
   const { email, senha } = req.body;
   const mensagemPadrao = "Login ou senha incorretos";
@@ -39,6 +50,8 @@ router.post("/", async (req, res) => {
       { expiresIn: "1h" }
     );
 
+    res.cookie(TOKEN_COOKIE_NAME, token, getCookieOptions());
+
     // Se o seu modelo tiver esses campos, eles serão enviados ao front:
     // - cpf
     // - cpfCnpj
@@ -50,7 +63,6 @@ router.post("/", async (req, res) => {
       cpf: (torcedor as any).cpf,           // ajuste o nome se for diferente
       cpfCnpj: (torcedor as any).cpfCnpj,   // opcional, se existir no modelo
       customerId: (torcedor as any).customerId, // se você já salvar isso no banco
-      token,
     });
   } catch (error) {
     console.error("Erro no login:", error);
