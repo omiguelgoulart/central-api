@@ -370,6 +370,69 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+router.get("/me", verificaToken, async (req: any, res) => {
+  try {
+    const id = req.userLogadoId;
+
+    const usuario = await prisma.torcedor.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        matricula: true,
+        nome: true,
+        email: true,
+        telefone: true,
+        cpf: true,
+        dataNascimento: true,
+        genero: true,
+        fotoUrl: true,
+        enderecoLogradouro: true,
+        enderecoNumero: true,
+        enderecoBairro: true,
+        enderecoCidade: true,
+        enderecoUF: true,
+        enderecoCEP: true,
+        statusSocio: true,
+        inadimplenteDesde: true,
+        aceitaTermosEm: true,
+        aceitaMarketing: true,
+        aceitaMarketingEm: true,
+        origemCadastro: true,
+        documentoFrenteUrl: true,
+        documentoVersoUrl: true,
+        gatewayClienteId: true,
+        faceId: true,
+        emailVerificado: true,
+        criadoEm: true,
+        atualizadoEm: true,
+        assinaturas: {
+          include: {
+            plano: true,
+            faturas: true,
+          },
+        },
+        pagamentos: true,
+        ingressos: {
+          include: {
+            jogo: true,
+            lote: true,
+          },
+        },
+        pedidos: true,
+      },
+    });
+
+    if (!usuario) {
+      return res.status(404).json({ error: "Usuário não encontrado" });
+    }
+
+    return res.status(200).json(usuario);
+  } catch (error) {
+    console.error("Erro ao buscar usuário logado:", error);
+    return res.status(500).json({ error: "Erro ao buscar usuário logado" });
+  }
+});
+
 router.get("/id/:id", async (req, res) => {
   const { id } = req.params;
 
