@@ -60,9 +60,7 @@ router.post("/", async (req, res) => {
       id: torcedor.id,
       nome: torcedor.nome,
       email: torcedor.email,
-      cpf: (torcedor as any).cpf,           // ajuste o nome se for diferente
-      cpfCnpj: (torcedor as any).cpfCnpj,   // opcional, se existir no modelo
-      customerId: (torcedor as any).customerId, // se você já salvar isso no banco
+      token,
     });
   } catch (error) {
     console.error("Erro no login:", error);
