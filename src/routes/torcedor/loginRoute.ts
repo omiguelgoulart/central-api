@@ -51,11 +51,6 @@ router.post("/", async (req, res) => {
     );
 
     res.cookie(TOKEN_COOKIE_NAME, token, getCookieOptions());
-
-    // Se o seu modelo tiver esses campos, eles serão enviados ao front:
-    // - cpf
-    // - cpfCnpj
-    // - customerId (já salvo no banco, se houver)
     res.status(200).json({
       id: torcedor.id,
       nome: torcedor.nome,
