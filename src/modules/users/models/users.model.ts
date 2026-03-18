@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../../../lib/prisma";
 import { CreateUsuarioInput, UpdateUsuarioInput } from "../types/users.type";
 import { cp } from "fs";
 

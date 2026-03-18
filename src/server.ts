@@ -1,15 +1,18 @@
 import app from "./app";
 
-const port = 3003;
+const port = Number(process.env.PORT) || 3003;
 
-if (!process.env.VERCEL) {
-  import("./emails/jobs/lembreteVencimento.job").then(
-    ({ startLembreteVencimentoJob }) => {
-      startLembreteVencimentoJob();
-    }
-  );
+async function startServer() {
+  if (!process.env.VERCEL) {
+    const { startLembreteVencimentoJob } = await import(
+      "./emails/jobs/lembreteVencimento.job"
+    );
+    startLembreteVencimentoJob();
+  }
+
+  app.listen(port, () => {
+    console.log(`Servidor rodando em http://localhost:${port}`);
+  });
 }
 
-app.listen(port, () => {
-  console.log(`Servidor rodando em http://localhost:${port}`);
-});
+startServer();

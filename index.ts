@@ -1,91 +1,19 @@
-import express from 'express'
-import routesUsuarios from './src/routes/torcedor/usuariosRoute';
-import routesLogin from './src/routes/torcedor/loginRoute';
-import routesAuth from './src/routes/torcedor/authRoute';
-import routesPlanos from './src/routes/plano/planosRoute';
-import routesAssinatura from './src/routes/pagamento/assinaturaRoute';
-import routesFatura from './src/routes/pagamento/faturaRoute';
-import routesPagamento from './src/routes/pagamento/pagamentoRoute';
-import asaasRoutes from './src/routes/asaas/asaasRoutes';
-import asaasWebhook from './src/routes/asaas/webhooksAsaas';
-import routesBeneficio from './src/routes/plano/beneficiosRoute';
-
-import reservasRoute from './src/routes/reserva/reservaRoute';
-import checkoutRoute from './src/routes/reserva/checkoutRoute';
-import pedidoRoute from './src/routes/reserva/pedidoRoute';
-
-import routesSetor from './src/routes/ADMIN/estadio/setorRoute';
-import routesIngresso from './src/routes/ADMIN/jogo/ingressoRoute';
-import routesJogo from './src/routes/ADMIN/jogo/jogoRoute';
-import routesJogoSetor from './src/routes/ADMIN/jogo/jogoSetorRoute';
-import routesLote from './src/routes/ADMIN/jogo/loteRoute';
-import routesAdmin from './src/routes/ADMIN/adminRoute';
-import routesAdminLogin from './src/routes/ADMIN/adminLoginRoute';
-import { checkinRouter } from './src/routes/ADMIN/check-in/checkinRoute';
-
-import cors from 'cors'
-
-const app = express()
-const port = 3003
-app.use(express.json());
-
-const allowedCorsOrigins = (process.env.CORS_ORIGINS ?? process.env.FRONTEND_URL ?? "http://localhost:3000")
-  .split(',')
-  .map((origin) => origin.trim())
-  .filter(Boolean)
-
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedCorsOrigins.includes(origin)) {
-      callback(null, true)
-      return
-    }
-
-    callback(null, false)
-  },
-  credentials: true,
-}))
-
-app.use("/usuario", routesUsuarios)
-app.use("/login", routesLogin)
-app.use("/auth", routesAuth)
-app.use("/planos", routesPlanos)
-app.use("/beneficio", routesBeneficio)
-app.use("/assinatura", routesAssinatura)
-app.use("/fatura", routesFatura)
-app.use("/pagamento", routesPagamento)
-app.use("/asaas", asaasRoutes);
-app.use(asaasWebhook);
+import app from "./src/app";
 
 
-app.use("/reservas", reservasRoute);
-app.use("/checkout", checkoutRoute);
-app.use("/pedidos", pedidoRoute);
+const port = Number(process.env.PORT) || 3003;
 
-//ADMIN
-app.use("/admin/user", routesAdmin)
-app.use("/admin/login", routesAdminLogin)
-app.use("/admin/setor", routesSetor)
-app.use("/admin/ingresso", routesIngresso)
-app.use("/admin/jogo", routesJogo)
-app.use("/admin/jogoSetor", routesJogoSetor)
-app.use("/admin/lote", routesLote)
-app.use("/admin/checkin/", checkinRouter);
-
-if (!process.env.VERCEL) {
-  import('./src/emails/jobs/lembreteVencimento.job').then(({ startLembreteVencimentoJob }) => {
+async function startServer() {
+  if (!process.env.VERCEL) {
+    const { startLembreteVencimentoJob } = await import(
+      "./src/emails/jobs/lembreteVencimento.job"
+    );
     startLembreteVencimentoJob();
+  }
+
+  app.listen(port, () => {
+    console.log(`Servidor rodando em http://localhost:${port}`);
   });
 }
 
-app.get('/', (req, res) => {
-  res.send('API central de torcedores!')
-})
-
-app.listen(port, () => {
-  console.log(`Servidor rodando em http://localhost:${port}`)
-})
-
-export default app
-
-
+startServer();

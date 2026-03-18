@@ -1,6 +1,10 @@
 import express from "express";
 import cors from "cors";
-import routes from "./routes";
+
+import routesPlanos from "./modules/plano/routes/plano.route";
+import routesBeneficio from "./modules/plano/routes/beneficio.route";
+import routesAuth from "./modules/users/routes/auth.route";
+
 
 const app = express();
 
@@ -22,14 +26,15 @@ app.use(
         callback(null, true);
         return;
       }
-
       callback(null, false);
     },
     credentials: true,
   })
 );
 
-app.use(routes);
+app.use("/planos", routesPlanos);
+app.use("/beneficio", routesBeneficio);
+app.use("/auth", routesAuth);
 
 app.get("/", (req, res) => {
   res.send("API central de torcedores!");

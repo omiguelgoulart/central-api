@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../../../lib/prisma";
 import { PeriodicidadePlano } from "../types/plano.type";
 
 type CreatePlanoData = {
