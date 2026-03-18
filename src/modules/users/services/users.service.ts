@@ -78,8 +78,22 @@ export class UserService {
         if (!user) {
             throw new Error('Usuário não encontrado');
         }
-        // Aqui você pode adicionar lógica para buscar dados relacionados, como planos, jogos, etc.
-        return user;
+
+        const model = this.userModel as unknown as {
+            getUserPlans?: (userId: string) => Promise<unknown[]>;
+            getUserGames?: (userId: string) => Promise<unknown[]>;
+        };
+
+        const [planos, jogos] = await Promise.all([
+            model.getUserPlans?.(id) ?? Promise.resolve<unknown[]>([]),
+            model.getUserGames?.(id) ?? Promise.resolve<unknown[]>([]),
+        ]);
+
+        return {
+            ...user,
+            planos,
+            jogos,
+        };
     }
 
     async getUserByEmailToken(emailToken: string) {
