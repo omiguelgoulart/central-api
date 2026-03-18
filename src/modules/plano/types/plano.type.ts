@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { planoSchema, updatePlanoSchema } from "../schema/plano.schema";
+import { planoSchema, updatePlanoSchema } from "../schemas/plano.schema";
 
 export type CreatePlanoInput = z.infer<typeof planoSchema>;
 export type UpdatePlanoInput = z.infer<typeof updatePlanoSchema>;

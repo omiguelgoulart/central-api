@@ -2,10 +2,10 @@ import { Request, Response } from "express";
 import { ZodError } from "zod";
 
 import { PlanoService } from "../services/plano.service";
-import { planoSchema, updatePlanoSchema } from "../schema/plano.schema";
+import { planoSchema, updatePlanoSchema } from "../schemas/plano.schema";
 
 export class PlanoController {
-  private planoService: PlanoService;
+    private planoService: PlanoService;
 
     constructor() {
         this.planoService = new PlanoService();

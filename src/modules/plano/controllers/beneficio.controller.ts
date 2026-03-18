@@ -2,10 +2,10 @@ import { Request, Response } from "express";
 import { ZodError } from "zod";
 
 import { BeneficioService } from "../services/beneficio.service";
-import { beneficioSchema,  updateBeneficioSchema } from "../schema/beneficio.schema";
+import { beneficioSchema, updateBeneficioSchema } from "../schemas/beneficio.schema";
 
 export class BeneficioController {
-  private beneficioService: BeneficioService;
+    private beneficioService: BeneficioService;
 
     constructor() {
         this.beneficioService = new BeneficioService();
