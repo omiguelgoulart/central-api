@@ -4,6 +4,7 @@ import cors from "cors";
 import routesPlanos from "./modules/plano/routes/plano.route";
 import routesBeneficio from "./modules/plano/routes/beneficio.route";
 import routesAuth from "./modules/users/routes/auth.route";
+import routesAdmin from "./modules/admin/routes/admin.route";
 
 
 const app = express();
@@ -35,6 +36,7 @@ app.use(
 app.use("/planos", routesPlanos);
 app.use("/beneficio", routesBeneficio);
 app.use("/auth", routesAuth);
+app.use("/admin", routesAdmin);
 
 app.get("/", (req, res) => {
   res.send("API central de torcedores!");
