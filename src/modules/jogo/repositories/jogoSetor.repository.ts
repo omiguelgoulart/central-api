@@ -1,51 +1,45 @@
 import { prisma } from "../../../lib/prisma";
 import { CreateJogoSetorInput, UpdateJogoSetorInput, TipoSetor } from "../types/jogoSetor.type";
 
-export class JogoSetorModel {
+export class JogoSetorRepository {
+    constructor(private readonly prismaClient = prisma) {}
+
     async createJogoSetor(data: CreateJogoSetorInput) {
-        return prisma.jogoSetor.create({
+        return this.prismaClient.jogoSetor.create({
             data: {
                 jogoId: data.jogoId,
                 setorId: data.setorId,
                 capacidade: data.capacidade,
-                aberto: data.aberto,
                 tipo: data.tipo,
             },
         });
     }
 
     async getAllJogoSetores() {
-        return prisma.jogoSetor.findMany();
+        return this.prismaClient.jogoSetor.findMany();
     }
 
     async getJogoSetorById(id: string) {
-        return prisma.jogoSetor.findUnique({
+        return this.prismaClient.jogoSetor.findUnique({
             where: { id },
         });
     }
 
     async deleteJogoSetor(id: string) {
-        return prisma.jogoSetor.delete({
+        return this.prismaClient.jogoSetor.delete({
             where: { id },
         });
     }
 
     async updateJogoSetor(id: string, data: UpdateJogoSetorInput) {
-        return prisma.jogoSetor.update({
+        return this.prismaClient.jogoSetor.update({
             where: { id },
             data: {
+                jogoId: data.jogoId,
+                setorId: data.setorId,
                 capacidade: data.capacidade,
-                aberto: data.aberto,
                 tipo: data.tipo,
-            },
-        });
-    }
-
-    async getSetoresByJogoId(jogoId: string) {
-        return prisma.jogoSetor.findMany({
-            where: { jogoId },
-            include: {
-                setor: true,
+                aberto: data.aberto,
             },
         });
     }

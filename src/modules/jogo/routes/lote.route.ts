@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { LoteController } from "../controllers/lote.controller";
 import { LoteService } from "../services/lote.service";
-import { LoteRepository } from "../models/lote.repository";
+import { LoteRepository } from "../repositories/lote.repository";
 
 const loteRoutes = Router();
 
@@ -17,6 +17,6 @@ loteRoutes.get("/:id", (req, res) => loteController.getLoteById(req, res));
 
 loteRoutes.delete("/:id", (req, res) => loteController.deleteLote(req, res));
 
-loteRoutes.put("/:id", (req, res) => loteController.updateLote(req, res));
+loteRoutes.patch("/:id", (req, res) => loteController.updateLote(req, res));
 
 export { loteRoutes };

@@ -1,4 +1,4 @@
-import { CreateLoteInput, LoteRepository } from "../models/lote.repository";
+import { CreateLoteInput, LoteRepository } from "../repositories/lote.repository";
 
 export class LoteService {
     constructor(private readonly loteRepository: LoteRepository) { }

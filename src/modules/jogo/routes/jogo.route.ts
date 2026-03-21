@@ -1,13 +1,22 @@
 import { Router } from "express";
+import { JogoRepository } from "../repositories/jogo.repository";
+import { JogoService } from "../services/jogo.service";
 import { JogoController } from "../controllers/jogo.controller";
 
-const router = Router();
-const jogoController = new JogoController();
+const jogoRoutes = Router();
 
-router.post("/", (req, res) => jogoController.createJogo(req, res));
+const jogoRepository = new JogoRepository();
+const jogoService = new JogoService(jogoRepository);
+const jogoController = new JogoController(jogoService);
 
-router.get("/", (req, res) => jogoController.getAllJogos(res));
+jogoRoutes.post("/", (req, res) => jogoController.createJogo(req, res));
 
-router.get("/:id", (req, res) => jogoController.getJogoById(req, res));
+jogoRoutes.get("/", (req, res) => jogoController.getAllJogos(res));
 
-router.delete("/:id", (req, res) => jogoController.deleteJogo(req, res));
+jogoRoutes.get("/:id", (req, res) => jogoController.getJogoById(req, res));
+
+jogoRoutes.delete("/:id", (req, res) => jogoController.deleteJogo(req, res));
+
+jogoRoutes.patch("/:id", (req, res) => jogoController.updateJogo(req, res));
+
+export { jogoRoutes };

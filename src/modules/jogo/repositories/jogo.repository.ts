@@ -1,9 +1,11 @@
 import { prisma } from "../../../lib/prisma";
 import { CreateJogoInput, UpdateJogoInput } from "../types/jogo.type";
 
-export class JogoModel {
+export class JogoRepository {
+    constructor(private readonly prismaClient = prisma ) {}
+   
     async createJogo(data: CreateJogoInput) {
-        return prisma.jogo.create({
+        return this.prismaClient.jogo.create({
             data: {
                 nome: data.nome,
                 data: new Date(data.data),
@@ -14,7 +16,7 @@ export class JogoModel {
     }
 
     async getAllJogos() {
-        return prisma.jogo.findMany({
+        return this.prismaClient.jogo.findMany({
             orderBy: {
                 data: "asc",
             },
@@ -22,19 +24,19 @@ export class JogoModel {
     }
 
     async getJogoById(id: string) {
-        return prisma.jogo.findUnique({
+        return this.prismaClient.jogo.findUnique({
             where: { id },
         });
     }
 
     async deleteJogo(id: string) {
-        return prisma.jogo.delete({
+        return this.prismaClient.jogo.delete({
             where: { id },
         });
     }
 
     async updateJogo(id: string, data: UpdateJogoInput) {
-        return prisma.jogo.update({
+        return this.prismaClient.jogo.update({
             where: { id },
             data: {
                 nome: data.nome,
@@ -44,5 +46,4 @@ export class JogoModel {
             },
         });
     }
-
 }

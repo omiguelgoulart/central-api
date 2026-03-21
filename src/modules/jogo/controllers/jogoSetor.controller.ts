@@ -5,11 +5,8 @@ import { JogoSetorService } from "../services/jogoSetor.service";
 import { CreateJogoSetorInput, UpdateJogoSetorInput } from "../types/jogoSetor.type";
 
 export class JogoSetorController {
-    private jogoSetorService: JogoSetorService;
-
-    constructor() {
-        this.jogoSetorService = new JogoSetorService();
-    }
+    
+    constructor(private readonly jogoSetorService: JogoSetorService) {}
 
     async createJogoSetor(req: Request, res: Response) {
         try {

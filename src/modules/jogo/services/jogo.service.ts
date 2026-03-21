@@ -1,13 +1,9 @@
-import { JogoModel } from "../models/jogo.model";
+import { JogoRepository } from "../repositories/jogo.repository";
 import { CreateJogoInput, UpdateJogoInput } from "../types/jogo.type";
 
 
 export class JogoService {
-    private jogoModel: JogoModel;
-
-    constructor() {
-        this.jogoModel = new JogoModel();
-    }
+    constructor(private readonly jogoModel: JogoRepository) {}
 
     async createJogo(data: CreateJogoInput) {
         const newJogo = await this.jogoModel.createJogo(data);

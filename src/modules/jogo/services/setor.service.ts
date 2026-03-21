@@ -1,12 +1,9 @@
-import { SetorModel } from "../models/setor.model";
-import { CreateSetorInput, UpdateSetorInput } from "../../setor/types/setor.type";
+import { SetorRepository } from "../repositories/setor.repository";
+import { CreateSetorInput, UpdateSetorInput } from "../types/setor.type";
 
 export class SetorService {
-    private setorModel: SetorModel;
-
-    constructor() {
-        this.setorModel = new SetorModel();
-    }
+    
+    constructor(private readonly setorModel: SetorRepository) {}
 
     async createSetor(data: CreateSetorInput) {
         const newSetor = await this.setorModel.createSetor(data);
@@ -18,7 +15,7 @@ export class SetorService {
             setorId: newSetor.id
         };
     }
-    
+
     async getAllSetores() {
         return this.setorModel.getAllSetores();
     }

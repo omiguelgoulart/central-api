@@ -5,11 +5,8 @@ import { SetorService } from "../services/setor.service";
 import { setorSchema, updateSetorSchema } from "../schemas/setor.schema";
 
 export class SetorController {
-    private setorService: SetorService;
-
-    constructor() {
-        this.setorService = new SetorService();
-    }
+    
+    constructor(private readonly setorService: SetorService) {}
 
     async createSetor(req: Request, res: Response) {
         try {

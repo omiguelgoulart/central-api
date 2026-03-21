@@ -1,13 +1,10 @@
-import { JogoSetorModel } from "../models/jogoSetor.model";
+import { JogoSetorRepository } from "../repositories/jogoSetor.repository";
 import { CreateJogoSetorInput, UpdateJogoSetorInput } from "../types/jogoSetor.type";
 
 
 export class JogoSetorService {
-    private jogoSetorModel: JogoSetorModel;
-
-    constructor() {
-        this.jogoSetorModel = new JogoSetorModel();
-    }
+    
+    constructor(private readonly jogoSetorModel: JogoSetorRepository) {}
 
     async createJogoSetor(data: CreateJogoSetorInput) {
         const newJogoSetor = await this.jogoSetorModel.createJogoSetor(data);
@@ -42,7 +39,7 @@ export class JogoSetorService {
     }
 
     async updateJogoSetor(id: string, data: UpdateJogoSetorInput) {
-        const jogoSetorExistente = await this.jogoSetorModel.getJogoSetorById(id);  
+        const jogoSetorExistente = await this.jogoSetorModel.getJogoSetorById(id);
         if (!jogoSetorExistente) {
             throw new Error('JogoSetor não encontrado');
         }

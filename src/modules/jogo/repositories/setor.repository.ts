@@ -2,10 +2,12 @@ import { prisma } from "../../../lib/prisma";
 import { CreateSetorInput, UpdateSetorInput } from "../types/setor.type";
 import { generateSlug } from "../utils/setor.util";
 
-export class SetorModel {
+export class SetorRepository {
+
+    constructor( private readonly prismaClient = prisma) {}
     async createSetor(data: CreateSetorInput) {
         const slug = generateSlug(data.nome);
-        return prisma.setor.create({
+        return this.prismaClient.setor.create({
             data: {
                 nome: data.nome,
                 capacidade: data.capacidade,
@@ -15,24 +17,24 @@ export class SetorModel {
     }
 
     async getAllSetores() {
-        return prisma.setor.findMany();
+        return this.prismaClient.setor.findMany();
     }
 
     async getSetorById(id: string) {
-        return prisma.setor.findUnique({
+        return this.prismaClient.setor.findUnique({
             where: { id },
         });
     }
 
     async deleteSetor(id: string) {
-        return prisma.setor.delete({
+        return this.prismaClient.setor.delete({
             where: { id },
         });
     }
 
     async updateSetor(id: string, data: UpdateSetorInput) {
         const slug = data.nome ? generateSlug(data.nome) : undefined;
-        return prisma.setor.update({
+        return this.prismaClient.setor.update({
             where: { id },
             data: {
                 nome: data.nome,

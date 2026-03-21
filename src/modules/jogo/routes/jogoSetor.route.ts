@@ -1,18 +1,22 @@
 import { Router } from "express";
+import { JogoSetorRepository } from "../repositories/jogoSetor.repository";
+import { JogoSetorService } from "../services/jogoSetor.service";
 import { JogoSetorController } from "../controllers/jogoSetor.controller";
 
-const router = Router();
+const jogoSetorRoutes = Router();
 
-const jogoSetorController = new JogoSetorController();
+const jogoSetorRepository = new JogoSetorRepository();
+const jogoSetorService = new JogoSetorService(jogoSetorRepository);
+const jogoSetorController = new JogoSetorController(jogoSetorService);
 
-router.post("/", (req, res) => jogoSetorController.createJogoSetor(req, res));
+jogoSetorRoutes.post("/", (req, res) => jogoSetorController.createJogoSetor(req, res));
 
-router.get("/", (req, res) => jogoSetorController.getAllJogoSetores(res));
+jogoSetorRoutes.get("/", (req, res) => jogoSetorController.getAllJogoSetores(res));
 
-router.get("/:id", (req, res) => jogoSetorController.getJogoSetorById(req, res));   
+jogoSetorRoutes.get("/:id", (req, res) => jogoSetorController.getJogoSetorById(req, res));
 
-router.delete("/:id", (req, res) => jogoSetorController.deleteJogoSetor(req, res));
+jogoSetorRoutes.delete("/:id", (req, res) => jogoSetorController.deleteJogoSetor(req, res));
 
-router.patch("/:id", (req, res) => jogoSetorController.updateJogoSetor(req, res));
+jogoSetorRoutes.patch("/:id", (req, res) => jogoSetorController.updateJogoSetor(req, res));
 
-export default router;
+export { jogoSetorRoutes };

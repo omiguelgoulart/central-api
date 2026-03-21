@@ -4,8 +4,12 @@ import cors from "cors";
 import routesPlanos from "./modules/plano/routes/plano.route";
 import routesBeneficio from "./modules/plano/routes/beneficio.route";
 import routesAuth from "./modules/users/routes/auth.route";
-import routesAdmin from "./modules/admin/routes/admin.route";
-
+import {adminRoutes} from "./modules/admin/routes/admin.route";
+import {ingressoRoutes } from "./modules/jogo/routes/ingresso.route";
+import {jogoRoutes } from "./modules/jogo/routes/jogo.route";
+import { jogoSetorRoutes } from "./modules/jogo/routes/jogoSetor.route";
+import { setorRoutes } from "./modules/jogo/routes/setor.route";
+import { loteRoutes } from "./modules/jogo/routes/lote.route";
 
 const app = express();
 
@@ -36,7 +40,13 @@ app.use(
 app.use("/planos", routesPlanos);
 app.use("/beneficio", routesBeneficio);
 app.use("/auth", routesAuth);
-app.use("/admin", routesAdmin);
+
+app.use("/admin", adminRoutes);
+app.use("/ingresso", ingressoRoutes)
+app.use("/jogo", jogoRoutes);
+app.use("/jogo-setor", jogoSetorRoutes);
+app.use("/setor", setorRoutes);
+app.use("/lote", loteRoutes);
 
 app.get("/", (req, res) => {
   res.send("API central de torcedores!");

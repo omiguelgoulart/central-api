@@ -5,11 +5,7 @@ import { JogoService } from "../services/jogo.service";
 import { jogoSchema, updateJogoSchema } from "../schemas/jogo.schema";
 
 export class JogoController {
-    private jogoService: JogoService;
-
-    constructor() {
-        this.jogoService = new JogoService();
-    }
+    constructor(private readonly jogoService: JogoService) {}
 
     async createJogo(req: Request, res: Response) {
         try {
