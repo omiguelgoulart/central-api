@@ -1,100 +1,115 @@
-import { AdminModel } from "../models/admin.model";
-import { CreateAdminInput, UpdateAdminInput } from "../types/admin.type";
-
 import { compare, hash } from "bcryptjs";
 import { sign } from "jsonwebtoken";
 
+;
+import { CreateAdminInput, UpdateAdminInput } from "../types/admin.type";
+import { AdminRepository } from "../repository/admin.repsitory";
+
 export class AdminService {
-    private adminModel: AdminModel;
+  constructor(private readonly adminRepository: AdminRepository) {}
 
-    constructor() {
-        this.adminModel = new AdminModel();
+  async createAdmin(data: CreateAdminInput) {
+    const adminExistente = await this.adminRepository.findAdminByEmail(data.email);
+
+    if (adminExistente) {
+      throw new Error("Já existe um admin com este e-mail");
     }
 
-    async createAdmin(data: CreateAdminInput) {
-        const emailExistente = await this.adminModel.getAllAdmins().then(admins => admins.find(admin => admin.email === data.email));
-        if (emailExistente) {
-            throw new Error('Já existe um administrador com esse email');
-        }
-        const newAdmin = await this.adminModel.createAdmin(data);
+    const senhaHash = await hash(data.senha, 10);
 
-        return {
-            message: 'Administrador criado com sucesso',
-            adminId: newAdmin.id
-        };
+    const novoAdmin = await this.adminRepository.createAdmin({
+      ...data,
+      senha: senhaHash,
+    });
+
+    return {
+      message: "Admin criado com sucesso",
+      adminId: novoAdmin.id,
+    };
+  }
+
+  async getAllAdmins() {
+    return this.adminRepository.getAllAdmins();
+  }
+
+  async getAdminById(id: string) {
+    const admin = await this.adminRepository.getAdminById(id);
+
+    if (!admin) {
+      throw new Error("Admin não encontrado");
     }
 
-    async getAllAdmins() {
-        return this.adminModel.getAllAdmins();
+    return admin;
+  }
+
+  async deleteAdmin(id: string) {
+    const adminExistente = await this.adminRepository.getAdminById(id);
+
+    if (!adminExistente) {
+      throw new Error("Admin não encontrado");
     }
 
-    async getAdminById(id: string) {
-        const admin = await this.adminModel.getAdminById(id);
-        if (!admin) {
-            throw new Error('Administrador não encontrado');
-        }
-        return admin;
+    await this.adminRepository.deleteAdmin(id);
+
+    return {
+      message: "Admin deletado com sucesso",
+    };
+  }
+
+  async updateAdmin(id: string, data: UpdateAdminInput) {
+    const adminExistente = await this.adminRepository.getAdminById(id);
+
+    if (!adminExistente) {
+      throw new Error("Admin não encontrado");
     }
 
-    async deleteAdmin(id: string) {
-        const adminExistente = await this.adminModel.getAdminById(id);
-        if (!adminExistente) {
-            throw new Error('Administrador não encontrado');
-        }
-        await this.adminModel.deleteAdmin(id);
+    const dataToUpdate: UpdateAdminInput = {
+      nome: data.nome,
+      email: data.email,
+      role: data.role,
+      senha: data.senha,
+    };
 
-        return {
-            message: 'Administrador deletado com sucesso'
-        };
+    if (data.senha) {
+      dataToUpdate.senha = await hash(data.senha, 10);
     }
 
-    async updateAdmin(id: string, data: UpdateAdminInput) {
-        const adminExistente = await this.adminModel.getAdminById(id);
-        if (!adminExistente) {
-            throw new Error('Administrador não encontrado');
-        }
-        if (data.email) {
-            const emailExistente = await this.adminModel.getAllAdmins().then(admins => admins.find(admin => admin.email === data.email));
-            if (emailExistente && emailExistente.id !== id) {
-                throw new Error('Já existe um administrador com esse email');
-            }
-        }
-        const updatedAdmin = await this.adminModel.updateAdmin(id, data);
-        return updatedAdmin;
+    return this.adminRepository.updateAdmin(id, dataToUpdate);
+  }
+
+  async loginAdmin(email: string, senha: string) {
+    const admin = await this.adminRepository.findAdminByEmail(email);
+
+    if (!admin) {
+      throw new Error("E-mail ou senha inválidos");
     }
 
-    async loginAdmin(email: string, senha: string) {
-        const mensagemPadrao = "Email ou senha incorretos";
-        const admin = await this.adminModel.findAdminByEmail(email);
+    const senhaValida = await compare(senha, admin.senha);
 
-        if (!admin) {
-            throw new Error(mensagemPadrao);
-        }
-
-        const senhaConfere = await compare(senha, admin.senha);
-        if (!senhaConfere) {
-            throw new Error(mensagemPadrao);
-        }
-
-        const token = sign(
-            {
-                userLogadoId: admin.id,
-                userLogadoNome: admin.nome,
-                userLogadoRole: admin.role,
-            },
-            process.env.JWT_KEY as string,
-            { expiresIn: "1h" }
-        );
-        return {
-            id: admin.id,
-            nome: admin.nome,
-            email: admin.email,
-            role: admin.role,
-            token,
-        };
+    if (!senhaValida) {
+      throw new Error("E-mail ou senha inválidos");
     }
 
+    if (!process.env.JWT_KEY) {
+      throw new Error("JWT_KEY não configurado");
+    }
 
+    const token = sign(
+      {
+        adminLogadoId: admin.id,
+        adminLogadoNome: admin.nome,
+        adminLogadoRole: admin.role,
+      },
+      process.env.JWT_KEY,
+      { expiresIn: "1h" }
+    );
+
+    return {
+      id: admin.id,
+      nome: admin.nome,
+      email: admin.email,
+      role: admin.role,
+      token,
+    };
+  }
 }
-
-

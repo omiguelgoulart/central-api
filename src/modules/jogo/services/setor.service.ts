@@ -1,5 +1,5 @@
 import { SetorModel } from "../models/setor.model";
-import { CreateSetorInput, UpdateSetorInput } from "../types/setor.type";
+import { CreateSetorInput, UpdateSetorInput } from "../../setor/types/setor.type";
 
 export class SetorService {
     private setorModel: SetorModel;

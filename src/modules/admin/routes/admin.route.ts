@@ -1,17 +1,22 @@
-import { Router } from 'express';
-import { AdminController } from '../controllers/admin.controller';
+import { Router } from "express";
+import { AdminController } from "../controllers/admin.controller";
+import { AdminService } from "../services/admin.service";
+import { AdminRepository } from "../repository/admin.repsitory";
 
 const adminRoutes = Router();
-const adminController = new AdminController();
 
-adminRoutes.post('/', (req, res) => adminController.createAdmin(req, res));
+const adminRepository = new AdminRepository();
+const adminService = new AdminService(adminRepository);
+const adminController = new AdminController(adminService);
 
-adminRoutes.get('/', (req, res) => adminController.getAllAdmins(res));
+adminRoutes.post("/", (req, res) => adminController.createAdmin(req, res));
 
-adminRoutes.get('/:id', (req, res) => adminController.getAdminbyId(req, res));
+adminRoutes.get("/", (req, res) => adminController.getAllAdmins(res));
 
-adminRoutes.delete('/:id', (req, res) => adminController.deleteAdmin(req, res));
+adminRoutes.get("/:id", (req, res) => adminController.getAdminbyId(req, res));
 
-adminRoutes.put('/:id', (req, res) => adminController.updateAdmin(req, res));
+adminRoutes.delete("/:id", (req, res) => adminController.deleteAdmin(req, res));
 
-export default adminRoutes;
+adminRoutes.put("/:id", (req, res) => adminController.updateAdmin(req, res));
+
+export { adminRoutes };

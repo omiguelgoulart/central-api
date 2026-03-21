@@ -5,11 +5,8 @@ import { AdminService } from "../services/admin.service";
 import { adminSchema, updateAdminSchema } from "../schemas/admin.schema";
 
 export class AdminController {
-    private adminService: AdminService;
-
-    constructor() {
-        this.adminService = new AdminService();
-    }
+    
+    constructor(private readonly adminService: AdminService) {}
 
     async createAdmin(req: Request, res: Response) {
         try {
