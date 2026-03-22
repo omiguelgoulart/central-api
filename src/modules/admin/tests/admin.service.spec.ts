@@ -281,6 +281,7 @@ describe("AdminService", () => {
         role: "SUPER_ADMIN",
         senha: "novo-hash",
       });
+      
       expect(result).toEqual({
         id: "1",
         nome: "Novo Nome",

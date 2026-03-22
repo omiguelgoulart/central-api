@@ -3,10 +3,10 @@ import { sign } from "jsonwebtoken";
 
 ;
 import { CreateAdminInput, UpdateAdminInput } from "../types/admin.type";
-import { AdminRepository } from "../repository/admin.repsitory";
+import { AdminRepository } from "../repositories/admin.repsitory";
 
 export class AdminService {
-  constructor(private readonly adminRepository: AdminRepository) {}
+  constructor(private readonly adminRepository: AdminRepository) { }
 
   async createAdmin(data: CreateAdminInput) {
     const adminExistente = await this.adminRepository.findAdminByEmail(data.email);

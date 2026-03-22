@@ -330,7 +330,7 @@ model Lote {
   id            String    @id @default(uuid())
   nome          String
   tipo          TipoLote  @default(INTEIRA)
-  quantidade    Int? // opcional: sub-limite do lote dentro do setor
+  quantidade    Int? 
   precoUnitario Decimal   @db.Decimal(10, 2)
   inicioVendas  DateTime?
   fimVendas     DateTime?
