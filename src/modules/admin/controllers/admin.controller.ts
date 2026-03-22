@@ -23,7 +23,7 @@ export class AdminController {
         }
     }
 
-    async getAllAdmins(res: Response) {
+    async getAllAdmins(req: Request, res: Response) {
         try {
             const admins = await this.adminService.getAllAdmins();
             res.status(200).json(admins);

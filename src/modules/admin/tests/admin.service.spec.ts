@@ -60,8 +60,8 @@ describe("AdminService", () => {
   describe("createAdmin", () => {
     it("deve criar admin com sucesso", async () => {
       const input: CreateAdminInput = {
-        nome: "Tanise",
-        email: "tanise@email.com",
+        nome: "novo",
+        email: "novo@email.com",
         senha: "123456",
         role: "SUPER_ADMIN",
       };
@@ -70,8 +70,8 @@ describe("AdminService", () => {
       bcryptMocked.hash.mockResolvedValue("senha-hash" as never);
       adminRepositoryMock.createAdmin.mockResolvedValue({
         id: "admin-1",
-        nome: "Tanise",
-        email: "tanise@email.com",
+        nome: "novo",
+        email: "novo@email.com",
         senha: "senha-hash",
         role: "SUPER_ADMIN",
       } satisfies AdminMock);
@@ -79,12 +79,12 @@ describe("AdminService", () => {
       const result = await adminService.createAdmin(input);
 
       expect(adminRepositoryMock.findAdminByEmail).toHaveBeenCalledWith(
-        "tanise@email.com"
+        "novo@email.com"
       );
       expect(bcryptMocked.hash).toHaveBeenCalledWith("123456", 10);
       expect(adminRepositoryMock.createAdmin).toHaveBeenCalledWith({
-        nome: "Tanise",
-        email: "tanise@email.com",
+        nome: "novo",
+        email: "novo@email.com",
         senha: "senha-hash",
         role: "SUPER_ADMIN",
       });
@@ -96,16 +96,16 @@ describe("AdminService", () => {
 
     it("deve lançar erro se já existir admin com o mesmo e-mail", async () => {
       const input: CreateAdminInput = {
-        nome: "Tanise",
-        email: "tanise@email.com",
+        nome: "novo",
+        email: "novo@email.com",
         senha: "123456",
         role: "SUPER_ADMIN",
       };
 
       adminRepositoryMock.findAdminByEmail.mockResolvedValue({
         id: "admin-1",
-        nome: "Tanise",
-        email: "tanise@email.com",
+        nome: "novo",
+        email: "novo@email.com",
         senha: "hash",
         role: "SUPER_ADMIN",
       } satisfies AdminMock);
@@ -150,8 +150,8 @@ describe("AdminService", () => {
     it("deve retornar admin quando encontrado", async () => {
       const admin: AdminMock = {
         id: "1",
-        nome: "Tanise",
-        email: "tanise@email.com",
+        nome: "novo",
+        email: "novo@email.com",
         senha: "hash",
         role: "SUPER_ADMIN",
       };
@@ -177,8 +177,8 @@ describe("AdminService", () => {
     it("deve deletar admin com sucesso", async () => {
       adminRepositoryMock.getAdminById.mockResolvedValue({
         id: "1",
-        nome: "Tanise",
-        email: "tanise@email.com",
+        nome: "novo",
+        email: "novo@email.com",
         senha: "hash",
         role: "SUPER_ADMIN",
       } satisfies AdminMock);
@@ -215,8 +215,8 @@ describe("AdminService", () => {
 
       adminRepositoryMock.getAdminById.mockResolvedValue({
         id: "1",
-        nome: "Tanise",
-        email: "tanise@email.com",
+        nome: "novo",
+        email: "novo@email.com",
         senha: "hash",
         role: "SUPER_ADMIN",
       } satisfies AdminMock);
@@ -256,8 +256,8 @@ describe("AdminService", () => {
 
       adminRepositoryMock.getAdminById.mockResolvedValue({
         id: "1",
-        nome: "Tanise",
-        email: "tanise@email.com",
+        nome: "novo",
+        email: "novo@email.com",
         senha: "hash-antigo",
         role: "SUPER_ADMIN",
       } satisfies AdminMock);
@@ -310,8 +310,8 @@ describe("AdminService", () => {
 
       adminRepositoryMock.findAdminByEmail.mockResolvedValue({
         id: "1",
-        nome: "Tanise",
-        email: "tanise@email.com",
+        nome: "novo",
+        email: "novo@email.com",
         senha: "hash-senha",
         role: "SUPER_ADMIN",
       } satisfies AdminMock);
@@ -320,18 +320,18 @@ describe("AdminService", () => {
       jwtMocked.sign.mockReturnValue("token-falso" as never);
 
       const result = await adminService.loginAdmin(
-        "tanise@email.com",
+        "novo@email.com",
         "123456"
       );
 
       expect(adminRepositoryMock.findAdminByEmail).toHaveBeenCalledWith(
-        "tanise@email.com"
+        "novo@email.com"
       );
       expect(bcryptMocked.compare).toHaveBeenCalledWith("123456", "hash-senha");
       expect(jwtMocked.sign).toHaveBeenCalledWith(
         {
           adminLogadoId: "1",
-          adminLogadoNome: "Tanise",
+          adminLogadoNome: "novo",
           adminLogadoRole: "SUPER_ADMIN",
         },
         "segredo-teste",
@@ -339,8 +339,8 @@ describe("AdminService", () => {
       );
       expect(result).toEqual({
         id: "1",
-        nome: "Tanise",
-        email: "tanise@email.com",
+        nome: "novo",
+        email: "novo@email.com",
         role: "SUPER_ADMIN",
         token: "token-falso",
       });
@@ -350,15 +350,15 @@ describe("AdminService", () => {
       adminRepositoryMock.findAdminByEmail.mockResolvedValue(null);
 
       await expect(
-        adminService.loginAdmin("tanise@email.com", "123456")
+        adminService.loginAdmin("novo@email.com", "123456")
       ).rejects.toThrow("E-mail ou senha inválidos");
     });
 
     it("deve lançar erro quando senha estiver incorreta", async () => {
       adminRepositoryMock.findAdminByEmail.mockResolvedValue({
         id: "1",
-        nome: "Tanise",
-        email: "tanise@email.com",
+        nome: "novo",
+        email: "novo@email.com",
         senha: "hash-senha",
         role: "SUPER_ADMIN",
       } satisfies AdminMock);
@@ -366,15 +366,15 @@ describe("AdminService", () => {
       bcryptMocked.compare.mockResolvedValue(false as never);
 
       await expect(
-        adminService.loginAdmin("tanise@email.com", "123456")
+        adminService.loginAdmin("novo@email.com", "123456")
       ).rejects.toThrow("E-mail ou senha inválidos");
     });
 
     it("deve lançar erro quando JWT_KEY não estiver configurado", async () => {
       adminRepositoryMock.findAdminByEmail.mockResolvedValue({
         id: "1",
-        nome: "Tanise",
-        email: "tanise@email.com",
+        nome: "novo",
+        email: "novo@email.com",
         senha: "hash-senha",
         role: "SUPER_ADMIN",
       } satisfies AdminMock);
@@ -382,7 +382,7 @@ describe("AdminService", () => {
       bcryptMocked.compare.mockResolvedValue(true as never);
 
       await expect(
-        adminService.loginAdmin("tanise@email.com", "123456")
+        adminService.loginAdmin("novo@email.com", "123456")
       ).rejects.toThrow("JWT_KEY não configurado");
     });
   });
