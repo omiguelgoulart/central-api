@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi, afterEach } from "vitest";
-import { ZodError } from "zod";
 import { Request, Response } from "express";
 
 import { AdminController } from "../controllers/admin.controller";

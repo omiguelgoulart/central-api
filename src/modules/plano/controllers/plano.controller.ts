@@ -5,11 +5,7 @@ import { PlanoService } from "../services/plano.service";
 import { planoSchema, updatePlanoSchema } from "../schemas/plano.schema";
 
 export class PlanoController {
-    private planoService: PlanoService;
-
-    constructor() {
-        this.planoService = new PlanoService();
-    }
+    constructor(private readonly planoService: PlanoService) {}
 
     async createPlano(req: Request, res: Response) {
         try {
@@ -26,7 +22,7 @@ export class PlanoController {
         }
     }
 
-    async getAllPlanos(res: Response) {
+    async getAllPlanos(req: Request, res: Response) {
         try {
             const planos = await this.planoService.getAllPlanos();
             res.status(200).json(planos);

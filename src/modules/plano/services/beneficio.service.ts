@@ -1,32 +1,26 @@
-import { BeneficioModel } from "../models/beneficio.model";
+import { BeneficioRepository } from "../repositories/beneficio.repository";
 import { CreateBeneficioInput, UpdateBeneficioInput } from "../types/beneficio.type";
 
 export class BeneficioService {
-  private beneficioModel: BeneficioModel;
-
-    constructor() {
-        this.beneficioModel = new BeneficioModel();
-    }
+    constructor(private readonly beneficioRepository: BeneficioRepository) {}
 
     async createBeneficio(data: CreateBeneficioInput) {
-        const slugExistente = await this.beneficioModel.getBeneficioBySlug(data.slug);
-        if (slugExistente) {
-            throw new Error('Já existe um benefício com esse slug');
+        const newBeneficio = await this.beneficioRepository.createBeneficio(data);
+        if (!newBeneficio) {
+            throw new Error('Erro ao criar benefício');
         }
-        const newBeneficio = await this.beneficioModel.createBeneficio(data);
-
         return {
             message: 'Benefício criado com sucesso',
             beneficioId: newBeneficio.id
         };
     }
 
-    async getBeneficios() {
-        return this.beneficioModel.getBeneficio();
+    async getAllBeneficios() {
+        return this.beneficioRepository.getAllBeneficios();
     }
 
     async getBeneficioById(id: string) {
-        const beneficio = await this.beneficioModel.getBeneficioById(id);
+        const beneficio = await this.beneficioRepository.getBeneficioById(id);
         if (!beneficio) {
             throw new Error('Benefício não encontrado');
         }
@@ -34,23 +28,29 @@ export class BeneficioService {
     }
 
     async deleteBeneficio(id: string) {
-        const beneficioExistente = await this.beneficioModel.getBeneficioById(id);
+        const beneficioExistente = await this.beneficioRepository.getBeneficioById(id);
         if (!beneficioExistente) {
             throw new Error('Benefício não encontrado');
         }
-        await this.beneficioModel.deleteBeneficio(id);
+        await this.beneficioRepository.deleteBeneficio(id);
 
-        return { 
-            message: 'Benefício deletado com sucesso' 
+        return {
+            message: 'Benefício deletado com sucesso'
         };
     }
 
     async updateBeneficio(id: string, data: UpdateBeneficioInput) {
-        const beneficioExistente = await this.beneficioModel.getBeneficioById(id);
+        const beneficioExistente = await this.beneficioRepository.getBeneficioById(id);
         if (!beneficioExistente) {
             throw new Error('Benefício não encontrado');
         }
-        return this.beneficioModel.updateBeneficio(id, data);
+        const updatedBeneficio = await this.beneficioRepository.updateBeneficio(id, data);
+        if (!updatedBeneficio) {
+            throw new Error('Erro ao atualizar benefício');
+        }
+        return {
+            message: 'Benefício atualizado com sucesso',
+            beneficioId: updatedBeneficio.id
+        };
     }
-
 }

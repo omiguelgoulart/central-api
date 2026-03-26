@@ -1,15 +1,22 @@
 import { Router } from "express";
+import { BeneficioRepository } from "../repositories/beneficio.repository";
+import { BeneficioService } from "../services/beneficio.service";
 import { BeneficioController } from "../controllers/beneficio.controller";
 
-const router = Router();
-const beneficioController = new BeneficioController();
+const beneficioRouter = Router();
 
-router.post("/", (req, res) => beneficioController.createBeneficio(req, res));
+const beneficioRepository = new BeneficioRepository();
+const beneficioService = new BeneficioService(beneficioRepository);
+const beneficioController = new BeneficioController(beneficioService);
 
-router.get("/:id", (req, res) => beneficioController.getBeneficioById(req, res));
+beneficioRouter.post("/", (req, res) => beneficioController.createBeneficio(req, res));
 
-router.delete("/:id", (req, res) => beneficioController.deleteBeneficio(req, res));
+beneficioRouter.get("/", (req, res) => beneficioController.getAllBeneficios(req, res));
 
-router.patch("/:id", (req, res) => beneficioController.updateBeneficio(req, res));
+beneficioRouter.get("/:id", (req, res) => beneficioController.getBeneficioById(req, res));
 
-export default router;
+beneficioRouter.delete("/:id", (req, res) => beneficioController.deleteBeneficio(req, res));
+
+beneficioRouter.patch("/:id", (req, res) => beneficioController.updateBeneficio(req, res));
+
+export { beneficioRouter };

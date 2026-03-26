@@ -1,8 +1,8 @@
 import express from "express";
 import cors from "cors";
 
-import routesPlanos from "./modules/plano/routes/plano.route";
-import routesBeneficio from "./modules/plano/routes/beneficio.route";
+import { planoRouter } from "./modules/plano/routes/plano.route";
+import { beneficioRouter } from "./modules/plano/routes/beneficio.route";
 import routesAuth from "./modules/users/routes/auth.route";
 import {adminRoutes} from "./modules/admin/routes/admin.route";
 import {ingressoRoutes } from "./modules/jogo/routes/ingresso.route";
@@ -37,8 +37,8 @@ app.use(
   })
 );
 
-app.use("/planos", routesPlanos);
-app.use("/beneficio", routesBeneficio);
+app.use("/planos", planoRouter);
+app.use("/beneficio", beneficioRouter);
 app.use("/auth", routesAuth);
 
 app.use("/admin", adminRoutes);

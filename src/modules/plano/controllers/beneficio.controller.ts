@@ -5,11 +5,7 @@ import { BeneficioService } from "../services/beneficio.service";
 import { beneficioSchema, updateBeneficioSchema } from "../schemas/beneficio.schema";
 
 export class BeneficioController {
-    private beneficioService: BeneficioService;
-
-    constructor() {
-        this.beneficioService = new BeneficioService();
-    }
+    constructor(private readonly beneficioService: BeneficioService) { }
 
     async createBeneficio(req: Request, res: Response) {
         try {
@@ -23,6 +19,16 @@ export class BeneficioController {
             }
             console.error(error);
             res.status(500).json({ error: 'Erro ao criar benefício', detalhe: String(error) });
+        }
+    }
+
+    async getAllBeneficios(req: Request, res: Response) {
+        try {
+            const beneficios = await this.beneficioService.getAllBeneficios();
+            res.status(200).json(beneficios);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: 'Erro ao buscar benefícios', detalhe: String(error) });
         }
     }
 
