@@ -1,14 +1,19 @@
 import { Router } from "express";
+
+import { AuthRepository } from "../repositories/auth.repository";
+import { AuthService } from "../services/auth.service";
 import { AuthController } from "../controllers/auth.controller";
 
-const router = Router();
+const authRouter = Router();
 
-const authController = new AuthController();
+const repository = new AuthRepository();
+const service = new AuthService(repository);
+const controller = new AuthController(service);
 
-router.post("/login", (req, res) => authController.login(req, res));
+authRouter.post("/login", (req, res) => controller.login(req, res));
 
-router.post("/forgot-password", (req, res) => authController.forgotPassword(req, res));
+authRouter.post("/forgot-password", (req, res) => controller.forgotPassword(req, res));
 
-router.post("/reset-password", (req, res) => authController.resetPassword(req, res));
+authRouter.post("/reset-password", (req, res) => controller.resetPassword(req, res));
 
-export default router;
+export { authRouter };

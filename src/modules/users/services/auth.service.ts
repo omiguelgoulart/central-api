@@ -1,17 +1,13 @@
-import { AuthModel } from "../models/auth.model";
+import { AuthRepository } from "../repositories/auth.repository";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 export class AuthService {
-    private loginModel: AuthModel;
-
-    constructor() {
-        this.loginModel = new AuthModel();
-    }
+    constructor(private readonly repository = new AuthRepository()) { }
 
     async login(email: string, senha: string) {
         const mensagemPadrao = "Login ou senha incorretos";
-        const user = await this.loginModel.findUserByEmail(email);
+        const user = await this.repository.findUserByEmail(email);
 
         if (!user) {
             throw new Error(mensagemPadrao);
@@ -39,19 +35,26 @@ export class AuthService {
     }
 
     async recoverPassword(email: string) {
-        const user = await this.loginModel.findUserByEmail(email);
+        const user = await this.repository.findUserByEmail(email);
         if (!user) {
             throw new Error("Email não encontrado");
         }
 
-        return this.loginModel.recoverPassword(email);
-
-        
+        return this.repository.recoverPassword(email);
     }
 
     async resetPassword(token: string, novaSenha: string) {
         const senhaHash = await bcrypt.hash(novaSenha, 10);
-        return this.loginModel.resetPassword(token, senhaHash);
+        return this.repository.resetPassword(token, senhaHash);
+    }
+
+    async forgotPassword(email: string) {
+        const user = await this.repository.findUserByEmail(email);
+        if (!user) {
+            throw new Error("Email não encontrado");
+        }
+
+        return this.repository.forgotPassword(email);
     }
 
 }

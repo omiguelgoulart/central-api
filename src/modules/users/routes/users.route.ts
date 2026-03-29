@@ -1,28 +1,34 @@
 import { Router } from "express";
+
+import { UserRepository } from "../repositories/users.repository";
+import { UserService } from "../services/users.service";
 import { UsersController } from "../controllers/users.controller";
 
-const router = Router();
-const usersController = new UsersController();
+const usersRouter = Router();
 
-router.post("/", (req, res) => usersController.createUser(req, res));
+const repository = new UserRepository();
+const service = new UserService(repository);
+const controller = new UsersController(service);
 
-router.get("/", (req, res) => usersController.getAllUsers(res));
+usersRouter.post("/", (req, res) => controller.createUser(req, res));
 
-router.get("/:id", (req, res) => usersController.getUserById(req, res));
+usersRouter.get("/", (req, res) => controller.getAllUsers(res));
 
-router.delete("/:id", (req, res) => usersController.deleteUser(req, res));
+usersRouter.get("/:id", (req, res) => controller.getUserById(req, res));
 
-router.patch("/:id", (req, res) => usersController.updateUser(req, res));
+usersRouter.delete("/:id", (req, res) => controller.deleteUser(req, res));
 
-router.get("/count", (req, res) => usersController.coutUsers(res));
+usersRouter.patch("/:id", (req, res) => controller.updateUser(req, res));
 
-router.get("/:id/details", (req, res) => usersController.getUserWithDetails(req, res));
+usersRouter.get("/count", (req, res) => controller.coutUsers(res));
 
-router.post("/verify-email", (req, res) => usersController.verifyEmail(req.body.token));
+usersRouter.get("/:id/details", (req, res) => controller.getUserWithDetails(req, res));
 
-router.patch("/:id/photo", (req, res) => usersController.updatePhotoUrl(req.params.id, req.body.photoUrl));
+usersRouter.post("/verify-email", (req, res) => controller.verifyEmail(req.body.token));
 
-router.patch("/:id/email-verified", (req, res) => usersController.markEmailAsVerified(req.params.id));
+usersRouter.patch("/:id/photo", (req, res) => controller.updatePhotoUrl(req.params.id, req.body.photoUrl));
 
-export default router;
+usersRouter.patch("/:id/email-verified", (req, res) => controller.markEmailAsVerified(req.params.id));
+
+export { usersRouter };
 

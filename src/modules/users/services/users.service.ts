@@ -1,23 +1,19 @@
-import { UserModel } from "../models/users.model";
+import { UserRepository } from "../repositories/users.repository";
 import { CreateUsuarioInput, UpdateUsuarioInput } from "../types/users.type";
 
 export class UserService {
-    private userModel: UserModel;
-
-    constructor() {
-        this.userModel = new UserModel();
-    }
+    constructor(private readonly repository = new UserRepository()) { }
 
     async createUser(data: CreateUsuarioInput) {
-        const emailExistente = await this.userModel.getUserByEmail(data.email);
+        const emailExistente = await this.repository.getUserByEmail(data.email);
         if (emailExistente) {
             throw new Error('Já existe um usuário com esse email');
         }
-        const matriculaExistente = await this.userModel.getUserByMatricula(String(data.matricula));
+        const matriculaExistente = await this.repository.getUserByMatricula(String(data.matricula));
         if (matriculaExistente) {
             throw new Error('Já existe um usuário com essa matrícula');
         }
-        const newUser = await this.userModel.createUser(data);
+        const newUser = await this.repository.createUser(data);
 
         return {
             message: 'Usuário criado com sucesso',
@@ -26,11 +22,11 @@ export class UserService {
     }
 
     async getAllUsers() {
-        return this.userModel.getAllUsers();
+        return this.repository.getAllUsers();
     }
 
     async getUserById(id: string) {
-        const user = await this.userModel.getUserById(id);
+        const user = await this.repository.getUserById(id);
         if (!user) {
             throw new Error('Usuário não encontrado');
         }
@@ -38,11 +34,11 @@ export class UserService {
     }
 
     async deleteUser(id: string) {
-        const userExistente = await this.userModel.getUserById(id);
+        const userExistente = await this.repository.getUserById(id);
         if (!userExistente) {
             throw new Error('Usuário não encontrado');
         }
-        await this.userModel.deleteUser(id);
+        await this.repository.deleteUser(id);
 
         return {
             message: 'Usuário deletado com sucesso'
@@ -50,36 +46,36 @@ export class UserService {
     }
 
     async updateUser(id: string, data: UpdateUsuarioInput) {
-        const userExistente = await this.userModel.getUserById(id);
+        const userExistente = await this.repository.getUserById(id);
         if (!userExistente) {
             throw new Error('Usuário não encontrado');
         }
         if (data.email) {
-            const emailExistente = await this.userModel.getUserByEmail(data.email);
+            const emailExistente = await this.repository.getUserByEmail(data.email);
             if (emailExistente && emailExistente.id !== id) {
                 throw new Error('Já existe um usuário com esse email');
             }
         }
         if (data.matricula) {
-            const matriculaExistente = await this.userModel.getUserByMatricula(String(data.matricula));
+            const matriculaExistente = await this.repository.getUserByMatricula(String(data.matricula));
             if (matriculaExistente && matriculaExistente.id !== id) {
                 throw new Error('Já existe um usuário com essa matrícula');
             }
         }
-        return this.userModel.updateUser(id, data);
+        return this.repository.updateUser(id, data);
     }
 
     async countUsers() {
-        return this.userModel.countUsers();
+        return this.repository.countUsers();
     }
 
     async getUserWithDetails(id: string) {
-        const user = await this.userModel.getUserById(id);
+        const user = await this.repository.getUserById(id);
         if (!user) {
             throw new Error('Usuário não encontrado');
         }
 
-        const model = this.userModel as unknown as {
+        const model = this.repository as unknown as {
             getUserPlans?: (userId: string) => Promise<unknown[]>;
             getUserGames?: (userId: string) => Promise<unknown[]>;
         };
@@ -97,49 +93,49 @@ export class UserService {
     }
 
     async getUserByEmailToken(emailToken: string) {
-        return this.userModel.getUserByEmailToken(emailToken);
+        return this.repository.getUserByEmailToken(emailToken);
     }
 
     async verifyEmailToken(token: string) {
-        const user = await this.userModel.getUserByEmailToken(token);
+        const user = await this.repository.getUserByEmailToken(token);
         if (!user) {
             throw new Error('Token de email inválido');
         }
-        await this.userModel.markEmailAsVerified(user.id);
+        await this.repository.markEmailAsVerified(user.id);
         return { message: 'Email verificado com sucesso' };
     }
 
     async verifyEmail(id: string) {
-        const user = await this.userModel.getUserById(id);
+        const user = await this.repository.getUserById(id);
         if (!user) {
             throw new Error('Usuário não encontrado');
         }
-        await this.userModel.markEmailAsVerified(id);
+        await this.repository.markEmailAsVerified(id);
         return { message: 'Email verificado com sucesso' };
     }
 
     async updateEmailToken(id: string, emailToken: string, emailTokenExpiry: Date) {
-        const user = await this.userModel.getUserById(id);
+        const user = await this.repository.getUserById(id);
         if (!user) {
             throw new Error('Usuário não encontrado');
         }
-        return this.userModel.updateEmailToken(id, emailToken, emailTokenExpiry);
+        return this.repository.updateEmailToken(id, emailToken, emailTokenExpiry);
     }
 
     async updatePhotoUrl(id: string, photoUrl: string) {
-        const user = await this.userModel.getUserById(id);
+        const user = await this.repository.getUserById(id);
         if (!user) {
             throw new Error('Usuário não encontrado');
         }
-        return this.userModel.updatePhotoUrl(id, photoUrl);
+        return this.repository.updatePhotoUrl(id, photoUrl);
     }
 
     async markEmailAsVerified(id: string) {
-        const user = await this.userModel.getUserById(id);
+        const user = await this.repository.getUserById(id);
         if (!user) {
             throw new Error('Usuário não encontrado');
         }
-        return this.userModel.markEmailAsVerified(id);
+        return this.repository.markEmailAsVerified(id);
     }
 
 }

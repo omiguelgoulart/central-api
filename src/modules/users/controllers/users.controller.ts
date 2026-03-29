@@ -5,16 +5,12 @@ import { UserService } from "../services/users.service";
 import { usuarioSchema, updateUsuarioSchema } from "../schemas/users.schema";
 
 export class UsersController {
-    private userService: UserService;
-
-    constructor() {
-        this.userService = new UserService();
-    }
+    constructor(private readonly service = new UserService()) { }
 
     async createUser(req: Request, res: Response) {
         try {
             const data = usuarioSchema.parse(req.body);
-            const result = await this.userService.createUser(data);
+            const result = await this.service.createUser(data);
             res.status(201).json(result);
         } catch (error) {
             if (error instanceof ZodError) {
@@ -28,7 +24,7 @@ export class UsersController {
 
     async getAllUsers(res: Response) {
         try {
-            const users = await this.userService.getAllUsers();
+            const users = await this.service.getAllUsers();
             res.status(200).json(users);
         } catch (error) {
             console.error(error);
@@ -39,7 +35,7 @@ export class UsersController {
     async getUserById(req: Request, res: Response) {
         const { id } = req.params;
         try {
-            const user = await this.userService.getUserById(id);
+            const user = await this.service.getUserById(id);
             res.status(200).json(user);
         }        catch (error) {
             console.error(error);          
@@ -50,7 +46,7 @@ export class UsersController {
     async deleteUser(req: Request, res: Response) {
         const { id } = req.params;
         try {
-            const result = await this.userService.deleteUser(id);
+            const result = await this.service.deleteUser(id);
             res.status(200).json(result);
         } catch (error) {
             console.error(error);
@@ -62,7 +58,7 @@ export class UsersController {
         const { id } = req.params;
         try {
             const data = updateUsuarioSchema.parse(req.body);
-            const result = await this.userService.updateUser(id, data);
+            const result = await this.service.updateUser(id, data);
             res.status(200).json(result);
         } catch (error) {
             if (error instanceof ZodError) {
@@ -77,7 +73,7 @@ export class UsersController {
 
     async coutUsers(res: Response) {
         try {
-            const count = await this.userService.countUsers();
+            const count = await this.service.countUsers();
             res.status(200).json({ count });
         } catch (error) {
             console.error(error);
@@ -88,7 +84,7 @@ export class UsersController {
     async getUserWithDetails(req: Request, res: Response) {
         const { id } = req.params;
         try {
-            const user = await this.userService.getUserWithDetails(id);
+            const user = await this.service.getUserWithDetails(id);
             res.status(200).json(user);
         } catch (error) {
             console.error(error);
@@ -98,7 +94,7 @@ export class UsersController {
 
     async getUserByEmailToken(emailToken: string) {
         try {
-            const user = await this.userService.getUserByEmailToken(emailToken);
+            const user = await this.service.getUserByEmailToken(emailToken);
             return user;
         } catch (error) {
             console.error(error);
@@ -108,7 +104,7 @@ export class UsersController {
 
     async verifyEmail(token: string) {
         try {
-            const result = await this.userService.verifyEmailToken(token);  
+            const result = await this.service.verifyEmailToken(token);  
             return result;
         } catch (error) {
             console.error(error);
@@ -118,7 +114,7 @@ export class UsersController {
 
     async updateEmailToken(id: string, emailToken: string, emailTokenExpiry: Date) {
         try {
-            const result = await this.userService.updateEmailToken(id, emailToken, emailTokenExpiry);
+            const result = await this.service.updateEmailToken(id, emailToken, emailTokenExpiry);
             return result;
         } catch (error) {
             console.error(error);
@@ -128,7 +124,7 @@ export class UsersController {
 
     async updatePhotoUrl(id: string, photoUrl: string) {
         try {
-            const result = await this.userService.updatePhotoUrl(id, photoUrl);
+            const result = await this.service.updatePhotoUrl(id, photoUrl);
             return result;
         } catch (error) {
             console.error(error);
@@ -138,7 +134,7 @@ export class UsersController {
 
     async markEmailAsVerified(id: string) {
         try {
-            const result = await this.userService.markEmailAsVerified(id);
+            const result = await this.service.markEmailAsVerified(id);
             return result;
         } catch (error) {
             console.error(error);

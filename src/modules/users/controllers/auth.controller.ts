@@ -1,20 +1,16 @@
 import { Request, Response } from "express";
 import { ZodError } from "zod";
 
-import { AuthModel } from "../models/auth.model";
+import { AuthService } from "../services/auth.service";
 import { loginSchema, resetPasswordSchema } from "../schemas/auth.schema";
 
 export class AuthController {
-    private loginModel: AuthModel;
-
-    constructor() {
-        this.loginModel = new AuthModel();
-    }
+    constructor(private readonly service = new AuthService()) { }
 
     async login(req: Request, res: Response) {
         try {
             const data = loginSchema.parse(req.body);
-            const result = await this.loginModel.login(data.email, data.senha);
+            const result = await this.service.login(data.email, data.senha);
             res.status(200).json(result);
         } catch (error) {
             if (error instanceof ZodError) {
@@ -29,7 +25,7 @@ export class AuthController {
     async forgotPassword(req: Request, res: Response) {
         try {
             const data = loginSchema.parse(req.body);
-            const result = await this.loginModel.forgotPassword(data.email);
+            const result = await this.service.forgotPassword(data.email);
             res.status(200).json(result);
         } catch (error) {
             if (error instanceof ZodError) {
@@ -44,7 +40,7 @@ export class AuthController {
     async resetPassword(req: Request, res: Response) {
         try {
             const data = resetPasswordSchema.parse(req.body);
-            const result = await this.loginModel.resetPassword(data.token, data.novaSenha);
+            const result = await this.service.resetPassword(data.token, data.novaSenha);
             res.status(200).json(result);
         } catch (error) {
             if (error instanceof ZodError) {
