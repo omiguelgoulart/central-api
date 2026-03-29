@@ -7,8 +7,6 @@ import { PlanoService } from "../services/plano.service";
 describe("PlanoController", () => {
     let planoServiceMock: Partial<PlanoService>;
     let planoController: PlanoController;
-    let req: Partial<Request>;
-    let res: Partial<Response>;
 
     const makeResponse = (): Response => ({
         status: vi.fn().mockReturnThis(),
