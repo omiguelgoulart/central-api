@@ -1,0 +1,128 @@
+import { StatusPagamento } from "@prisma/client";
+import { render } from "@react-email/render";
+import { type ReactElement } from "react";
+
+import { PagamentoAtrasado } from "../../emails/email-templates/pagamento-atrasado.template";
+import { PagamentoConfirmado } from "../../emails/email-templates/pagamento-confirmado.template";
+import { sendEmail } from "../../emails/services/email.service";
+import { AsaasRepository, CriarPagamentoBoleto, CriarPagamentoCredito, CriarPagamentoDebito, CriarPagamentoPix } from "../repositories/asaas.repository";
+import { CriarClienteInput, CriarPagamentoInput } from "../types/asaas.type";
+
+export class AsaasService {
+  constructor(private readonly asaasRepository = new AsaasRepository()) {}
+
+  async criarCliente(data: CriarClienteInput) {
+    return this.asaasRepository.criarCliente(data);
+  }
+
+  async criarPagamento(data: CriarPagamentoInput, ip?: string) {
+    let valorReal: number | undefined;
+
+    if (data.loteId) {
+      const lote = await this.asaasRepository.getLoteById(data.loteId);
+      if (!lote) throw new Error("Lote nao encontrado");
+      valorReal = Number(lote.precoUnitario);
+    } else if (data.faturaId) {
+      const fatura = await this.asaasRepository.getFaturaById(data.faturaId);
+      if (!fatura) throw new Error("Fatura nao encontrada");
+      valorReal = Number(fatura.valor);
+    }
+
+    if (!valorReal && !data.valor) {
+      throw new Error("Informe loteId ou faturaId para calcular o valor");
+    }
+
+    const valorFinal = valorReal ?? data.valor;
+    const payload: any = { ...data, valor: valorFinal };
+    delete payload.loteId;
+    delete payload.faturaId;
+
+    switch (payload.tipo) {
+      case "PIX":
+        return this.asaasRepository.criarPagamento(payload as CriarPagamentoPix);
+      case "BOLETO":
+        return this.asaasRepository.criarPagamento(payload as CriarPagamentoBoleto);
+      case "CREDIT_CARD":
+        return this.asaasRepository.criarPagamento({ ...payload, ip } as CriarPagamentoCredito);
+      case "DEBIT_CARD":
+        return this.asaasRepository.criarPagamento({ ...payload, ip } as CriarPagamentoDebito);
+    }
+  }
+
+  async obterQrCodePix(paymentId: string) {
+    return this.asaasRepository.obterQrCodePix(paymentId);
+  }
+
+  async obterStatusPagamento(id: string) {
+    return this.asaasRepository.obterStatusPagamento(id);
+  }
+
+  async obterBoletoPdf(id: string) {
+    return this.asaasRepository.obterBoletoPdf(id);
+  }
+
+  async processarWebhook(evento: any) {
+    if (!evento?.event) throw new Error("Evento invalido");
+    if (!(evento.event.startsWith("PAYMENT_") && evento.payment?.id)) return;
+
+    const novoStatus = this.mapStatus(evento.payment.status);
+    const pagoEm =
+      novoStatus === StatusPagamento.PAGO && evento.payment.confirmedDate
+        ? new Date(evento.payment.confirmedDate)
+        : novoStatus === StatusPagamento.PAGO
+          ? new Date()
+          : null;
+
+    const resultado = await this.asaasRepository.atualizarPagamentoWebhook(evento.payment.id, novoStatus, pagoEm);
+    if (resultado.count <= 0) return;
+
+    const pagamentoDb = await this.asaasRepository.getPagamentoComTorcedor(evento.payment.id);
+    if (!pagamentoDb?.torcedor?.email) return;
+
+    const { nome, email } = pagamentoDb.torcedor;
+    if (novoStatus === StatusPagamento.PAGO) {
+      const template = PagamentoConfirmado({
+        nome,
+        valor: Number(pagamentoDb.valor),
+        descricao: pagamentoDb.descricao ?? "Pagamento",
+        metodo: pagamentoDb.metodo,
+        dataConfirmacao: new Date().toLocaleDateString("pt-BR"),
+        referencia: pagamentoDb.referencia ?? undefined,
+      }) as ReactElement;
+      const html = await render(template);
+      sendEmail({
+        to: email,
+        subject: "Pagamento Confirmado!",
+        html,
+      }).catch((err) => console.error("Erro email pgto confirmado:", err));
+    } else if (novoStatus === StatusPagamento.ATRASADO) {
+      const template = PagamentoAtrasado({
+        nome,
+        valor: Number(pagamentoDb.valor),
+        descricao: pagamentoDb.descricao ?? "Pagamento",
+        dataVencimento: pagamentoDb.dataVencimento.toLocaleDateString("pt-BR"),
+      }) as ReactElement;
+      const html = await render(template);
+      sendEmail({
+        to: email,
+        subject: "Pagamento em Atraso",
+        html,
+      }).catch((err) => console.error("Erro email pgto atrasado:", err));
+    }
+  }
+
+  private mapStatus(status: string): StatusPagamento {
+    switch (status) {
+      case "CONFIRMED":
+      case "RECEIVED":
+      case "RECEIVED_IN_CASH":
+        return StatusPagamento.PAGO;
+      case "OVERDUE":
+        return StatusPagamento.ATRASADO;
+      case "CANCELED":
+        return StatusPagamento.CANCELADO;
+      default:
+        return StatusPagamento.PENDENTE;
+    }
+  }
+}
