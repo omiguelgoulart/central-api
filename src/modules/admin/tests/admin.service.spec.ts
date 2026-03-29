@@ -10,7 +10,7 @@ vi.mock("jsonwebtoken", () => ({
 }));
 
 import { AdminService } from "../services/admin.service";
-import { AdminRepository } from "../repositories/admin.repsitory";
+import { AdminRepository } from "../repositories/admin.repository";
 import { CreateAdminInput, UpdateAdminInput } from "../types/admin.type";
 import * as bcrypt from "bcryptjs";
 import * as jwt from "jsonwebtoken";
@@ -281,7 +281,7 @@ describe("AdminService", () => {
         role: "SUPER_ADMIN",
         senha: "novo-hash",
       });
-      
+
       expect(result).toEqual({
         id: "1",
         nome: "Novo Nome",

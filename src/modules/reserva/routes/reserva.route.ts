@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { verificaToken } from "../../../middlewares/verificaToken";
 
 import { ReservaController } from "../controllers/reserva.controller";
 import { ReservaRepository } from "../repositories/reserva.repository";
@@ -8,6 +9,8 @@ const reservaRoutes = Router();
 const repository = new ReservaRepository();
 const service = new ReservaService(repository);
 const controller = new ReservaController(service);
+
+reservaRoutes.use(verificaToken);
 
 reservaRoutes.post("/segurar", (req, res) => controller.segurarReserva(req, res));
 reservaRoutes.post("/liberar", (req, res) => controller.liberarReserva(req, res));

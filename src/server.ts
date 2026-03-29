@@ -5,7 +5,7 @@ const port = Number(process.env.PORT) || 3003;
 async function startServer() {
   if (!process.env.VERCEL) {
     const { startLembreteVencimentoJob } = await import(
-      "./emails/jobs/lembreteVencimento.job"
+      "./modules/emails/jobs/lembrete-vencimento.job"
     );
     startLembreteVencimentoJob();
   }

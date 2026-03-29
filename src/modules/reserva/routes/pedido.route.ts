@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { verificaToken } from "../../../middlewares/verificaToken";
 
 import { ReservaController } from "../controllers/reserva.controller";
 import { ReservaRepository } from "../repositories/reserva.repository";
@@ -8,6 +9,8 @@ const pedidoRoutes = Router();
 const repository = new ReservaRepository();
 const service = new ReservaService(repository);
 const controller = new ReservaController(service);
+
+pedidoRoutes.use(verificaToken);
 
 pedidoRoutes.post("/", (req, res) => controller.createPedido(req, res));
 pedidoRoutes.get("/", (_req, res) => controller.getAllPedidos(res));

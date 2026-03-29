@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { verificaToken } from "../../../middlewares/verificaToken";
 
 import { AssinaturaRepository } from "../repositories/assinatura.repository";
 import { AssinaturaService } from "../services/assinatura.service";
@@ -8,6 +9,8 @@ const assinaturaRoutes = Router();
 const repository = new AssinaturaRepository();
 const service = new AssinaturaService(repository);
 const controller = new AssinaturaController(service);
+
+assinaturaRoutes.use(verificaToken);
 
 assinaturaRoutes.post("/", (req, res) => controller.createAssinatura(req, res));
 assinaturaRoutes.get("/", (_req, res) => controller.getAllAssinaturas(res));

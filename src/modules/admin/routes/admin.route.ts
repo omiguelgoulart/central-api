@@ -1,13 +1,16 @@
 import { Router } from "express";
 import { AdminController } from "../controllers/admin.controller";
 import { AdminService } from "../services/admin.service";
-import { AdminRepository } from "../repositories/admin.repsitory";
+import { AdminRepository } from "../repositories/admin.repository";
+import { verificaToken } from "../../../middlewares/verificaToken";
 
 const adminRoutes = Router();
 
 const adminRepository = new AdminRepository();
 const adminService = new AdminService(adminRepository);
 const adminController = new AdminController(adminService);
+
+adminRoutes.use(verificaToken);
 
 adminRoutes.post("/", (req, res) => adminController.createAdmin(req, res));
 

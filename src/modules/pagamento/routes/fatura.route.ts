@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { verificaToken } from "../../../middlewares/verificaToken";
 
 import { FaturaRepository } from "../repositories/fatura.repository";
 import { FaturaService } from "../services/fatura.service";
@@ -9,6 +10,8 @@ const faturaRoutes = Router();
 const repository = new FaturaRepository();
 const service = new FaturaService(repository);
 const controller = new FaturaController(service);
+
+faturaRoutes.use(verificaToken);
 
 faturaRoutes.post("/", (req, res) => controller.createFatura(req, res));
 faturaRoutes.get("/", (_req, res) => controller.getAllFaturas(res));

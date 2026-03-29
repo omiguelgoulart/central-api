@@ -3,7 +3,7 @@ import { sign } from "jsonwebtoken";
 
 ;
 import { CreateAdminInput, UpdateAdminInput } from "../types/admin.type";
-import { AdminRepository } from "../repositories/admin.repsitory";
+import { AdminRepository } from "../repositories/admin.repository";
 
 export class AdminService {
   constructor(private readonly adminRepository: AdminRepository) { }
