@@ -65,6 +65,20 @@ export class UserRepository {
                 emailVerificado: true,
                 criadoEm: true,
                 atualizadoEm: true,
+                assinaturas: {
+                    include: {
+                        plano: true,
+                        faturas: true,
+                    },
+                },
+                pagamentos: true,
+                ingressos: {
+                    include: {
+                        jogo: true,
+                        lote: true,
+                    },
+                },
+                pedidos: true,
             },
         });
     }
