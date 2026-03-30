@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "npx ts-node-dev --respawn index.ts",
+    "dev": "npx ts-node-dev --respawn --files index.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "vercel-build": "npx prisma migrate deploy",

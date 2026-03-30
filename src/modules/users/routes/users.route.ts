@@ -15,7 +15,7 @@ usersRouter.post("/", (req, res) => controller.createUser(req, res));
 
 usersRouter.post("/verify-email", (req, _res) => controller.verifyEmail(req.body.token));
 
-usersRouter.use(verificaToken);
+usersRouter.get("/me", verificaToken, (req, res) => controller.getUserByToken(req, res));
 
 usersRouter.get("/", (req, res) => controller.getAllUsers(res));
 

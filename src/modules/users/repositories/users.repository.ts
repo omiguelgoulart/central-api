@@ -2,8 +2,8 @@ import { prisma } from "../../../lib/prisma";
 import { CreateUsuarioInput, UpdateUsuarioInput } from "../types/users.type";
 
 export class UserRepository {
-  constructor(private readonly prismaClient = prisma) { }
-    
+    constructor(private readonly prismaClient = prisma) { }
+
     async createUser(data: CreateUsuarioInput) {
         return this.prismaClient.torcedor.create({
             data: {
@@ -30,6 +30,42 @@ export class UserRepository {
     async getUserById(id: string) {
         return this.prismaClient.torcedor.findUnique({
             where: { id },
+        });
+    }
+
+    async findById(id: string) {
+        return this.prismaClient.torcedor.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                matricula: true,
+                nome: true,
+                email: true,
+                telefone: true,
+                cpf: true,
+                dataNascimento: true,
+                genero: true,
+                fotoUrl: true,
+                enderecoLogradouro: true,
+                enderecoNumero: true,
+                enderecoBairro: true,
+                enderecoCidade: true,
+                enderecoUF: true,
+                enderecoCEP: true,
+                statusSocio: true,
+                inadimplenteDesde: true,
+                aceitaTermosEm: true,
+                aceitaMarketing: true,
+                aceitaMarketingEm: true,
+                origemCadastro: true,
+                documentoFrenteUrl: true,
+                documentoVersoUrl: true,
+                gatewayClienteId: true,
+                faceId: true,
+                emailVerificado: true,
+                criadoEm: true,
+                atualizadoEm: true,
+            },
         });
     }
 
@@ -67,7 +103,7 @@ export class UserRepository {
                 enderecoCidade: data.enderecoCidade,
                 enderecoUF: data.enderecoUF,
                 enderecoCEP: data.enderecoCEP,
-             },
+            },
         });
     }
 

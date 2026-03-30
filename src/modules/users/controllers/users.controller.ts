@@ -30,15 +30,32 @@ export class UsersController {
             console.error(error);
             res.status(500).json({ error: 'Erro ao buscar usuários', detalhe: String(error) });
         }
-    }   
+    }
+
+    async getUserByToken(req: Request, res: Response) {
+        const userId = req.userLogadoId 
+        if (!userId) {
+            res.status(401).json({ error: 'Usuário não autenticado' });
+            return;
+        }
+        try {
+            const user = await this.service.getUserByToken(userId);
+            res.status(200).json(user);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: 'Erro ao buscar usuário', detalhe: String(error) });
+        }
+        
+    }
+
 
     async getUserById(req: Request, res: Response) {
         const { id } = req.params;
         try {
             const user = await this.service.getUserById(id);
             res.status(200).json(user);
-        }        catch (error) {
-            console.error(error);          
+        } catch (error) {
+            console.error(error);
             res.status(500).json({ error: 'Erro ao buscar usuário', detalhe: String(error) });
         }
     }
@@ -104,7 +121,7 @@ export class UsersController {
 
     async verifyEmail(token: string) {
         try {
-            const result = await this.service.verifyEmailToken(token);  
+            const result = await this.service.verifyEmailToken(token);
             return result;
         } catch (error) {
             console.error(error);

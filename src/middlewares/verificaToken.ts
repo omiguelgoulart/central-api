@@ -2,13 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
 interface TokenPayload {
-  userLogadoId: number;
+  userLogadoId: string;
   userLogadoNome: string;
-}
-
-interface AuthenticatedRequest extends Request {
-  userLogadoId?: number;
-  userLogadoNome?: string;
 }
 
 const TOKEN_COOKIE_NAME = "token";
@@ -52,13 +47,13 @@ function getRequestToken(req: Request): string | null {
       : undefined;
 
   return (
-    getTokenFromCookieHeader(cookieHeader) ??
+    getTokenFromCookieHeader(cookieHeader) ||
     getTokenFromAuthorizationHeader(authorizationHeader)
   );
 }
 
 export function verificaToken(
-  req: AuthenticatedRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): void {
@@ -82,8 +77,11 @@ export function verificaToken(
     req.userLogadoId = decoded.userLogadoId;
     req.userLogadoNome = decoded.userLogadoNome;
 
+    res.locals.userLogadoId = decoded.userLogadoId;
+    res.locals.userLogadoNome = decoded.userLogadoNome;
+
     next();
   } catch {
-    res.status(401).json({ error: "Token inválido" });
+    res.status(401).json({ error: "Token inválido ou expirado" });
   }
 }

@@ -25,6 +25,14 @@ export class UserService {
         return this.repository.getAllUsers();
     }
 
+    async getUserByToken(id: string) {
+        const user = await this.repository.findById(id);
+        if (!user) {
+            throw new Error('Usuário não encontrado');
+        }
+        return user;
+    }
+
     async getUserById(id: string) {
         const user = await this.repository.getUserById(id);
         if (!user) {
