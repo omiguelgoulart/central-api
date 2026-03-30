@@ -1,4 +1,3 @@
-import { ad } from "@faker-js/faker/dist/airline-CLphikKp";
 import { z } from "zod";
 
 export const adminSchema = z.object({

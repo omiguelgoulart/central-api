@@ -1,6 +1,7 @@
-import { AuthRepository } from "../repositories/auth.repository";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+
+import { AuthRepository } from "../repositories/auth.repository";
 
 export class AuthService {
     constructor(private readonly repository = new AuthRepository()) { }

@@ -1,4 +1,5 @@
 import { z } from "zod";
+
 import { planoSchema, updatePlanoSchema } from "../schemas/plano.schema";
 
 export type CreatePlanoInput = z.infer<typeof planoSchema>;

@@ -1,4 +1,5 @@
 import crypto from "crypto";
+
 import QRCode from "qrcode";
 
 export type QrPayload = {

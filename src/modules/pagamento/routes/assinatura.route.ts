@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { verificaToken } from "../../../middlewares/verificaToken";
 
+import { verificaToken } from "../../../middlewares/verificaToken";
+import { AssinaturaController } from "../controllers/assinatura.controller";
 import { AssinaturaRepository } from "../repositories/assinatura.repository";
 import { AssinaturaService } from "../services/assinatura.service";
-import { AssinaturaController } from "../controllers/assinatura.controller";
 
 const assinaturaRoutes = Router();
 const repository = new AssinaturaRepository();

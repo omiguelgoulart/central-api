@@ -1,8 +1,8 @@
 import { prisma } from "../../../lib/prisma";
-import { CreateJogoSetorInput, UpdateJogoSetorInput, TipoSetor } from "../types/jogoSetor.type";
+import { CreateJogoSetorInput, UpdateJogoSetorInput } from "../types/jogoSetor.type";
 
 export class JogoSetorRepository {
-    constructor(private readonly prismaClient = prisma) {}
+    constructor(private readonly prismaClient = prisma) { }
 
     async createJogoSetor(data: CreateJogoSetorInput) {
         return this.prismaClient.jogoSetor.create({

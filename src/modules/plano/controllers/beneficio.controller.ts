@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { ZodError } from "zod";
 
-import { BeneficioService } from "../services/beneficio.service";
 import { beneficioSchema, updateBeneficioSchema } from "../schemas/beneficio.schema";
+import { BeneficioService } from "../services/beneficio.service";
 
 export class BeneficioController {
     constructor(private readonly beneficioService: BeneficioService) { }

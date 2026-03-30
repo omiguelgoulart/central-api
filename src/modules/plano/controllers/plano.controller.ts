@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { ZodError } from "zod";
 
-import { PlanoService } from "../services/plano.service";
 import { planoSchema, updatePlanoSchema } from "../schemas/plano.schema";
+import { PlanoService } from "../services/plano.service";
 
 export class PlanoController {
     constructor(private readonly planoService: PlanoService) {}

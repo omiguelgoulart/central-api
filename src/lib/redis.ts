@@ -15,7 +15,7 @@ const redis = new Redis(url, {
         return Math.min(times * 50, 2000);
     },
     // evitar reconectar automaticamente em alguns erros conhecidos
-    reconnectOnError(err: any) {
+    reconnectOnError(err: Error & { code?: string }) {
         // se o erro for ECONNREFUSED (host inacessível), não forçar reconexão imediata
         if (err && err.code === "ECONNREFUSED") return false;
         return true;
@@ -26,7 +26,7 @@ const redis = new Redis(url, {
 const _lastErrorLog: Map<string, number> = new Map();
 const LOG_THROTTLE_MS = 60 * 1000; // 1 minuto
 
-redis.on("error", (err: any) => {
+redis.on("error", (err: Error & { code?: string }) => {
     try {
         const code = err && (err.code || (err instanceof Error ? err.name : String(err)));
         const key = String(code ?? "unknown");
@@ -47,25 +47,25 @@ redis.on("error", (err: any) => {
 
 // também throttle para eventos de connect/close para evitar spam de logs
 const _lastEventLog: Map<string, number> = new Map();
-function maybeLogEvent(key: string, level: 'log' | 'error' = 'log', ...args: any[]) {
+function maybeLogEvent(key: string, level: "log" | "error" = "log", ...args: unknown[]) {
     try {
         const now = Date.now();
         const last = _lastEventLog.get(key) || 0;
         if (now - last > LOG_THROTTLE_MS) {
             _lastEventLog.set(key, now);
-            if (level === 'error') console.error(...args); else console.log(...args);
+            if (level === "error") console.error(...args); else console.log(...args);
         }
-    } catch (e) {
+    } catch {
         // ignore
     }
 }
 
 redis.on("connect", () => {
-    maybeLogEvent('connect', 'log', '[redis] connected');
+    maybeLogEvent("connect", "log", "[redis] connected");
 });
 
 redis.on("close", () => {
-    maybeLogEvent('close', 'log', '[redis] connection closed');
+    maybeLogEvent("close", "log", "[redis] connection closed");
 });
 
 export default redis;

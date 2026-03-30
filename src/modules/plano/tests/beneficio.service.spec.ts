@@ -1,16 +1,7 @@
-import { beforeEach, describe, expect, it, vi, afterEach } from "vitest";
-import { BeneficioService } from "../services/beneficio.service";
-import { BeneficioRepository } from "../repositories/beneficio.repository";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-type BeneficioMock = {
-    id: number;
-    slug: string;
-    titulo: string;
-    ativo: boolean;
-    planoId: string;
-    ordem: number;
-    destaque: boolean;
-};
+import { BeneficioRepository } from "../repositories/beneficio.repository";
+import { BeneficioService } from "../services/beneficio.service";
 
 type BeneficioRepositoryMock = {
     createBeneficio: ReturnType<typeof vi.fn>;

@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi, afterEach } from "vitest";
 import { Request, Response } from "express";
+import { beforeEach, describe, expect, it, vi, afterEach } from "vitest";
 
 import { AdminController } from "../controllers/admin.controller";
 import { AdminService } from "../services/admin.service";

@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { verificaToken } from "../../../middlewares/verificaToken";
 
+import { verificaToken } from "../../../middlewares/verificaToken";
+import { PagamentoController } from "../controllers/pagamento.controller";
 import { PagamentoRepository } from "../repositories/pagamento.repository";
 import { PagamentoService } from "../services/pagamento.service";
-import { PagamentoController } from "../controllers/pagamento.controller";
 
 const pagamentoRoutes = Router();
 

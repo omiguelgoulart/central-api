@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { verificaToken } from "../../../middlewares/verificaToken";
 
+import { verificaToken } from "../../../middlewares/verificaToken";
 import { ReservaController } from "../controllers/reserva.controller";
 import { ReservaRepository } from "../repositories/reserva.repository";
 import { ReservaService } from "../services/reserva.service";

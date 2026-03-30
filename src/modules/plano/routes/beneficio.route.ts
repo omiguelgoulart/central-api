@@ -1,7 +1,8 @@
 import { Router } from "express";
+
+import { BeneficioController } from "../controllers/beneficio.controller";
 import { BeneficioRepository } from "../repositories/beneficio.repository";
 import { BeneficioService } from "../services/beneficio.service";
-import { BeneficioController } from "../controllers/beneficio.controller";
 
 const beneficioRouter = Router();
 

@@ -1,3 +1,5 @@
+import { Prisma } from "@prisma/client";
+
 import { prisma } from "../../../lib/prisma";
 import { CreateAssinaturaInput, UpdateAssinaturaInput } from "../types/pagamento.type";
 
@@ -42,10 +44,23 @@ export class AssinaturaRepository {
     }
 
     async updateAssinatura(id: string, data: UpdateAssinaturaInput) {
-        const parsedData = { ...data } as any;
-        if (parsedData.inicioEm) parsedData.inicioEm = new Date(parsedData.inicioEm);
-        if (parsedData.fimEm) parsedData.fimEm = new Date(parsedData.fimEm);
-        if (parsedData.proximaCobrancaEm) parsedData.proximaCobrancaEm = new Date(parsedData.proximaCobrancaEm);
+        const toDate = (value?: string) => (value ? new Date(value) : undefined);
+        const toDateOrNull = (value?: string | null) => {
+            if (value === null) return null;
+            if (!value) return undefined;
+            return new Date(value);
+        };
+
+        const parsedData: Prisma.AssinaturaUpdateInput = {
+            ...data,
+            inicioEm: toDate(data.inicioEm),
+            expiraEm: toDateOrNull(data.expiraEm),
+            proximaCobrancaEm: toDateOrNull(data.proximaCobrancaEm),
+            canceladaEm: toDateOrNull(data.canceladaEm),
+            suspensaEm: toDateOrNull(data.suspensaEm),
+            retomadaEm: toDateOrNull(data.retomadaEm),
+        };
+
         return this.prismaClient.assinatura.update({ where: { id }, data: parsedData });
     }
 

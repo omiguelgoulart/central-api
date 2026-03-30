@@ -1,4 +1,5 @@
 import { UploadApiResponse } from "cloudinary";
+
 import { cloudinary } from "../lib/cloudinary";
 
 export function uploadCloudinary(

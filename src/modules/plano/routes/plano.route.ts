@@ -1,7 +1,8 @@
 import { Router } from "express";
+
+import { PlanoController } from "../controllers/plano.controller";
 import { PlanoRepository } from "../repositories/plano.repository";
 import { PlanoService } from "../services/plano.service";
-import { PlanoController } from "../controllers/plano.controller";
 
 const planoRouter = Router();
 

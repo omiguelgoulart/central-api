@@ -1,3 +1,5 @@
+import { Prisma } from "@prisma/client";
+
 import { prisma } from "../../../lib/prisma";
 import { CreateFaturaInput, UpdateFaturaInput } from "../types/pagamento.type";
 
@@ -35,7 +37,7 @@ export class FaturaRepository {
     }
 
     async updateFatura(id: string, data: UpdateFaturaInput) {
-        return this.prismaClient.fatura.update({ where: { id }, data: data as any });
+        return this.prismaClient.fatura.update({ where: { id }, data: data as Prisma.FaturaUpdateInput });
     }
 
     async getAssinaturaComTorcedor(id: string) {

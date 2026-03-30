@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, it, vi, afterEach } from "vitest";
-import { PlanoService } from "../services/plano.service";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { PlanoRepository } from "../repositories/plano.repository";
+import { PlanoService } from "../services/plano.service";
 
 
 type PlanoMock = {

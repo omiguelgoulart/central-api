@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { ZodError } from "zod";
 
-import { AuthService } from "../services/auth.service";
 import { loginSchema, resetPasswordSchema } from "../schemas/auth.schema";
+import { AuthService } from "../services/auth.service";
 
 export class AuthController {
     constructor(private readonly service = new AuthService()) { }

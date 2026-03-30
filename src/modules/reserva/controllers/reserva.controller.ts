@@ -1,16 +1,13 @@
 import { Request, Response } from "express";
 import { ZodError } from "zod";
 
-import {
-    checkoutConfirmarSchema,
-    confirmarPedidoSchema,
-    itemCreateSchema,
-    itemPatchSchema,
-    pedidoCreateSchema,
-    pedidoPatchSchema,
-    reservaBodySchema,
-} from "../schemas/reserva.schema";
+import { checkoutConfirmarSchema, confirmarPedidoSchema, itemCreateSchema, itemPatchSchema, pedidoCreateSchema, pedidoPatchSchema, reservaBodySchema } from "../schemas/reserva.schema";
 import { ReservaService } from "../services/reserva.service";
+
+type HttpError = Error & {
+    status?: number;
+    details?: Record<string, unknown>;
+};
 
 export class ReservaController {
     constructor(private readonly service = new ReservaService()) { }
@@ -145,8 +142,9 @@ export class ReservaController {
             res.status(400).json({ errors: error.errors });
             return;
         }
-        if (error instanceof Error && (error as any).status) {
-            res.status((error as any).status).json({ error: error.message, ...(error as any).details });
+        const typedError = error as HttpError;
+        if (error instanceof Error && typedError.status) {
+            res.status(typedError.status).json({ error: error.message, ...(typedError.details ?? {}) });
             return;
         }
         if (error instanceof Error && error.message.includes("nao encontrado")) {

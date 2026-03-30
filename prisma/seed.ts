@@ -1,5 +1,5 @@
-import { PrismaClient, Periodicidade, StatusSocio, StatusAssinatura, StatusFatura, MetodoPagamento, TipoSetor, StatusIngresso, StatusPedido, TipoIngresso, TipoLote } from '@prisma/client'
 import { fakerPT_BR as faker } from '@faker-js/faker'
+import { PrismaClient, Periodicidade, StatusSocio, StatusAssinatura, StatusFatura, MetodoPagamento, TipoSetor, StatusIngresso, StatusPedido, TipoIngresso, TipoLote } from '@prisma/client'
 
 const prisma = new PrismaClient()
 

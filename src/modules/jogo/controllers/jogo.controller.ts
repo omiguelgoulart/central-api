@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { ZodError } from "zod";
 
-import { JogoService } from "../services/jogo.service";
 import { jogoSchema, updateJogoSchema } from "../schemas/jogo.schema";
+import { JogoService } from "../services/jogo.service";
 
 export class JogoController {
     constructor(private readonly jogoService: JogoService) {}

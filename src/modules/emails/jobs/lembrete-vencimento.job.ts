@@ -1,10 +1,8 @@
 import cron from 'node-cron';
-import { render } from '@react-email/render';
-import type { ReactElement } from 'react';
 
-import { sendEmail } from '../services/email.service';
 import { prisma } from '../../../lib/prisma';
-import { LembreteVencimento } from '../email-templates/lembrete-vencimento.template';
+import { lembreteVencimentoTemplate } from '../email-templates/lembrete-vencimento.template';
+import { sendEmail } from '../services/email.service';
 
 export function startLembreteVencimentoJob(): void {
     cron.schedule('0 9 * * *', async () => {
@@ -42,13 +40,11 @@ export function startLembreteVencimentoJob(): void {
             });
 
             for (const pagamento of pagamentos) {
-                const template = await LembreteVencimento({
+                const html = lembreteVencimentoTemplate({
                     nomeTorcedor: pagamento.torcedor.nome,
                     dataVencimento: pagamento.dataVencimento.toLocaleDateString('pt-BR'),
                     diasRestantes: 1,
                 });
-
-                const html = await render(template as ReactElement);
 
                 await sendEmail({
                     to: pagamento.torcedor.email,

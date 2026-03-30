@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { ZodError } from "zod";
 
-import { AdminService } from "../services/admin.service";
 import { adminSchema, updateAdminSchema } from "../schemas/admin.schema";
+import { AdminService } from "../services/admin.service";
 
 export class AdminController {
     

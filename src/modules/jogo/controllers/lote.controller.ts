@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { ZodError } from "zod";
 
-import { LoteService } from "../services/lote.service";
 import { CreateLoteInput } from "../repositories/lote.repository";
+import { LoteService } from "../services/lote.service";
 
 export class LoteController {
     constructor(private readonly loteService: LoteService) { }

@@ -1,9 +1,9 @@
 import { prisma } from "../../../lib/prisma";
-import { CreatePlanoInput, UpdatePlanoInput, PeriodicidadePlano } from "../types/plano.type";
+import { CreatePlanoInput, UpdatePlanoInput } from "../types/plano.type";
 
 
 export class PlanoRepository {
-    constructor(private readonly prismaClient = prisma) {}
+    constructor(private readonly prismaClient = prisma) { }
 
     async createPlano(data: CreatePlanoInput) {
         return this.prismaClient.plano.create({
@@ -41,4 +41,4 @@ export class PlanoRepository {
             },
         });
     }
-  }
+}

@@ -1,11 +1,12 @@
 import { compare, hash } from "bcryptjs";
 import { sign } from "jsonwebtoken";
+
 import { prisma } from "../../../lib/prisma";
 
 export class AuthRepository {
   constructor(private readonly prismaClient = prisma) { }
 
-  forgotPassword(email: string) {
+  forgotPassword(_email: string) {
     throw new Error("Method not implemented.");
   }
   async findUserByEmail(email: string) {

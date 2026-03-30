@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { verificaToken } from "../../../middlewares/verificaToken";
 
+import { verificaToken } from "../../../middlewares/verificaToken";
+import { FaturaController } from "../controllers/fatura.controller";
 import { FaturaRepository } from "../repositories/fatura.repository";
 import { FaturaService } from "../services/fatura.service";
-import { FaturaController } from "../controllers/fatura.controller";
 
 const faturaRoutes = Router();
 

@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
 import { ZodError } from "zod";
 
-import { AsaasService } from "../services/asaas.service";
 import { criarClienteSchema, idParamSchema, pagamentoUnionSchema, paymentIdParamSchema } from "../schemas/asaas.schema";
+import { AsaasService } from "../services/asaas.service";
 
 export class AsaasController {
-  constructor(private readonly service = new AsaasService()) {}
+  constructor(private readonly service = new AsaasService()) { }
 
-  private getClientIp(req: any): string | undefined {
+  private getClientIp(req: Request): string | undefined {
     const xf = req.headers["x-forwarded-for"];
     if (Array.isArray(xf)) return xf[0];
     if (typeof xf === "string") return xf.split(",")[0]?.trim();

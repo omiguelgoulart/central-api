@@ -1,11 +1,13 @@
-import AssinaturaCancelada from "@/modules/emails/email-templates/assinatura-cancelada.template";
-import AssinaturaCriada from "@/modules/emails/email-templates/assinatura-criada.template";
-import { render } from "@react-email/render";
-import { type ReactElement } from "react";
-
 import { sendEmail } from "../../emails/services/email.service";
 import { AssinaturaRepository } from "../repositories/assinatura.repository";
 import { CreateAssinaturaInput, UpdateAssinaturaInput } from "../types/pagamento.type";
+
+import {
+    assinaturaCanceladaTemplate,
+} from "../../emails/email-templates/assinatura-cancelada.template";
+import {
+    assinaturaCriadaTemplate,
+} from "../../emails/email-templates/assinatura-criada.template";
 
 export class AssinaturaService {
     constructor(private readonly repository = new AssinaturaRepository()) { }
@@ -18,15 +20,14 @@ export class AssinaturaService {
         if (!plano) throw new Error("Plano nao encontrado");
 
         const nova = await this.repository.createAssinatura(data);
-        const template = AssinaturaCriada({
+        const html = assinaturaCriadaTemplate({
             nome: torcedor.nome,
             plano: plano.nome,
             valor: Number(plano.valor),
             periodicidade: plano.periodicidade,
             inicioEm: new Date(data.inicioEm).toLocaleDateString("pt-BR"),
             proximaCobranca: data.proximaCobrancaEm ? new Date(data.proximaCobrancaEm).toLocaleDateString("pt-BR") : undefined,
-        }) as ReactElement;
-        const html = await render(template);
+        });
 
         sendEmail({
             to: torcedor.email,
@@ -64,13 +65,12 @@ export class AssinaturaService {
         if (data.status === "CANCELADA") {
             const assinaturaCompleta = await this.repository.getAssinaturaComTorcedor(id);
             if (assinaturaCompleta?.torcedor?.email) {
-                const template = AssinaturaCancelada({
+                const html = assinaturaCanceladaTemplate({
                     nome: assinaturaCompleta.torcedor.nome,
                     plano: assinaturaCompleta.plano.nome,
                     canceladaEm: new Date().toLocaleDateString("pt-BR"),
                     motivo: data.motivoCancelamento ?? undefined,
-                }) as ReactElement;
-                const html = await render(template);
+                });
 
                 sendEmail({
                     to: assinaturaCompleta.torcedor.email,

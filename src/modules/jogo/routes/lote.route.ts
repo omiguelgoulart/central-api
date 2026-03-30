@@ -1,7 +1,8 @@
 import { Router } from "express";
+
 import { LoteController } from "../controllers/lote.controller";
-import { LoteService } from "../services/lote.service";
 import { LoteRepository } from "../repositories/lote.repository";
+import { LoteService } from "../services/lote.service";
 
 const loteRoutes = Router();
 

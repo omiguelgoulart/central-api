@@ -1,3 +1,5 @@
+import * as bcrypt from "bcryptjs";
+import * as jwt from "jsonwebtoken";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("bcryptjs", () => ({
@@ -9,11 +11,9 @@ vi.mock("jsonwebtoken", () => ({
   sign: vi.fn(),
 }));
 
-import { AdminService } from "../services/admin.service";
 import { AdminRepository } from "../repositories/admin.repository";
+import { AdminService } from "../services/admin.service";
 import { CreateAdminInput, UpdateAdminInput } from "../types/admin.type";
-import * as bcrypt from "bcryptjs";
-import * as jwt from "jsonwebtoken";
 
 const bcryptMocked = vi.mocked(bcrypt);
 const jwtMocked = vi.mocked(jwt);

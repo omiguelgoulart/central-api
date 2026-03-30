@@ -1,7 +1,8 @@
 import { Router } from "express";
+
+import { JogoSetorController } from "../controllers/jogoSetor.controller";
 import { JogoSetorRepository } from "../repositories/jogoSetor.repository";
 import { JogoSetorService } from "../services/jogoSetor.service";
-import { JogoSetorController } from "../controllers/jogoSetor.controller";
 
 const jogoSetorRoutes = Router();
 

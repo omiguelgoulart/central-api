@@ -1,8 +1,8 @@
 import { Router } from "express";
 
+import { AsaasController } from "../controllers/asaas.controller";
 import { AsaasRepository } from "../repositories/asaas.repository";
 import { AsaasService } from "../services/asaas.service";
-import { AsaasController } from "../controllers/asaas.controller";
 
 const asaasRoutes = Router();
 const repository = new AsaasRepository();

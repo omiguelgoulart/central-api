@@ -1,7 +1,8 @@
 import { Router } from "express";
+
+import { SetorController } from "../controllers/setor.controller";
 import { SetorRepository } from "../repositories/setor.repository";
 import { SetorService } from "../services/setor.service";
-import { SetorController } from "../controllers/setor.controller";
 
 const setorRoutes = Router();
 

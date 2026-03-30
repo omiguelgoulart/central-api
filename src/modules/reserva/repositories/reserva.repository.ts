@@ -2,6 +2,9 @@ import { prisma } from "../../../lib/prisma";
 import redis from "../../../lib/redis";
 import { CheckoutConfirmarInput, ItemCreateInput, ItemPatchInput, PedidoCreateInput, PedidoPatchInput, ReservaBody } from "../types/reserva.type";
 
+type ItemPedidoComPreco = PedidoCreateInput["itens"][number] & { preco: number };
+type CheckoutItemComPreco = CheckoutConfirmarInput["itens"][number] & { preco: number };
+
 export class ReservaRepository {
   constructor(
     private readonly db = prisma,
@@ -55,7 +58,7 @@ export class ReservaRepository {
     return this.db.lote.findUnique({ where: { id: loteId } });
   }
 
-  async createPedido(data: PedidoCreateInput & { itensComPreco: Array<any>; total: number }) {
+  async createPedido(data: PedidoCreateInput & { itensComPreco: ItemPedidoComPreco[]; total: number }) {
     return this.db.pedido.create({
       data: {
         torcedorId: data.torcedorId,
@@ -149,7 +152,7 @@ export class ReservaRepository {
     return this.db.pedido.update({ where: { id: pedidoId }, data: { status: "RESERVA_ATIVA" } });
   }
 
-  async createCheckoutPedido(data: CheckoutConfirmarInput & { total: number }) {
+  async createCheckoutPedido(data: Omit<CheckoutConfirmarInput, "itens"> & { itens: CheckoutItemComPreco[]; total: number }) {
     return this.db.pedido.create({
       data: {
         torcedorId: data.torcedorId,
@@ -160,7 +163,7 @@ export class ReservaRepository {
             Array.from({ length: i.qtd }).map((_, idx) => ({
               setorId: i.setorId,
               tipo: i.tipo,
-              preco: (i as any).preco,
+              preco: i.preco,
               nomeTitular: i.titulares?.[idx]?.nome ?? null,
               torcedorCpf: i.titulares?.[idx]?.cpf ?? null,
             }))

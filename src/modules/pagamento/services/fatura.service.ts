@@ -1,7 +1,6 @@
-import FaturaGerada from "@/modules/emails/email-templates/fatura-gerada.template";
-import { render } from "@react-email/render";
-import { type ReactElement } from "react";
-
+import {
+    faturaGeradaTemplate,
+} from "../../emails/email-templates/fatura-gerada.template";
 import { sendEmail } from "../../emails/services/email.service";
 import { FaturaRepository } from "../repositories/fatura.repository";
 import { CreateFaturaInput, UpdateFaturaInput } from "../types/pagamento.type";
@@ -16,14 +15,13 @@ export class FaturaService {
         const novaFatura = await this.repository.createFatura(data);
         const assinaturaComTorcedor = await this.repository.getAssinaturaComTorcedor(data.assinaturaId);
         if (assinaturaComTorcedor?.torcedor?.email) {
-            const template = FaturaGerada({
+            const html = faturaGeradaTemplate({
                 nome: assinaturaComTorcedor.torcedor.nome,
                 plano: assinaturaComTorcedor.plano.nome,
                 competencia: data.competencia,
                 valor: Number(data.valor),
                 vencimentoEm: data.vencimentoEm.toLocaleDateString("pt-BR"),
-            }) as ReactElement;
-            const html = await render(template);
+            });
             sendEmail({
                 to: assinaturaComTorcedor.torcedor.email,
                 subject: `Fatura ${data.competencia} - ${assinaturaComTorcedor.plano.nome}`,

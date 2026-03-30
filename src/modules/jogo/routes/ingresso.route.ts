@@ -1,7 +1,8 @@
 import { Router } from "express";
+
+import { IngressoController } from "../controllers/ingresso.controller";
 import { IngressoRepository } from "../repositories/ingresso.repository";
 import { IngressoService } from "../services/ingresso.service";
-import { IngressoController } from "../controllers/ingresso.controller";
 
 const ingressoRoutes = Router();
 

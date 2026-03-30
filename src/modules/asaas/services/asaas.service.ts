@@ -1,15 +1,26 @@
 import { StatusPagamento } from "@prisma/client";
-import { render } from "@react-email/render";
-import { type ReactElement } from "react";
 
-import { PagamentoAtrasado } from "../../emails/email-templates/pagamento-atrasado.template";
-import { PagamentoConfirmado } from "../../emails/email-templates/pagamento-confirmado.template";
+import {
+  pagamentoAtrasadoTemplate,
+} from "../../emails/email-templates/pagamento-atrasado.template";
+import {
+  pagamentoConfirmadoTemplate,
+} from "../../emails/email-templates/pagamento-confirmado.template";
 import { sendEmail } from "../../emails/services/email.service";
 import { AsaasRepository, CriarPagamentoBoleto, CriarPagamentoCredito, CriarPagamentoDebito, CriarPagamentoPix } from "../repositories/asaas.repository";
 import { CriarClienteInput, CriarPagamentoInput } from "../types/asaas.type";
 
+type AsaasWebhookEvent = {
+  event?: string;
+  payment?: {
+    id?: string;
+    status?: string;
+    confirmedDate?: string;
+  };
+};
+
 export class AsaasService {
-  constructor(private readonly asaasRepository = new AsaasRepository()) {}
+  constructor(private readonly asaasRepository = new AsaasRepository()) { }
 
   async criarCliente(data: CriarClienteInput) {
     return this.asaasRepository.criarCliente(data);
@@ -33,7 +44,7 @@ export class AsaasService {
     }
 
     const valorFinal = valorReal ?? data.valor;
-    const payload: any = { ...data, valor: valorFinal };
+    const payload = { ...data, valor: valorFinal };
     delete payload.loteId;
     delete payload.faturaId;
 
@@ -61,11 +72,12 @@ export class AsaasService {
     return this.asaasRepository.obterBoletoPdf(id);
   }
 
-  async processarWebhook(evento: any) {
+  async processarWebhook(rawEvento: unknown) {
+    const evento = rawEvento as AsaasWebhookEvent;
     if (!evento?.event) throw new Error("Evento invalido");
     if (!(evento.event.startsWith("PAYMENT_") && evento.payment?.id)) return;
 
-    const novoStatus = this.mapStatus(evento.payment.status);
+    const novoStatus = this.mapStatus(evento.payment.status ?? "");
     const pagoEm =
       novoStatus === StatusPagamento.PAGO && evento.payment.confirmedDate
         ? new Date(evento.payment.confirmedDate)
@@ -81,28 +93,26 @@ export class AsaasService {
 
     const { nome, email } = pagamentoDb.torcedor;
     if (novoStatus === StatusPagamento.PAGO) {
-      const template = PagamentoConfirmado({
+      const html = pagamentoConfirmadoTemplate({
         nome,
         valor: Number(pagamentoDb.valor),
         descricao: pagamentoDb.descricao ?? "Pagamento",
         metodo: pagamentoDb.metodo,
         dataConfirmacao: new Date().toLocaleDateString("pt-BR"),
         referencia: pagamentoDb.referencia ?? undefined,
-      }) as ReactElement;
-      const html = await render(template);
+      });
       sendEmail({
         to: email,
         subject: "Pagamento Confirmado!",
         html,
       }).catch((err) => console.error("Erro email pgto confirmado:", err));
     } else if (novoStatus === StatusPagamento.ATRASADO) {
-      const template = PagamentoAtrasado({
+      const html = pagamentoAtrasadoTemplate({
         nome,
         valor: Number(pagamentoDb.valor),
         descricao: pagamentoDb.descricao ?? "Pagamento",
         dataVencimento: pagamentoDb.dataVencimento.toLocaleDateString("pt-BR"),
-      }) as ReactElement;
-      const html = await render(template);
+      });
       sendEmail({
         to: email,
         subject: "Pagamento em Atraso",

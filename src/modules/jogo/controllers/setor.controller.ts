@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { ZodError } from "zod";
 
-import { SetorService } from "../services/setor.service";
 import { setorSchema, updateSetorSchema } from "../schemas/setor.schema";
+import { SetorService } from "../services/setor.service";
 
 export class SetorController {
     

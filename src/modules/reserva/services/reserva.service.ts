@@ -1,7 +1,14 @@
-import { PedidoConfirmado } from "../../emails/email-templates/pedido-confirmado.template";
+import { pedidoConfirmadoTemplate } from "../../emails/email-templates/pedido-confirmado.template";
 import { sendEmail } from "../../emails/services/email.service";
 import { ReservaRepository } from "../repositories/reserva.repository";
 import { CheckoutConfirmarInput, ItemCreateInput, ItemPatchInput, PedidoCreateInput, PedidoPatchInput, ReservaBody } from "../types/reserva.type";
+
+type HttpError = Error & {
+    status?: number;
+    details?: Record<string, unknown>;
+};
+
+type CheckoutItemComPreco = CheckoutConfirmarInput["itens"][number] & { preco: number };
 
 export class ReservaService {
     constructor(
@@ -116,8 +123,9 @@ export class ReservaService {
             const ok = await this.validarDisponibilidade(partidaId, setorId, qtd);
             if (!ok.ok) {
                 const err = new Error("Setor sem disponibilidade suficiente");
-                (err as any).status = 409;
-                (err as any).details = { setorId, livres: ok.livres };
+                const typedErr = err as HttpError;
+                typedErr.status = 409;
+                typedErr.details = { setorId, livres: ok.livres };
                 throw err;
             }
         }
@@ -127,35 +135,37 @@ export class ReservaService {
     }
 
     async confirmarCheckout(data: CheckoutConfirmarInput) {
+        const itensComPreco: CheckoutItemComPreco[] = [];
         for (const item of data.itens) {
             const lote = await this.repository.getLoteById(item.loteId);
             if (!lote) throw new Error(`Lote ${item.loteId} nao encontrado`);
-            (item as any).preco = Number(lote.precoUnitario);
+            itensComPreco.push({ ...item, preco: Number(lote.precoUnitario) });
         }
 
-        for (const item of data.itens) {
+        for (const item of itensComPreco) {
             const ok = await this.validarDisponibilidade(data.partidaId, item.setorId, item.qtd);
             if (!ok.ok) {
                 const err = new Error("Setor sem disponibilidade suficiente");
-                (err as any).status = 409;
-                (err as any).details = { setorId: item.setorId, livres: ok.livres };
+                const typedErr = err as HttpError;
+                typedErr.status = 409;
+                typedErr.details = { setorId: item.setorId, livres: ok.livres };
                 throw err;
             }
         }
 
-        const total = data.itens.reduce((sum, i) => sum + Number((i as any).preco) * Number(i.qtd), 0);
-        const pedido = await this.repository.createCheckoutPedido({ ...data, total });
+        const total = itensComPreco.reduce((sum, i) => sum + Number(i.preco) * Number(i.qtd), 0);
+        const pedido = await this.repository.createCheckoutPedido({ ...data, itens: itensComPreco, total });
 
         const torcedor = await this.repository.getTorcedorById(data.torcedorId);
         if (torcedor?.email) {
             this.sendEmailFn({
                 to: torcedor.email,
                 subject: "Pedido Confirmado!",
-                html: String(PedidoConfirmado({
+                html: String(pedidoConfirmadoTemplate({
                     nome: torcedor.nome,
                     pedidoId: pedido.id,
                     total,
-                    itens: pedido.itens.map((item: any) => ({
+                    itens: pedido.itens.map((item) => ({
                         setor: item.setorId,
                         tipo: item.tipo,
                         preco: Number(item.preco),

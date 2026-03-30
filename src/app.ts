@@ -1,26 +1,26 @@
-import express from "express";
 import cors from "cors";
+import express from "express";
 
-import { planoRouter } from "./modules/plano/routes/plano.route";
-import { beneficioRouter } from "./modules/plano/routes/beneficio.route";
-import { authRouter } from "./modules/users/routes/auth.route";
-import { usersRouter } from "./modules/users/routes/users.route";
 import { adminRoutes } from "./modules/admin/routes/admin.route";
+import { adminLoginRoutes } from "./modules/admin/routes/adminLogin.route";
+import { asaasRoutes } from "./modules/asaas/routes/asaas.route";
+import { asaasWebhookRoutes } from "./modules/asaas/routes/webhooks.route";
+import { checkinRoutes } from "./modules/jogo/routes/checkin.route";
 import { ingressoRoutes } from "./modules/jogo/routes/ingresso.route";
 import { jogoRoutes } from "./modules/jogo/routes/jogo.route";
 import { jogoSetorRoutes } from "./modules/jogo/routes/jogoSetor.route";
-import { setorRoutes } from "./modules/jogo/routes/setor.route";
 import { loteRoutes } from "./modules/jogo/routes/lote.route";
-import { pagamentoRoutes } from "./modules/pagamento/routes/pagamento.route";
-import { faturaRoutes } from "./modules/pagamento/routes/fatura.route";
+import { setorRoutes } from "./modules/jogo/routes/setor.route";
 import { assinaturaRoutes } from "./modules/pagamento/routes/assinatura.route";
-import { reservaRoutes } from "./modules/reserva/routes/reserva.route";
-import { pedidoRoutes } from "./modules/reserva/routes/pedido.route";
+import { faturaRoutes } from "./modules/pagamento/routes/fatura.route";
+import { pagamentoRoutes } from "./modules/pagamento/routes/pagamento.route";
+import { beneficioRouter } from "./modules/plano/routes/beneficio.route";
+import { planoRouter } from "./modules/plano/routes/plano.route";
 import { checkoutRoutes } from "./modules/reserva/routes/checkout.route";
-import { asaasRoutes } from "./modules/asaas/routes/asaas.route";
-import { asaasWebhookRoutes } from "./modules/asaas/routes/webhooks.route";
-import { adminLoginRoutes } from "./modules/admin/routes/adminLogin.route";
-import { checkinRoutes } from "./modules/jogo/routes/checkin.route";
+import { pedidoRoutes } from "./modules/reserva/routes/pedido.route";
+import { reservaRoutes } from "./modules/reserva/routes/reserva.route";
+import { authRouter } from "./modules/users/routes/auth.route";
+import { usersRouter } from "./modules/users/routes/users.route";
 
 const app = express();
 
@@ -54,7 +54,7 @@ app.use("/auth", authRouter);
 app.use("/usuario", usersRouter);
 
 app.use("/admin", adminRoutes);
-app.use("/ingresso", ingressoRoutes)
+app.use("/ingresso", ingressoRoutes);
 app.use("/jogo", jogoRoutes);
 app.use("/jogo-setor", jogoSetorRoutes);
 app.use("/setor", setorRoutes);

@@ -2,8 +2,8 @@ import { compare, hash } from "bcryptjs";
 import { sign } from "jsonwebtoken";
 
 ;
-import { CreateAdminInput, UpdateAdminInput } from "../types/admin.type";
 import { AdminRepository } from "../repositories/admin.repository";
+import { CreateAdminInput, UpdateAdminInput } from "../types/admin.type";
 
 export class AdminService {
   constructor(private readonly adminRepository: AdminRepository) { }

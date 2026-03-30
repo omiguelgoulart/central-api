@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi, afterEach } from "vitest";
 import { Request, Response } from "express";
+import { beforeEach, describe, expect, it, vi, afterEach } from "vitest";
 
 import { PlanoController } from "../controllers/plano.controller";
 import { PlanoService } from "../services/plano.service";

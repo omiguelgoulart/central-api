@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { verificaToken } from "../../../middlewares/verificaToken";
 
+import { verificaToken } from "../../../middlewares/verificaToken";
+import { CheckinController } from "../controllers/checkin.controller";
 import { CheckinRepository } from "../repositories/checkin.repository";
 import { CheckinService } from "../services/checkin.service";
-import { CheckinController } from "../controllers/checkin.controller";
 
 const checkinRoutes = Router();
 const repository = new CheckinRepository();

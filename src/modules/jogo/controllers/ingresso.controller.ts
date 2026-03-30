@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { ZodError } from "zod";
 
 import { IngressoService } from "../services/ingresso.service";
-import { CreateIngressoInput, UpdateIngressoInput } from "../types/ingresso.type";
+import { CreateIngressoInput, IngressoStatus } from "../types/ingresso.type";
 
 export class IngressoController {
     constructor(private readonly ingressoService: IngressoService) { }
@@ -68,7 +68,8 @@ export class IngressoController {
 
     async deleteIngresso(req: Request, res: Response) {
         const { id } = req.params;
-        try {            const result = await this.ingressoService.deleteIngresso(id);
+        try {
+            const result = await this.ingressoService.deleteIngresso(id);
             res.status(200).json(result);
         } catch (error) {
             console.error(error);
@@ -92,7 +93,7 @@ export class IngressoController {
         const { id } = req.params;
         const { status } = req.body as { status: string };
         try {
-            const result = await this.ingressoService.updateIngresso(id, { status: status as any });
+            const result = await this.ingressoService.updateIngresso(id, { status: status as IngressoStatus });
             res.status(200).json(result);
         } catch (error) {
             console.error(error);
@@ -100,4 +101,3 @@ export class IngressoController {
         }
     }
 }
-        

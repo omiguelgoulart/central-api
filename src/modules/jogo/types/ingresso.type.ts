@@ -1,4 +1,5 @@
 import { z } from "zod";
+
 import { ingressoSchema, updateIngressoSchema } from "../schemas/ingresso.schema";
 
 export type CreateIngressoInput = z.infer<typeof ingressoSchema>;

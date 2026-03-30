@@ -1,9 +1,9 @@
-import axios from "axios";
 import { StatusPagamento } from "@prisma/client";
+import axios from "axios";
 
-import { asaas } from "../libs/asaas.lib";
 import { prisma } from "../../../lib/prisma";
 import { AsaasPayment, AsaasPixQrCode } from "../../../types/asaas";
+import { asaas } from "../libs/asaas.lib";
 
 export interface CriarPagamentoBase {
   customerId: string;
@@ -99,9 +99,9 @@ export class AsaasRepository {
   ) { }
 
   async criarCliente(params: { nome: string; email: string; cpfCnpj?: string }) {
-    const payload: Record<string, any> = { name: params.nome, email: params.email };
+    const payload: Record<string, unknown> = { name: params.nome, email: params.email };
     if (params.cpfCnpj) payload.cpfCnpj = cleanDigits(params.cpfCnpj);
-    const { data } = await this.asaasClient.post<any>("/customers", payload);
+    const { data } = await this.asaasClient.post<Record<string, unknown>>("/customers", payload);
     return data;
   }
 
@@ -143,7 +143,7 @@ export class AsaasRepository {
   }
 
   private async criarPagamentoCredito(p: CriarPagamentoCredito): Promise<AsaasPayment> {
-    const payload: any = {
+    const payload: Record<string, unknown> = {
       customer: p.customerId,
       value: p.valor,
       billingType: "CREDIT_CARD" as const,
@@ -159,7 +159,7 @@ export class AsaasRepository {
   }
 
   private async criarPagamentoDebito(p: CriarPagamentoDebito): Promise<AsaasPayment> {
-    const payload: any = {
+    const payload: Record<string, unknown> = {
       customer: p.customerId,
       value: p.valor,
       billingType: "DEBIT_CARD" as const,
@@ -179,6 +179,10 @@ export class AsaasRepository {
 
   async obterStatusPagamento(paymentId: string) {
     const { data } = await this.asaasClient.get<AsaasPayment>(`/payments/${paymentId}`);
+    const paymentDetails = data as AsaasPayment & {
+      confirmedDate?: string;
+      paymentDate?: string;
+    };
     return {
       id: data.id,
       status: data.status,
@@ -187,16 +191,17 @@ export class AsaasRepository {
       customer: data.customer,
       description: data.description,
       dueDate: data.dueDate,
-      confirmedDate: (data as any).confirmedDate,
-      paymentDate: (data as any).paymentDate,
+      confirmedDate: paymentDetails.confirmedDate,
+      paymentDate: paymentDetails.paymentDate,
     };
   }
 
   async obterBoletoPdf(paymentId: string): Promise<Buffer> {
-    const response = await this.asaasClient.get(`/payments/${paymentId}/boleto`, {
+    const boletoConfig = {
       maxRedirects: 0,
       validateStatus: (status: number) => status >= 200 && status < 400,
-    } as any);
+    };
+    const response = await this.asaasClient.get(`/payments/${paymentId}/boleto`, boletoConfig);
 
     const pdfUrl = response.headers["location"];
     if (!pdfUrl) throw new Error("BOLETO_PDF_URL_NOT_FOUND");

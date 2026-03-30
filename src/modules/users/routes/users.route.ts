@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { verificaToken } from "../../../middlewares/verificaToken";
 
+import { verificaToken } from "../../../middlewares/verificaToken";
+import { UsersController } from "../controllers/users.controller";
 import { UserRepository } from "../repositories/users.repository";
 import { UserService } from "../services/users.service";
-import { UsersController } from "../controllers/users.controller";
 
 const usersRouter = Router();
 
@@ -13,7 +13,7 @@ const controller = new UsersController(service);
 
 usersRouter.post("/", (req, res) => controller.createUser(req, res));
 
-usersRouter.post("/verify-email", (req, res) => controller.verifyEmail(req.body.token));
+usersRouter.post("/verify-email", (req, _res) => controller.verifyEmail(req.body.token));
 
 usersRouter.use(verificaToken);
 
@@ -29,9 +29,9 @@ usersRouter.get("/count", (req, res) => controller.coutUsers(res));
 
 usersRouter.get("/:id/details", (req, res) => controller.getUserWithDetails(req, res));
 
-usersRouter.patch("/:id/photo", (req, res) => controller.updatePhotoUrl(req.params.id, req.body.photoUrl));
+usersRouter.patch("/:id/photo", (req, _res) => controller.updatePhotoUrl(req.params.id, req.body.photoUrl));
 
-usersRouter.patch("/:id/email-verified", (req, res) => controller.markEmailAsVerified(req.params.id));
+usersRouter.patch("/:id/email-verified", (req, _res) => controller.markEmailAsVerified(req.params.id));
 
 export { usersRouter };
 

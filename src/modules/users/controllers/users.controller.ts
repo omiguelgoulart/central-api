@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { ZodError } from "zod";
 
-import { UserService } from "../services/users.service";
 import { usuarioSchema, updateUsuarioSchema } from "../schemas/users.schema";
+import { UserService } from "../services/users.service";
 
 export class UsersController {
     constructor(private readonly service = new UserService()) { }

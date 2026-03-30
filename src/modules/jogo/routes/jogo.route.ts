@@ -1,7 +1,8 @@
 import { Router } from "express";
+
+import { JogoController } from "../controllers/jogo.controller";
 import { JogoRepository } from "../repositories/jogo.repository";
 import { JogoService } from "../services/jogo.service";
-import { JogoController } from "../controllers/jogo.controller";
 
 const jogoRoutes = Router();
 
