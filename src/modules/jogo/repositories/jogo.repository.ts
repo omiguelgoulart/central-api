@@ -2,8 +2,8 @@ import { prisma } from "../../../lib/prisma";
 import { CreateJogoInput, UpdateJogoInput } from "../types/jogo.type";
 
 export class JogoRepository {
-    constructor(private readonly prismaClient = prisma ) {}
-   
+    constructor(private readonly prismaClient = prisma) { }
+
     async createJogo(data: CreateJogoInput) {
         return this.prismaClient.jogo.create({
             data: {
@@ -26,6 +26,13 @@ export class JogoRepository {
     async getJogoById(id: string) {
         return this.prismaClient.jogo.findUnique({
             where: { id },
+            include: {
+                lotes: true,
+                ingressos: true,
+                setores: true,
+                criadoPor: true,
+                atualizadoPor: true,
+            },
         });
     }
 
