@@ -27,15 +27,60 @@ export class JogoRepository {
         return prisma.jogo.findUnique({
             where: { id },
             include: {
-                lotes: true,
-                ingressos: true,
+                criadoPor: true,
+                atualizadoPor: true,
+
+                lotes: {
+                    include: {
+                        jogo: true,
+                        jogoSetor: {
+                            include: {
+                                setor: true,
+                            },
+                        },
+                        ingressos: {
+                            include: {
+                                socio: true,
+                                pagamento: true,
+                                checkins: true,
+                            },
+                        },
+                    },
+                },
+
+                ingressos: {
+                    include: {
+                        socio: true,
+                        lote: {
+                            include: {
+                                jogoSetor: {
+                                    include: {
+                                        setor: true,
+                                    },
+                                },
+                            },
+                        },
+                        pagamento: true,
+                        checkins: true,
+                    },
+                },
+
                 setores: {
                     include: {
                         setor: true,
+                        lotes: {
+                            include: {
+                                ingressos: {
+                                    include: {
+                                        socio: true,
+                                        pagamento: true,
+                                        checkins: true,
+                                    },
+                                },
+                            },
+                        },
                     },
                 },
-                criadoPor: true,
-                atualizadoPor: true,
             },
         });
     }
