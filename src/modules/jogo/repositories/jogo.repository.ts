@@ -23,7 +23,7 @@ export class JogoRepository {
         });
     }
 
-    async findById(id: string) {
+    async getJogoById(id: string) {
         return prisma.jogo.findUnique({
             where: { id },
             include: {
