@@ -23,13 +23,17 @@ export class JogoRepository {
         });
     }
 
-    async getJogoById(id: string) {
-        return this.prismaClient.jogo.findUnique({
+    async findById(id: string) {
+        return prisma.jogo.findUnique({
             where: { id },
             include: {
                 lotes: true,
                 ingressos: true,
-                setores: true,
+                setores: {
+                    include: {
+                        setor: true,
+                    },
+                },
                 criadoPor: true,
                 atualizadoPor: true,
             },
