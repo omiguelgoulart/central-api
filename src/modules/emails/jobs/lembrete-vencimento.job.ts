@@ -17,7 +17,7 @@ export function startLembreteVencimentoJob(): void {
             const fim = new Date(amanha);
             fim.setHours(23, 59, 59, 999);
 
-            const pagamentos = await prisma.pagamento.findMany({
+            const pagamentos = await prisma.pagamentoSocio.findMany({
                 where: {
                     dataVencimento: {
                         gte: inicio,
