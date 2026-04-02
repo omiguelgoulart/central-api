@@ -47,7 +47,8 @@ describe("PlanoService", () => {
         nome: "Plano Básico",
         descricao: "Descrição do plano básico",
         valor: 29.99,
-        Periodicidade: "MENSAL",
+        periodicidade: "MENSAL",
+        isFeatured: false,
       };
 
       planoRepositoryMock.createPlano.mockResolvedValue({
@@ -137,7 +138,8 @@ describe("PlanoService", () => {
         nome: "Plano Básico Atualizado",
         descricao: "Descrição do plano básico atualizado",
         valor: 39.99,
-        Periodicidade: "MENSAL",
+        isFeatured: false,
+        periodicidade: "MENSAL",
       };
 
       planoRepositoryMock.getPlanoById.mockResolvedValue({
