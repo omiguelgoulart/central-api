@@ -3,10 +3,10 @@ import { CreateIngressoInput, UpdateIngressoInput } from "../types/ingresso.type
 import { IngressoUtil } from "../utils/ingresso.util";
 
 export class IngressoService {
-    constructor(private readonly ingressoRepository: IngressoRepository) {}
+    constructor(private readonly ingressoRepository: IngressoRepository) { }
 
     async createIngresso(data: CreateIngressoInput) {
-        const newIngresso = await this.ingressoRepository.createJogo(data);
+        const newIngresso = await this.ingressoRepository.createIngresso(data);
         return {
             message: 'Ingresso criado com sucesso',
             ingressoId: newIngresso.id
@@ -25,12 +25,8 @@ export class IngressoService {
         return ingresso;
     }
 
-    async getIngressosByJogoId(jogoId: string) {
-        return this.ingressoRepository.getIngressosByJogoId(jogoId);
-    }
-
-    async getIngressoQrCode(id: string) {
-        const ingresso = await this.ingressoRepository.getIngressoQrCode(id);
+    async getIngressoByQrCode(qrCode: string) {
+        const ingresso = await this.ingressoRepository.getIngressoByQrCode(qrCode);
         if (!ingresso) {
             throw new Error('Ingresso não encontrado');
         }
