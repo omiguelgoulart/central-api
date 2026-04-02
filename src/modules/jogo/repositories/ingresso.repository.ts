@@ -4,15 +4,13 @@ import { CreateIngressoInput } from "../types/ingresso.type";
 export class IngressoRepository {
     constructor(private readonly prismaClient = prisma) { }
 
-    async createJogo(data: CreateIngressoInput) {
+    async createIngresso(data: CreateIngressoInput) {
         return this.prismaClient.ingresso.create({
             data: {
-                torcedorId: data.torcedorId,
-                jogoId: data.jogoId,
-                loteId: data.loteId ?? null,
-                qrCode: data.qrCode || "",
-                valor: data.valor,
-                status: data.status,
+                itemPedidoId: data.itemPedidoId as any,
+                qrCode: data.qrCode,
+                status: data.status || "VALIDO",
+                usadoEm: data.usadoEm || null,
             },
         });
     }
@@ -27,16 +25,9 @@ export class IngressoRepository {
         });
     }
 
-    async getIngressosByJogoId(jogoId: string) {
-        return this.prismaClient.ingresso.findMany({
-            where: { jogoId },
-        });
-    }
-
-    async getIngressoQrCode(id: string) {
+    async getIngressoByQrCode(qrCode: string) {
         return this.prismaClient.ingresso.findUnique({
-            where: { id },
-            select: { id: true, qrCode: true },
+            where: { qrCode },
         });
     }
 
@@ -50,17 +41,14 @@ export class IngressoRepository {
         return this.prismaClient.ingresso.update({
             where: { id },
             data: {
-                torcedorId: data.torcedorId,
-                jogoId: data.jogoId,
-                loteId: data.loteId ?? null,
                 qrCode: data.qrCode,
-                valor: data.valor,
                 status: data.status,
+                usadoEm: data.usadoEm,
             },
         });
     }
 
-    async updateIngressoStatus(id: string, status: "VALIDO" | "USADO" | "CANCELADO") {
+    async updateIngressoStatus(id: string, status: "VALIDO" | "USADO" | "CANCELADO" | "EXPIRADO" | "ESTORNADO") {
         return this.prismaClient.ingresso.update({
             where: { id },
             data: { status },
