@@ -1,25 +1,37 @@
 import { fakerPT_BR as faker } from '@faker-js/faker'
-import { PrismaClient, Periodicidade, StatusSocio, StatusAssinatura, StatusFatura, MetodoPagamento, TipoSetor, StatusIngresso, StatusPedido, TipoIngresso, TipoLote } from '@prisma/client'
+import {
+  PrismaClient,
+  Periodicidade,
+  StatusSocio,
+  StatusAssinatura,
+  StatusFatura,
+  MetodoPagamento,
+  TipoSetor,
+  StatusIngresso,
+  StatusPedido,
+  TipoLote,
+  StatusPagamentoSocio,
+  StatusPagamentoIngresso
+} from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-// Utilitário para datas
 const subMonths = (date: Date, months: number) => {
-  const d = new Date(date);
-  d.setMonth(d.getMonth() - months);
-  return d;
+  const d = new Date(date)
+  d.setMonth(d.getMonth() - months)
+  return d
 }
 
 async function main() {
   console.log('🔴⚫ INICIANDO SEED DO XAVANTE...')
 
-  // 1. LIMPEZA DO BANCO
   console.log('🧹 Limpando dados antigos...')
   await prisma.checkin.deleteMany()
   await prisma.ingresso.deleteMany()
   await prisma.itemPedido.deleteMany()
+  await prisma.pagamentoIngresso.deleteMany()
   await prisma.pedido.deleteMany()
-  await prisma.pagamento.deleteMany()
+  await prisma.pagamentoSocio.deleteMany()
   await prisma.fatura.deleteMany()
   await prisma.assinatura.deleteMany()
   await prisma.beneficio.deleteMany()
@@ -31,64 +43,33 @@ async function main() {
   await prisma.torcedor.deleteMany()
   await prisma.admin.deleteMany()
 
-  // 2. ADMIN
   await prisma.admin.create({
     data: {
       nome: 'Miguel Goulart',
       email: 'admin@gebrasil.com.br',
-      senha: '@Senha123', // Senha hash ficticia
+      senha: '@Senha123',
       role: 'SUPER_ADMIN',
     }
   })
 
-  // 3. SETORES (BENTO FREITAS)
-  console.log('🏟️  Construindo o Bento Freitas...')
-const setoresData = [
-  {
-    nome: "Arquibancada JK (Juscelino)",
-    slug: "jk",
-    capacidade: 4000,
-    tipo: TipoSetor.ARQUIBANCADA,
-  },
-  {
-    nome: "Arquibancada Social",
-    slug: "social",
-    capacidade: 2000,
-    tipo: TipoSetor.ARQUIBANCADA,
-  },
-  {
-    nome: "Arquibancada Norte",
-    slug: "norte",
-    capacidade: 2500,
-    tipo: TipoSetor.ARQUIBANCADA,
-  },
-  {
-    nome: "Arquibancada Sul",
-    slug: "sul",
-    capacidade: 2500,
-    tipo: TipoSetor.ARQUIBANCADA,
-  },
-  {
-    nome: "Cadeiras Cativas",
-    slug: "cativas",
-    capacidade: 1500,
-    tipo: TipoSetor.CADEIRA,
-  },
-  {
-    nome: "Arquibancada Norte (Visitante)",
-    slug: "norte-visitante",
-    capacidade: 1000,
-    tipo: TipoSetor.VISITANTE,
-  },
-];
+  console.log('🏟️ Construindo o Bento Freitas...')
+  const setoresData = [
+    { nome: 'Arquibancada JK (Juscelino)', slug: 'jk', tipo: TipoSetor.ARQUIBANCADA },
+    { nome: 'Arquibancada Social', slug: 'social', tipo: TipoSetor.ARQUIBANCADA },
+    { nome: 'Arquibancada Norte', slug: 'norte', tipo: TipoSetor.ARQUIBANCADA },
+    { nome: 'Arquibancada Sul', slug: 'sul', tipo: TipoSetor.ARQUIBANCADA },
+    { nome: 'Cadeiras Cativas', slug: 'cativas', tipo: TipoSetor.CADEIRA },
+    { nome: 'Arquibancada Norte (Visitante)', slug: 'norte-visitante', tipo: TipoSetor.VISITANTE },
+  ]
 
-  const setoresMap = new Map()
+  const setoresMap = new Map<string, { id: string; slug: string; nome: string; tipo: TipoSetor }>()
   for (const s of setoresData) {
-    const setor = await prisma.setor.create({ data: { slug: s.slug ,nome: s.nome, capacidade: s.capacidade } })
+    const setor = await prisma.setor.create({
+      data: { slug: s.slug, nome: s.nome, tipo: s.tipo }
+    })
     setoresMap.set(s.nome, setor)
   }
 
-  // 4. PLANOS DE SÓCIO
   console.log('💳 Criando planos de sócio...')
   const planosData = [
     {
@@ -125,7 +106,7 @@ const setoresData = [
       nome: 'Sócio Xavante Social',
       valor: 9.90,
       periodicidade: Periodicidade.MENSAL,
-      beneficios: ['Acesso a Eventos Exclusivos', 'Descontos em Produtos Oficiais', 'Carteirinha Digital' ]
+      beneficios: ['Acesso a Eventos Exclusivos', 'Descontos em Produtos Oficiais', 'Carteirinha Digital']
     }
   ]
 
@@ -137,9 +118,9 @@ const setoresData = [
         valor: p.valor,
         periodicidade: p.periodicidade,
         beneficios: {
-          create: p.beneficios.map(b => ({
+          create: p.beneficios.map((b) => ({
             titulo: b,
-            slug: faker.helpers.slugify(b + '-' + p.nome).toLowerCase(),
+            slug: faker.helpers.slugify(`${b}-${p.nome}`).toLowerCase(),
             ativo: true
           }))
         }
@@ -148,50 +129,126 @@ const setoresData = [
     planos.push(plano)
   }
 
-  // 5. CALENDÁRIO DE JOGOS (Passado e Futuro)
-  console.log('⚽ Agendando jogos do Gauchão e Série D...')
-  const hoje = new Date()
-  
+  console.log('⚽ Agendando jogos da Série D 2026...')
   const listaJogos = [
-    // Jogos Passados (Terão checkins e status USADO)
-    { nome: 'Brasil x São Luiz', data: subMonths(hoje, 2), adv: 'São Luiz', passado: true },
-    { nome: 'Brasil x Ypiranga', data: subMonths(hoje, 1), adv: 'Ypiranga', passado: true },
-    { nome: 'Brasil x Novo Hamburgo', data: new Date(hoje.getTime() - 86400000 * 7), adv: 'Novo Hamburgo', passado: true }, // 7 dias atrás
-    
-    // Jogos Futuros (Venda aberta)
-    { nome: 'Brasil x Pelotas (BRA-PEL)', data: new Date(hoje.getTime() + 86400000 * 3), adv: 'Pelotas', passado: false, classico: true },
-    { nome: 'Brasil x Internacional', data: new Date(hoje.getTime() + 86400000 * 10), adv: 'Internacional', passado: false },
-    { nome: 'Brasil x Caxias', data: new Date(hoje.getTime() + 86400000 * 17), adv: 'Caxias', passado: false },
+    {
+      nome: 'Brasil x Azuriz',
+      data: new Date('2026-04-05T15:30:00-03:00'),
+      adv: 'Azuriz',
+      passado: false,
+      local: 'Estádio Bento Freitas',
+      mandoBrasil: true,
+    },
+    {
+      nome: 'Blumenau x Brasil',
+      data: new Date('2026-04-12T16:00:00-03:00'),
+      adv: 'Blumenau',
+      passado: false,
+      local: 'Estádio Ervin Blaese',
+      mandoBrasil: false,
+    },
+    {
+      nome: 'Brasil x São Joseense',
+      data: new Date('2026-04-19T16:00:00-03:00'),
+      adv: 'São Joseense',
+      passado: false,
+      local: 'Estádio Bento Freitas',
+      mandoBrasil: true,
+    },
+    {
+      nome: 'São José x Brasil',
+      data: new Date('2026-04-26T16:00:00-03:00'),
+      adv: 'São José',
+      passado: false,
+      local: 'Estádio Passo d’Areia',
+      mandoBrasil: false,
+    },
+    {
+      nome: 'Brasil x Marcílio Dias',
+      data: new Date('2026-05-02T16:00:00-03:00'),
+      adv: 'Marcílio Dias',
+      passado: false,
+      local: 'Estádio Bento Freitas',
+      mandoBrasil: true,
+    },
   ]
 
-  const jogosCriados = []
+  const jogosCriados: Array<{
+    id: string
+    nome: string
+    data: Date
+    local: string
+    descricao: string | null
+    criadoPorId: string | null
+    atualizadoPorId: string | null
+    criadoEm: Date
+    atualizadoEm: Date
+    lotes: Array<{
+      lote: {
+        id: string
+        nome: string
+        jogoId: string
+        jogoSetorId: string
+        precoUnitario: number
+        quantidade: number
+        inicioVendas: Date
+        fimVendas: Date | null
+        limitePorCPF: number | null
+        tipo: TipoLote
+        criadoEm: Date
+        atualizadoEm: Date
+      }
+      setorObj: {
+        id: string
+        slug: string
+        nome: string
+        tipo: TipoSetor
+      }
+      jogoSetor: {
+        id: string
+        jogoId: string
+        setorId: string
+        capacidade: number
+        aberto: boolean
+        criadoEm: Date
+        atualizadoEm: Date
+      }
+    }>
+    passado: boolean
+  }> = []
 
   for (const j of listaJogos) {
     const jogo = await prisma.jogo.create({
       data: {
         nome: j.nome,
         data: j.data,
-        local: 'Estádio Bento Freitas',
-        descricao: j.classico ? 'O maior clássico do interior!' : `Rodada do campeonato contra ${j.adv}`,
+        local: j.local,
+        descricao: `Partida da Série D contra ${j.adv}`,
       }
     })
 
-    // Criar Lotes e Setores para o jogo
     const lotesDoJogo = []
+
     for (const [nomeSetor, setorObj] of setoresMap) {
+      let capacidade = 4000
+      if (nomeSetor.includes('Cadeira')) capacidade = 1500
+      if (nomeSetor.includes('Social')) capacidade = 2000
+      if (nomeSetor.includes('Visitante')) capacidade = 1000
+      if (nomeSetor.includes('Sul') || nomeSetor.includes('Norte')) capacidade = 2500
+
       const jogoSetor = await prisma.jogoSetor.create({
         data: {
           jogoId: jogo.id,
           setorId: setorObj.id,
-          capacidade: setorObj.capacidade,
-          tipo: j.adv === 'Pelotas' && nomeSetor.includes('JK') ? TipoSetor.VISITANTE : setorObj.tipo as TipoSetor
+          capacidade,
+          aberto: true
         }
       })
 
-      // Preço dinâmico (mais caro no clássico)
       let precoBase = 40.00
       if (nomeSetor.includes('Cadeira')) precoBase = 120.00
-      if (j.classico) precoBase *= 1.5
+      if (nomeSetor.includes('Social')) precoBase = 60.00
+      if (nomeSetor.includes('Visitante')) precoBase = 50.00
 
       const lote = await prisma.lote.create({
         data: {
@@ -200,98 +257,104 @@ const setoresData = [
           jogoSetorId: jogoSetor.id,
           precoUnitario: precoBase,
           quantidade: 500,
-          inicioVendas: subMonths(hoje, 3), // Vendas começaram 3 meses atrás
+          inicioVendas: new Date('2026-04-01T08:00:00-03:00'),
           tipo: TipoLote.INTEIRA
         }
       })
+
       lotesDoJogo.push({ lote, setorObj, jogoSetor })
     }
-    
+
     jogosCriados.push({ ...jogo, lotes: lotesDoJogo, passado: j.passado })
   }
 
-  // 6. POPULAÇÃO DE TORCEDORES (A parte pesada)
   console.log('👥 Invasão da torcida Xavante (Gerando 150 torcedores)...')
 
   const NUM_TORCEDORES = 150
-  const metodosPagamento = [MetodoPagamento.PIX, MetodoPagamento.CARTAO_CREDITO, MetodoPagamento.BOLETO]
+  const metodosPagamento = [
+    MetodoPagamento.PIX,
+    MetodoPagamento.CARTAO_CREDITO,
+    MetodoPagamento.BOLETO
+  ]
+
+  const hoje = new Date()
 
   for (let i = 0; i < NUM_TORCEDORES; i++) {
     const sexo = faker.person.sexType()
-    const nome = faker.person.firstName(sexo) + ' ' + faker.person.lastName(sexo)
-    const ehSocio = Math.random() > 0.4 // 60% são sócios
-    
-    // Status do sócio (alguns inadimplentes)
+    const nome = `${faker.person.firstName(sexo)} ${faker.person.lastName(sexo)}`
+    const ehSocio = Math.random() > 0.4
+
     let statusSocio: StatusSocio | null = ehSocio ? StatusSocio.ATIVO : null
     if (ehSocio && Math.random() > 0.8) statusSocio = StatusSocio.INADIMPLENTE
 
     const torcedor = await prisma.torcedor.create({
       data: {
         nome,
-        email: faker.internet.email({ firstName: nome.split(' ')[0], lastName: nome.split(' ')[1] }),
+        email: faker.internet.email({
+          firstName: nome.split(' ')[0],
+          lastName: nome.split(' ')[1]
+        }),
         senha: '123',
-        matricula: ehSocio ? faker.string.numeric(6) : faker.string.numeric(8), // sócios tem matrícula menor rs
+        matricula: faker.string.numeric(6),
         cpf: faker.number.int({ min: 10000000000, max: 99999999999 }).toString(),
         telefone: faker.phone.number(),
         dataNascimento: faker.date.birthdate({ min: 16, max: 70, mode: 'age' }),
         enderecoCidade: 'Pelotas',
         enderecoUF: 'RS',
         statusSocio: ehSocio ? statusSocio : null,
-        criadoEm: faker.date.past({ years: 2 })
       }
     })
 
-    // === SE FOR SÓCIO: GERAR ASSINATURA E HISTÓRICO DE FATURAS ===
     if (ehSocio) {
       const plano = planos[Math.floor(Math.random() * planos.length)]
-      
+
       const assinatura = await prisma.assinatura.create({
         data: {
           torcedorId: torcedor.id,
           planoId: plano.id,
-          status: statusSocio === StatusSocio.INADIMPLENTE ? StatusAssinatura.SUSPENSA : StatusAssinatura.ATIVA,
-          inicioEm: subMonths(hoje, 8), // Sócio há 8 meses
+          status: statusSocio === StatusSocio.INADIMPLENTE
+            ? StatusAssinatura.SUSPENSA
+            : StatusAssinatura.ATIVA,
+          inicioEm: subMonths(hoje, 8),
           valorAtual: plano.valor,
-          periodicidade: Periodicidade.MENSAL,
+          periodicidade: plano.periodicidade,
           proximaCobrancaEm: new Date(hoje.getFullYear(), hoje.getMonth() + 1, 10)
         }
       })
 
-      // Gerar faturas dos últimos 6 meses
       for (let m = 0; m < 6; m++) {
         const dataRef = subMonths(hoje, m)
         const vencimento = new Date(dataRef.getFullYear(), dataRef.getMonth(), 10)
-        
-        // Lógica de pagamento:
-        // Se o sócio é INADIMPLENTE, ele não pagou as últimas 2 faturas (m=0 e m=1)
+
         let estaPaga = true
         if (statusSocio === StatusSocio.INADIMPLENTE && m < 2) estaPaga = false
 
         if (estaPaga) {
-          await prisma.fatura.create({
+          const fatura = await prisma.fatura.create({
             data: {
               assinaturaId: assinatura.id,
               competencia: `${dataRef.getFullYear()}-${(dataRef.getMonth() + 1).toString().padStart(2, '0')}`,
               valor: plano.valor,
               status: StatusFatura.PAGA,
               vencimentoEm: vencimento,
-              pagoEm: vencimento, // Pagou no dia
+              pagoEm: vencimento,
               metodo: metodosPagamento[Math.floor(Math.random() * metodosPagamento.length)],
-              pagamentos: {
-                create: {
-                  torcedorId: torcedor.id,
-                  valor: plano.valor,
-                  status: 'PAGO',
-                  dataVencimento: vencimento,
-                  pagoEm: vencimento,
-                  metodo: metodosPagamento[Math.floor(Math.random() * metodosPagamento.length)],
-                  descricao: `Mensalidade Sócio - Ref ${dataRef.getMonth() + 1}/${dataRef.getFullYear()}`
-                }
-              }
+            }
+          })
+
+          await prisma.pagamentoSocio.create({
+            data: {
+              torcedorId: torcedor.id,
+              faturaId: fatura.id,
+              valor: plano.valor,
+              status: StatusPagamentoSocio.PAGO,
+              dataVencimento: vencimento,
+              pagoEm: vencimento,
+              metodo: metodosPagamento[Math.floor(Math.random() * metodosPagamento.length)],
+              descricao: `Mensalidade Sócio - Ref ${dataRef.getMonth() + 1}/${dataRef.getFullYear()}`
             }
           })
         } else {
-          // Fatura em aberto/atrasada
           await prisma.fatura.create({
             data: {
               assinaturaId: assinatura.id,
@@ -306,73 +369,55 @@ const setoresData = [
       }
     }
 
-    // === COMPRA DE INGRESSOS (PARA SÓCIOS E NÃO SÓCIOS) ===
-    // Sócio vai em 80% dos jogos, não sócio vai em 30%
     const chanceIrNoJogo = ehSocio ? 0.8 : 0.3
 
     for (const jogoData of jogosCriados) {
-      if (Math.random() > chanceIrNoJogo) continue; // Pulou esse jogo
+      if (Math.random() > chanceIrNoJogo) continue
+      if (ehSocio && statusSocio === StatusSocio.INADIMPLENTE) continue
 
-      // Se for sócio inadimplente, não compra ingresso
-      if (ehSocio && statusSocio === StatusSocio.INADIMPLENTE) continue;
-
-      // Escolher um lote aleatório do jogo
       const { lote, setorObj } = jogoData.lotes[Math.floor(Math.random() * jogoData.lotes.length)]
 
-      // Criar Pedido
       const pedido = await prisma.pedido.create({
         data: {
           torcedorId: torcedor.id,
           status: StatusPedido.PAGO,
-          total: lote.precoUnitario,
-          criadoEm: jogoData.passado ? subMonths(jogoData.data, 0) : new Date(), // Comprou na data do jogo ou hoje
-          itens: {
-            create: {
-              setorId: setorObj.id, // ID DO SETOR (Modelo Setor)
-              tipo: TipoIngresso.INTEIRA,
-              preco: lote.precoUnitario,
-              nomeTitular: torcedor.nome,
-              torcedorCpf: torcedor.cpf
-            }
-          }
+          criadoEm: jogoData.passado ? jogoData.data : new Date(),
         }
       })
 
-      // Criar Ingresso
+      const itemPedido = await prisma.itemPedido.create({
+        data: {
+          pedidoId: pedido.id,
+          loteId: lote.id,
+          valorUnitario: lote.precoUnitario,
+        }
+      })
+
       const ingresso = await prisma.ingresso.create({
         data: {
-          jogoId: jogoData.id,
-          torcedorId: torcedor.id,
-          loteId: lote.id,
+          itemPedidoId: itemPedido.id,
           qrCode: faker.string.uuid(),
-          valor: lote.precoUnitario,
-          status: jogoData.passado ? StatusIngresso.USADO : StatusIngresso.VALIDO, // Se passou, já usou
-          usadoEm: jogoData.passado ? jogoData.data : null, // Usou na hora do jogo
+          status: jogoData.passado ? StatusIngresso.USADO : StatusIngresso.VALIDO,
+          usadoEm: jogoData.passado ? jogoData.data : null,
         }
       })
 
-      // Criar Pagamento do Ingresso
-      await prisma.pagamento.create({
+      await prisma.pagamentoIngresso.create({
         data: {
-          torcedorId: torcedor.id,
-          valor: lote.precoUnitario,
-          status: 'PAGO',
-          metodo: MetodoPagamento.PIX,
-          dataVencimento: new Date(),
-          pagoEm: new Date(),
-          descricao: `Ingresso: ${jogoData.nome}`,
-          ingressos: { connect: { id: ingresso.id } },
-          pedidos: { connect: { id: pedido.id } }
+          pedidoId: pedido.id,
+          total: lote.precoUnitario,
+          status: StatusPagamentoIngresso.APROVADO,
+          provider: 'ASAAS',
+          externalId: faker.string.alphanumeric(16)
         }
       })
 
-      // === SE O JOGO JÁ PASSOU, FAZ O CHECKIN NA CATRACA ===
       if (jogoData.passado) {
         await prisma.checkin.create({
           data: {
             ingressoId: ingresso.id,
-            feitoEm: jogoData.data, // Checkin na hora do jogo
-            local: `Catraca 0${faker.number.int({ min: 1, max: 9 })} - ${setorObj.nome}`
+            feitoEm: jogoData.data,
+            local: `Catraca ${faker.number.int({ min: 1, max: 9 })} - ${setorObj.nome}`
           }
         })
       }
@@ -382,7 +427,7 @@ const setoresData = [
   console.log('✅ SEED FINALIZADO COM SUCESSO!')
   console.log(`📊 Total de Torcedores: ${await prisma.torcedor.count()}`)
   console.log(`🎫 Total de Ingressos: ${await prisma.ingresso.count()}`)
-  console.log(`💰 Total de Pagamentos: ${await prisma.pagamento.count()}`)
+  console.log(`💳 Total de PagamentosIngresso: ${await prisma.pagamentoIngresso.count()}`)
 }
 
 main()
