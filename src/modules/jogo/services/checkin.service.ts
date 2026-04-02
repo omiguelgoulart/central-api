@@ -3,7 +3,7 @@ import { StatusIngresso } from "@prisma/client";
 import { CheckinRepository } from "../repositories/checkin.repository";
 
 export class CheckinService {
-  constructor(private readonly repository = new CheckinRepository()) {}
+  constructor(private readonly repository = new CheckinRepository()) { }
 
   async checkin(ingressoId?: string, qrCode?: string, local?: string, feitoPor?: string) {
     const ingresso = await this.repository.getIngressoByIdOrQr(ingressoId, qrCode);
@@ -15,12 +15,12 @@ export class CheckinService {
       };
     }
 
-    const jogo = ingresso.jogo
+    const jogo = ingresso.itemPedido?.lote?.jogoSetor?.jogo
       ? {
-          id: ingresso.jogo.id,
-          nome: ingresso.jogo.nome,
-          data: ingresso.jogo.data,
-        }
+        id: ingresso.itemPedido.lote.jogoSetor.jogo.id,
+        nome: ingresso.itemPedido.lote.jogoSetor.jogo.nome,
+        data: ingresso.itemPedido.lote.jogoSetor.jogo.data,
+      }
       : undefined;
 
     if (ingresso.status === StatusIngresso.USADO) {
@@ -36,11 +36,11 @@ export class CheckinService {
       ingresso.status === StatusIngresso.CANCELADO ||
       ingresso.status === StatusIngresso.EXPIRADO ||
       ingresso.status === StatusIngresso.ESTORNADO ||
-      ingresso.status === StatusIngresso.PENDENTE
+      ingresso.status === StatusIngresso.VALIDO
     ) {
       const motivo =
-        ingresso.status === StatusIngresso.PENDENTE
-          ? "Pagamento ainda nao confirmado para este ingresso."
+        ingresso.status === StatusIngresso.VALIDO
+          ? "Ingresso valido para entrada."
           : "Ingresso nao e valido para entrada.";
 
       return {
