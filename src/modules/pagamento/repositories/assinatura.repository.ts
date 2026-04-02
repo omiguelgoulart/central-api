@@ -52,7 +52,7 @@ export class AssinaturaRepository {
         };
 
         const parsedData: Prisma.AssinaturaUpdateInput = {
-            ...data,
+            status: data.status,
             inicioEm: toDate(data.inicioEm),
             expiraEm: toDateOrNull(data.expiraEm),
             proximaCobrancaEm: toDateOrNull(data.proximaCobrancaEm),
