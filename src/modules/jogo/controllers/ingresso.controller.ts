@@ -47,7 +47,7 @@ export class IngressoController {
     async getIngressosByJogoId(req: Request, res: Response) {
         const { jogoId } = req.params;
         try {
-            const ingressos = await this.ingressoService.getIngressosByJogoId(jogoId);
+            const ingressos = await this.ingressoService.getIngressoById(jogoId);
             res.status(200).json(ingressos);
         } catch (error) {
             console.error(error);
@@ -58,7 +58,7 @@ export class IngressoController {
     async getIngressoQrCode(req: Request, res: Response) {
         const { id } = req.params;
         try {
-            const ingresso = await this.ingressoService.getIngressoQrCode(id);
+            const ingresso = await this.ingressoService.getIngressoByQrCode(id);
             res.status(200).json(ingresso);
         } catch (error) {
             console.error(error);
