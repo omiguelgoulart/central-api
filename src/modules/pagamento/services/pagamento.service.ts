@@ -10,7 +10,7 @@ export class PagamentoService {
             throw new Error("Torcedor nao encontrado");
         }
         const novo = await this.repository.createPagamento(data);
-        return { message: "Pagamento criado com sucesso", pagamentoId: novo.id };
+        return { message: "Pagamento criado com sucesso" };
     }
 
     async getAllPagamentos() {
