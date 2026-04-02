@@ -1,10 +1,10 @@
-import { MetodoPagamento, StatusPagamento } from "@prisma/client";
+import { MetodoPagamento, StatusFatura, StatusAssinatura } from "@prisma/client";
 import { z } from "zod";
 
 export const pagamentoSchema = z.object({
     torcedorId: z.string().uuid("ID do torcedor invalido"),
     valor: z.coerce.number({ required_error: "Informe o valor do pagamento" }),
-    status: z.nativeEnum(StatusPagamento, { required_error: "Informe o status do pagamento" }),
+    status: z.enum(['PENDENTE', 'PAGO', 'ATRASADO', 'CANCELADO'], { required_error: "Informe o status do pagamento" }),
     dataVencimento: z.coerce.date({ required_error: "Informe a data de vencimento" }),
     pagoEm: z.coerce.date().optional(),
     referencia: z.string().trim().max(120).optional(),
@@ -17,17 +17,17 @@ export const faturaSchema = z.object({
     assinaturaId: z.string().uuid(),
     competencia: z.string(),
     valor: z.number(),
-    status: z.enum(["ABERTA", "PAGA", "CANCELADA"]).optional(),
+    status: z.nativeEnum(StatusFatura).optional(),
     vencimentoEm: z.coerce.date(),
     pagoEm: z.coerce.date().nullable().optional(),
     referencia: z.string().nullable().optional(),
-    metodo: z.enum(["CARTAO", "BOLETO", "PIX"]).nullable().optional(),
+    metodo: z.nativeEnum(MetodoPagamento).nullable().optional(),
 });
 
 export const assinaturaSchema = z.object({
     torcedorId: z.string().uuid("ID do torcedor invalido"),
     planoId: z.string().uuid("ID do plano invalido"),
-    status: z.enum(["ATIVA", "CANCELADA", "SUSPENSA", "EXPIRADA"], {
+    status: z.nativeEnum(StatusAssinatura, {
         required_error: "Informe o status da assinatura",
     }),
     inicioEm: z.string().default(() => new Date().toISOString()),
@@ -37,9 +37,19 @@ export const assinaturaSchema = z.object({
     motivoCancelamento: z.string().optional().nullable(),
     suspensaEm: z.string().optional().nullable(),
     retomadaEm: z.string().optional().nullable(),
-    periodicidade: z.enum(["MENSAL", "TRIMESTRAL", "ANUAL"]).optional(),
+    periodicidade: z.enum(["MENSAL", "TRIMESTRAL", "SEMESTRAL", "ANUAL"]).optional(),
     valorAtual: z.string().optional().nullable(),
     moeda: z.string().optional().nullable(),
     gatewayClienteId: z.string().optional().nullable(),
     gatewayAssinaturaId: z.string().optional().nullable(),
 });
+
+export const pagamentoIngressoSchema = z.object({
+    pedidoId: z.string().uuid("ID do pedido invalido"),
+    total: z.number().positive("Total deve ser positivo"),
+    status: z.enum(['AGUARDANDO', 'APROVADO', 'RECUSADO', 'ESTORNADO']).default("AGUARDANDO").optional(),
+    provider: z.string().min(1, "Provider é obrigatório"),
+    externalId: z.string().optional(),
+});
+
+export const updatePagamentoIngressoSchema = pagamentoIngressoSchema.partial();
