@@ -8,29 +8,35 @@ export class PagamentoRepository {
     return this.prismaClient.torcedor.findUnique({ where: { id } });
   }
 
+  // Nota: O modelo 'pagamento' não existe mais no schema Prisma
+  // Use pagamentoSocio ou pagamentoIngresso conforme necessário
   async createPagamento(data: CreatePagamentoInput) {
-    return this.prismaClient.pagamento.create({ data });
+    return this.createPagamentoSocio(data);
   }
 
   async getAllPagamentos() {
-    return this.prismaClient.pagamento.findMany({
-      include: {
-        torcedor: { select: { nome: true } },
-        ingressos: { select: { id: true } },
-        pedidos: { select: { id: true } },
-        fatura: {
-          include: {
-            assinatura: {
-              include: { plano: { select: { nome: true } } },
-            },
-          },
-        },
-      },
-      orderBy: { dataVencimento: "desc" },
-    });
+    return this.prismaClient.pagamentoSocio.findMany();
   }
 
   async getPagamentoById(id: string) {
-    return this.prismaClient.pagamento.findUnique({ where: { id } });
+    return this.getPagamentoSocioById(id);
+  }
+
+  // Métodos para PagamentoSocio
+  async createPagamentoSocio(data: any) {
+    return this.prismaClient.pagamentoSocio.create({ data });
+  }
+
+  async getPagamentoSocioById(id: string) {
+    return this.prismaClient.pagamentoSocio.findUnique({ where: { id } });
+  }
+
+  // Métodos para PagamentoIngresso
+  async createPagamentoIngresso(data: any) {
+    return this.prismaClient.pagamentoIngresso.create({ data });
+  }
+
+  async getPagamentoIngressoById(id: string) {
+    return this.prismaClient.pagamentoIngresso.findUnique({ where: { id } });
   }
 }
