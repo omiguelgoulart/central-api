@@ -1,8 +1,8 @@
-import { StatusPedido, TipoIngresso } from "@prisma/client";
+import { StatusPedido, TipoLote } from "@prisma/client";
 import { z } from "zod";
 
 export const reservaBodySchema = z.object({
-    partidaId: z.string().min(1),
+    jogoId: z.string().min(1),
     setorId: z.string().min(1),
     qtd: z.coerce.number().int().positive(),
 });
@@ -14,7 +14,7 @@ export const pedidoCreateSchema = z.object({
         .array(
             z.object({
                 setorId: z.string().trim().min(1),
-                tipo: z.nativeEnum(TipoIngresso),
+                tipo: z.nativeEnum(TipoLote),
                 loteId: z.string().uuid("loteId invalido"),
                 qtd: z.number().int().positive().default(1),
                 titulares: z
@@ -32,13 +32,12 @@ export const pedidoCreateSchema = z.object({
 
 export const pedidoPatchSchema = z.object({
     status: z.nativeEnum(StatusPedido).optional(),
-    total: z.number().nonnegative().optional(),
     expiraEm: z.string().datetime().optional(),
 });
 
 export const itemCreateSchema = z.object({
     setorId: z.string().trim().min(1),
-    tipo: z.nativeEnum(TipoIngresso),
+    tipo: z.nativeEnum(TipoLote),
     loteId: z.string().uuid("loteId invalido"),
     qtd: z.number().int().positive().default(1),
     titulares: z
@@ -52,24 +51,24 @@ export const itemCreateSchema = z.object({
 });
 
 export const itemPatchSchema = z.object({
-    tipo: z.nativeEnum(TipoIngresso).optional(),
+    tipo: z.nativeEnum(TipoLote).optional(),
     loteId: z.string().uuid().optional(),
     nomeTitular: z.string().trim().min(1).optional(),
     torcedorCpf: z.string().trim().min(11).max(14).optional(),
 });
 
 export const confirmarPedidoSchema = z.object({
-    partidaId: z.string().trim().min(1, "Informe a partida"),
+    jogoId: z.string().trim().min(1, "Informe o jogo"),
 });
 
 export const checkoutConfirmarSchema = z.object({
-    partidaId: z.string().trim().min(1),
+    jogoId: z.string().trim().min(1),
     torcedorId: z.string().trim().min(1),
     itens: z
         .array(
             z.object({
                 setorId: z.string().trim().min(1),
-                tipo: z.nativeEnum(TipoIngresso),
+                tipo: z.nativeEnum(TipoLote),
                 loteId: z.string().uuid("loteId invalido"),
                 qtd: z.number().int().positive(),
                 titulares: z.array(z.object({ nome: z.string().min(1), cpf: z.string().min(11).max(14) })).optional(),
