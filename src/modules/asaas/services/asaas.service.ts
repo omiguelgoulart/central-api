@@ -1,4 +1,4 @@
-import { StatusPagamento } from "@prisma/client";
+import { StatusPagamentoSocio } from "@prisma/client";
 
 import {
   pagamentoAtrasadoTemplate,
@@ -79,9 +79,9 @@ export class AsaasService {
 
     const novoStatus = this.mapStatus(evento.payment.status ?? "");
     const pagoEm =
-      novoStatus === StatusPagamento.PAGO && evento.payment.confirmedDate
+      novoStatus === StatusPagamentoSocio.PAGO && evento.payment.confirmedDate
         ? new Date(evento.payment.confirmedDate)
-        : novoStatus === StatusPagamento.PAGO
+        : novoStatus === StatusPagamentoSocio.PAGO
           ? new Date()
           : null;
 
@@ -92,7 +92,7 @@ export class AsaasService {
     if (!pagamentoDb?.torcedor?.email) return;
 
     const { nome, email } = pagamentoDb.torcedor;
-    if (novoStatus === StatusPagamento.PAGO) {
+    if (novoStatus === StatusPagamentoSocio.PAGO) {
       const html = pagamentoConfirmadoTemplate({
         nome,
         valor: Number(pagamentoDb.valor),
@@ -106,7 +106,7 @@ export class AsaasService {
         subject: "Pagamento Confirmado!",
         html,
       }).catch((err) => console.error("Erro email pgto confirmado:", err));
-    } else if (novoStatus === StatusPagamento.ATRASADO) {
+    } else if (novoStatus === StatusPagamentoSocio.ATRASADO) {
       const html = pagamentoAtrasadoTemplate({
         nome,
         valor: Number(pagamentoDb.valor),
@@ -121,18 +121,18 @@ export class AsaasService {
     }
   }
 
-  private mapStatus(status: string): StatusPagamento {
+  private mapStatus(status: string): StatusPagamentoSocio {
     switch (status) {
       case "CONFIRMED":
       case "RECEIVED":
       case "RECEIVED_IN_CASH":
-        return StatusPagamento.PAGO;
+        return StatusPagamentoSocio.PAGO;
       case "OVERDUE":
-        return StatusPagamento.ATRASADO;
+        return StatusPagamentoSocio.ATRASADO;
       case "CANCELED":
-        return StatusPagamento.CANCELADO;
+        return StatusPagamentoSocio.CANCELADO;
       default:
-        return StatusPagamento.PENDENTE;
+        return StatusPagamentoSocio.PENDENTE;
     }
   }
 }
