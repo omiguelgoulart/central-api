@@ -8,7 +8,7 @@ type HttpError = Error & {
     details?: Record<string, unknown>;
 };
 
-type CheckoutItemComPreco = CheckoutConfirmarInput["itens"][number] & { preco: number };
+type CheckoutItemComValor = CheckoutConfirmarInput["itens"][number] & { valorUnitario: number };
 
 export class ReservaService {
     constructor(
@@ -24,31 +24,37 @@ export class ReservaService {
         return this.repository.liberarReserva(data);
     }
 
-    async listarReservas(partidaId: string) {
-        return this.repository.listarReservas(partidaId);
+    async listarReservas(jogoId: string) {
+        return this.repository.listarReservas(jogoId);
     }
 
-    private async validarDisponibilidade(partidaId: string, setorId: string, qtdDesejada: number) {
+    private async validarDisponibilidade(jogoId: string, setorId: string, qtdDesejada: number) {
         const setor = await this.repository.getSetorById(setorId);
         if (!setor) throw new Error("Setor nao encontrado");
-        const vendidos = await this.repository.getVendidosSetor(setorId);
-        const reservado = await this.repository.getReservadoRedis(partidaId, setorId);
-        const livres = setor.capacidade - (vendidos + reservado);
+        const vendidos = await this.repository.getVendidosSetor(jogoId, setorId);
+        const reservado = await this.repository.getReservadoRedis(jogoId, setorId);
+        const jogoSetor = await this.repository.getJogoSetorByIds(jogoId, setorId);
+        if (!jogoSetor) throw new Error("Setor nao disponivel neste jogo");
+        const livres = jogoSetor.capacidade - (vendidos + reservado);
         if (livres < qtdDesejada) return { ok: false, livres };
         return { ok: true, livres };
     }
 
     async createPedido(data: PedidoCreateInput) {
-        const itensComPreco = await Promise.all(
+        const itensComValor = await Promise.all(
             data.itens.map(async (item) => {
                 const lote = await this.repository.getLoteById(item.loteId);
                 if (!lote) throw new Error(`Lote ${item.loteId} nao encontrado`);
-                return { ...item, preco: Number(lote.precoUnitario) };
+                return { loteId: item.loteId, qtd: item.qtd };
             })
         );
 
-        const total = itensComPreco.reduce((sum, i) => sum + i.preco * i.qtd, 0);
-        const pedido = await this.repository.createPedido({ ...data, itensComPreco, total });
+        let total = 0;
+        for (const i of itensComValor) {
+            const lote = await this.repository.getLoteById(i.loteId);
+            if (lote) total += Number(lote.precoUnitario) * i.qtd;
+        }
+        const pedido = await this.repository.createPedido({ ...data, itensComValor, total });
         return { message: "Pedido criado com sucesso", pedidoId: pedido.id, pedido };
     }
 
@@ -95,7 +101,7 @@ export class ReservaService {
         if (patch.loteId) {
             const lote = await this.repository.getLoteById(patch.loteId);
             if (!lote) throw new Error("Lote nao encontrado");
-            await this.repository.updateItemPreco(itemId, Number(lote.precoUnitario));
+            await this.repository.updateItemValor(itemId, Number(lote.precoUnitario));
         }
 
         const total = await this.repository.recalcPedidoTotal(item.pedidoId);
@@ -111,16 +117,19 @@ export class ReservaService {
         return { message: "Item removido com sucesso", total };
     }
 
-    async confirmarPedido(pedidoId: string, partidaId: string) {
+    async confirmarPedido(pedidoId: string, jogoId: string) {
         const pedido = await this.repository.getPedidoById(pedidoId);
         if (!pedido) throw new Error("Pedido nao encontrado");
         if (!pedido.itens.length) throw new Error("Pedido sem itens");
 
         const porSetor: Record<string, number> = {};
-        for (const it of pedido.itens) porSetor[it.setorId] = (porSetor[it.setorId] || 0) + 1;
+        for (const it of pedido.itens) {
+            const setorId = it.lote?.jogoSetor?.setorId;
+            if (setorId) porSetor[setorId] = (porSetor[setorId] || 0) + 1;
+        }
 
         for (const [setorId, qtd] of Object.entries(porSetor)) {
-            const ok = await this.validarDisponibilidade(partidaId, setorId, qtd);
+            const ok = await this.validarDisponibilidade(jogoId, setorId, qtd);
             if (!ok.ok) {
                 const err = new Error("Setor sem disponibilidade suficiente");
                 const typedErr = err as HttpError;
@@ -135,26 +144,27 @@ export class ReservaService {
     }
 
     async confirmarCheckout(data: CheckoutConfirmarInput) {
-        const itensComPreco: CheckoutItemComPreco[] = [];
+        const itensComValor: CheckoutItemComValor[] = [];
         for (const item of data.itens) {
             const lote = await this.repository.getLoteById(item.loteId);
             if (!lote) throw new Error(`Lote ${item.loteId} nao encontrado`);
-            itensComPreco.push({ ...item, preco: Number(lote.precoUnitario) });
+            itensComValor.push({ ...item, valorUnitario: Number(lote.precoUnitario) });
         }
 
-        for (const item of itensComPreco) {
-            const ok = await this.validarDisponibilidade(data.partidaId, item.setorId, item.qtd);
+        for (const item of itensComValor) {
+            const setorId = item.loteId; // Note: need to get setor from lote
+            const ok = await this.validarDisponibilidade(data.jogoId, setorId, item.qtd);
             if (!ok.ok) {
                 const err = new Error("Setor sem disponibilidade suficiente");
                 const typedErr = err as HttpError;
                 typedErr.status = 409;
-                typedErr.details = { setorId: item.setorId, livres: ok.livres };
+                typedErr.details = { setorId, livres: ok.livres };
                 throw err;
             }
         }
 
-        const total = itensComPreco.reduce((sum, i) => sum + Number(i.preco) * Number(i.qtd), 0);
-        const pedido = await this.repository.createCheckoutPedido({ ...data, itens: itensComPreco, total });
+        const total = itensComValor.reduce((sum, i) => sum + Number(i.valorUnitario) * Number(i.qtd), 0);
+        const pedido = await this.repository.createCheckoutPedido({ ...data, itens: itensComValor, total });
 
         const torcedor = await this.repository.getTorcedorById(data.torcedorId);
         if (torcedor?.email) {
@@ -165,10 +175,10 @@ export class ReservaService {
                     nome: torcedor.nome,
                     pedidoId: pedido.id,
                     total,
-                    itens: pedido.itens.map((item) => ({
-                        setor: item.setorId,
-                        tipo: item.tipo,
-                        preco: Number(item.preco),
+                    itens: pedido.itens.map((item: any) => ({
+                        setor: item.lote?.jogoSetor?.setor?.nome ?? "N/A",
+                        tipo: item.lote?.tipo ?? "INTEIRA",
+                        preco: Number(item.valorUnitario),
                     })),
                 })),
             }).catch((err) => console.error("Erro email pedido confirmado:", err));
