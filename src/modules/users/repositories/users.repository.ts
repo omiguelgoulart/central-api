@@ -71,13 +71,6 @@ export class UserRepository {
                         faturas: true,
                     },
                 },
-                pagamentos: true,
-                ingressos: {
-                    include: {
-                        jogo: true,
-                        lote: true,
-                    },
-                },
                 pedidos: true,
             },
         });
@@ -161,13 +154,6 @@ export class UserRepository {
                     include: {
                         plano: true,
                         faturas: true,
-                    },
-                },
-                pagamentos: true,
-                ingressos: {
-                    include: {
-                        jogo: true,
-                        lote: true,
                     },
                 },
                 pedidos: true,
