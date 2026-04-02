@@ -1,4 +1,4 @@
-import { StatusPagamento } from "@prisma/client";
+import { StatusPagamentoSocio } from "@prisma/client";
 import axios from "axios";
 
 import { prisma } from "../../../lib/prisma";
@@ -218,12 +218,12 @@ export class AsaasRepository {
     return this.prismaClient.fatura.findUnique({ where: { id } });
   }
 
-  async atualizarPagamentoWebhook(gatewayPaymentId: string, status: StatusPagamento, pagoEm: Date | null) {
-    return this.prismaClient.pagamento.updateMany({ where: { gatewayPaymentId }, data: { status, pagoEm } });
+  async atualizarPagamentoWebhook(gatewayPaymentId: string, status: StatusPagamentoSocio, pagoEm: Date | null) {
+    return this.prismaClient.pagamentoSocio.updateMany({ where: { gatewayPaymentId }, data: { status, pagoEm } });
   }
 
   async getPagamentoComTorcedor(gatewayPaymentId: string) {
-    return this.prismaClient.pagamento.findFirst({
+    return this.prismaClient.pagamentoSocio.findFirst({
       where: { gatewayPaymentId },
       include: { torcedor: { select: { nome: true, email: true } } },
     });
