@@ -3,12 +3,12 @@ import { StatusIngresso } from "@prisma/client";
 import { prisma } from "../../../lib/prisma";
 
 export class CheckinRepository {
-  constructor(private readonly prismaClient = prisma) {}
+  constructor(private readonly prismaClient = prisma) { }
 
   async getIngressoByIdOrQr(ingressoId?: string, qrCode?: string) {
     return this.prismaClient.ingresso.findUnique({
       where: ingressoId ? { id: ingressoId } : { qrCode: qrCode as string },
-      include: { jogo: true },
+      include: { itemPedido: { include: { lote: { include: { jogoSetor: { include: { jogo: true } } } } } } },
     });
   }
 
