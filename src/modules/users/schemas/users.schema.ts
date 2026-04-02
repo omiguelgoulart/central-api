@@ -1,18 +1,36 @@
 import { z } from "zod";
 
 export const usuarioSchema = z.object({
-    matricula: z.number().optional(),
+    matricula: z.string().min(1, "Matrícula é obrigatória"),
     nome: z.string().min(1, "Nome é obrigatório"),
     email: z.string().email("E-mail inválido"),
     senha: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
     cpf: z.string().optional(),
     telefone: z.string().optional(),
+    dataNascimento: z.string().datetime().optional(),
+    genero: z.string().optional(),
+    fotoUrl: z.string().url().optional(),
     enderecoLogradouro: z.string().optional(),
     enderecoNumero: z.string().optional(),
     enderecoBairro: z.string().optional(),
     enderecoCidade: z.string().optional(),
     enderecoUF: z.string().optional(),
     enderecoCEP: z.string().optional(),
+    statusSocio: z.enum(['ATIVO', 'INADIMPLENTE', 'CANCELADO']).optional(),
+    inadimplenteDesde: z.string().datetime().optional(),
+    aceitaTermosEm: z.string().datetime().optional(),
+    aceitaMarketing: z.boolean().optional(),
+    aceitaMarketingEm: z.string().datetime().optional(),
+    origemCadastro: z.string().optional(),
+    documentoFrenteUrl: z.string().url().optional(),
+    documentoVersoUrl: z.string().url().optional(),
+    gatewayClienteId: z.string().optional(),
+    faceId: z.string().optional(),
+    emailVerificado: z.boolean().optional(),
+    emailToken: z.string().optional(),
+    emailTokenExpiraEm: z.string().datetime().optional(),
+    senhaToken: z.string().optional(),
+    senhaTokenExpiraEm: z.string().datetime().optional(),
 });
 
 export const updateUsuarioSchema = usuarioSchema.partial();
