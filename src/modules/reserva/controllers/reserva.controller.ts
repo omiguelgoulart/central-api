@@ -120,7 +120,7 @@ export class ReservaController {
     async confirmarPedido(req: Request, res: Response) {
         try {
             const data = confirmarPedidoSchema.parse(req.body);
-            const result = await this.service.confirmarPedido(req.params.id, data.partidaId);
+            const result = await this.service.confirmarPedido(req.params.id, data.jogoId);
             res.status(200).json(result);
         } catch (error) {
             this.handleError(error, res, "Erro ao confirmar pedido");
