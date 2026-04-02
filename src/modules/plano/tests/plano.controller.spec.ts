@@ -39,7 +39,8 @@ describe("PlanoController", () => {
             nome: "Plano Básico",
             descricao: "Descrição do plano básico",
             valor: 29.99,
-            Periodicidade: "MENSAL",
+            periodicidade: "MENSAL",
+            isFeatured: false,
         };
 
         const req = {
@@ -70,7 +71,8 @@ describe("PlanoController", () => {
             nome: "Plano Premium",
             descricao: "Descrição do plano premium",
             valor: 59.99,
-            Periodicidade: "MENSAL",
+            periodicidade: "MENSAL",
+            isFeatured: false,
         };
 
         const req = {
@@ -128,7 +130,8 @@ describe("PlanoController", () => {
                 nome: "Plano Premium",
                 descricao: "Descrição do plano premium",
                 valor: 59.99,
-                Periodicidade: "MENSAL",
+                periodicidade: "MENSAL",
+                isFeatured: false,
             },
         } as unknown as Request;
 
@@ -139,13 +142,19 @@ describe("PlanoController", () => {
             nome: "Plano Básico",
             descricao: "Descrição do plano básico",
             valor: 29.99,
-            Periodicidade: "MENSAL",
+            periodicidade: "MENSAL",
         });
         planoServiceMock.updatePlano = vi.fn().mockRejectedValue(new Error("Erro ao atualizar plano"));
 
         await planoController.updatePlano(req, res);
 
-        expect(planoServiceMock.updatePlano).toHaveBeenCalledWith("1", req.body);
+        expect(planoServiceMock.updatePlano).toHaveBeenCalledWith("1", {
+            nome: "Plano Premium",
+            descricao: "Descrição do plano premium",
+            valor: 59.99,
+            periodicidade: "MENSAL",
+            isFeatured: false,
+        });
         expect(res.status).toHaveBeenCalledWith(500);
         expect(res.json).toHaveBeenCalledWith({
             error: "Erro ao atualizar plano",
