@@ -10,7 +10,7 @@ export class PlanoRepository {
             data: {
                 nome: data.nome,
                 valor: data.valor,
-                periodicidade: data.Periodicidade,
+                periodicidade: data.periodicidade,
             },
         });
     }
@@ -37,7 +37,7 @@ export class PlanoRepository {
             data: {
                 nome: data.nome,
                 valor: data.valor,
-                periodicidade: data.Periodicidade,
+                periodicidade: data.periodicidade,
             },
         });
     }
