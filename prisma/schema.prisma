@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,16 +6,17 @@ datasource db {
   provider = "postgresql"
 }
 
+// ENUMS
+
+enum AdminRole {
+  SUPER_ADMIN
+  OPERACIONAL
+  PORTARIA
+}
+
 enum StatusSocio {
   ATIVO
   INADIMPLENTE
-  CANCELADO
-}
-
-enum StatusPagamento {
-  PENDENTE
-  PAGO
-  ATRASADO
   CANCELADO
 }
 
@@ -54,198 +49,29 @@ enum StatusFatura {
   CANCELADA
 }
 
-enum AdminRole {
-  SUPER_ADMIN
-  OPERACIONAL
-  PORTARIA
+enum StatusPagamentoSocio {
+  PENDENTE
+  PAGO
+  ATRASADO
+  CANCELADO
 }
 
-model Admin {
-  id           String     @id @default(uuid())
-  nome         String
-  email        String     @unique
-  senha        String
-  role         AdminRole? @default(OPERACIONAL)
-  ativo        Boolean    @default(true)
-  criadoEm     DateTime   @default(now())
-  atualizadoEm DateTime   @updatedAt
-
-  jogosCriados     Jogo[] @relation("JogoCriadoPor")
-  jogosAtualizados Jogo[] @relation("JogoAtualizadoPor")
-
-  @@map("admins")
+enum StatusPagamentoIngresso {
+  AGUARDANDO
+  APROVADO
+  RECUSADO
+  ESTORNADO
 }
 
-model Torcedor {
-  id                 String       @id @default(uuid())
-  matricula          String       @unique
-  nome               String
-  email              String       @unique
-  senha              String
-  telefone           String?
-  cpf                String?      @unique
-  dataNascimento     DateTime?
-  genero             String?
-  fotoUrl            String?
-  enderecoLogradouro String?
-  enderecoNumero     String?
-  enderecoBairro     String?
-  enderecoCidade     String?
-  enderecoUF         String?
-  enderecoCEP        String?
-  statusSocio        StatusSocio?
-  inadimplenteDesde  DateTime?
-  aceitaTermosEm     DateTime?
-  aceitaMarketing    Boolean?     @default(false)
-  aceitaMarketingEm  DateTime?
-  origemCadastro     String?
-  documentoFrenteUrl String?
-  documentoVersoUrl  String?
-  gatewayClienteId   String?
-  faceId             String?
-  emailVerificado    Boolean      @default(false)
-  emailToken         String?      @unique
-  emailTokenExpiraEm DateTime?
-  senhaToken         String?      @unique
-  senhaTokenExpiraEm DateTime?
-  assinaturas        Assinatura[]
-  pagamentos         Pagamento[]  @relation("TorcedorPagamentos")
-  ingressos          Ingresso[]   @relation("IngressoSocio")
-  pedidos            Pedido[]
-  criadoEm           DateTime     @default(now())
-  atualizadoEm       DateTime     @updatedAt
-
-  @@index([statusSocio])
-  @@index([cpf])
-  @@index([email])
-  @@map("torcedores")
-}
-
-model Plano {
-  id            String        @id @default(uuid())
-  nome          String        @unique
-  descricao     String?
-  valor         Decimal
-  periodicidade Periodicidade
-
-  isFeatured Boolean @default(false)
-  badgeLabel String?
-  ordem      Int     @default(0)
-
-  assinaturas  Assinatura[]
-  beneficios   Beneficio[]
-  criadoEm     DateTime     @default(now())
-  atualizadoEm DateTime     @updatedAt
-
-  @@map("planos")
-}
-
-model Beneficio {
-  id        String  @id @default(uuid())
-  slug      String  @unique
-  titulo    String
-  descricao String?
-  icone     String?
-  ativo     Boolean @default(true)
-
-  planoId String
-  plano   Plano  @relation(fields: [planoId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
-  ordem      Int     @default(0)
-  destaque   Boolean @default(false)
-  observacao String?
-
-  criadoEm     DateTime @default(now())
-  atualizadoEm DateTime @updatedAt
-
-  @@index([planoId])
-  @@map("beneficios")
-}
-
-model Assinatura {
-  id                String           @id @default(uuid())
-  torcedorId        String
-  planoId           String
-  status            StatusAssinatura @default(ATIVA)
-  inicioEm          DateTime
-  expiraEm          DateTime?
-  proximaCobrancaEm DateTime?
-
-  canceladaEm        DateTime?
-  motivoCancelamento String?
-  suspensaEm         DateTime?
-  retomadaEm         DateTime?
-
-  periodicidade       Periodicidade @default(MENSAL)
-  valorAtual          Decimal?      @db.Decimal(10, 2)
-  moeda               String?       @default("BRL")
-  gatewayClienteId    String?
-  gatewayAssinaturaId String?
-
-  torcedor Torcedor @relation(fields: [torcedorId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  plano    Plano    @relation(fields: [planoId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  faturas  Fatura[]
-
-  criadoEm     DateTime @default(now())
-  atualizadoEm DateTime @updatedAt
-
-  @@index([torcedorId, status])
-  @@index([planoId])
-  @@index([status, proximaCobrancaEm])
-  @@index([torcedorId, planoId, status])
-}
-
-model Fatura {
-  id           String           @id @default(uuid())
-  assinaturaId String
-  competencia  String
-  valor        Decimal
-  status       StatusFatura     @default(ABERTA)
-  vencimentoEm DateTime
-  pagoEm       DateTime?
-  referencia   String?          @unique
-  metodo       MetodoPagamento?
-
-  assinatura Assinatura  @relation(fields: [assinaturaId], references: [id])
-  pagamentos Pagamento[]
-
-  criadoEm     DateTime @default(now())
-  atualizadoEm DateTime @updatedAt
-
-  @@index([assinaturaId, status, vencimentoEm, competencia])
-}
-
-model Pagamento {
-  id             String          @id @default(uuid())
-  torcedorId     String
-  valor          Decimal         @db.Decimal(10, 2)
-  status         StatusPagamento @default(PENDENTE)
-  dataVencimento DateTime
-  pagoEm         DateTime?
-  referencia     String?         @unique
-  metodo         MetodoPagamento
-  descricao      String?
-
-  faturaId String?
-
-  gatewayPaymentId String?
-
-  torcedor  Torcedor   @relation("TorcedorPagamentos", fields: [torcedorId], references: [id])
-  fatura    Fatura?    @relation(fields: [faturaId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  ingressos Ingresso[]
-  pedidos   Pedido[]
-
-  criadoEm     DateTime @default(now())
-  atualizadoEm DateTime @updatedAt
-
-  @@index([torcedorId])
-  @@index([faturaId])
-  @@index([status, dataVencimento, metodo])
-  @@map("pagamentos")
+enum StatusPedido {
+  PENDENTE
+  PAGO
+  CANCELADO
+  EXPIRADO
+  ESTORNADO
 }
 
 enum StatusIngresso {
-  PENDENTE
   VALIDO
   USADO
   CANCELADO
@@ -268,6 +94,200 @@ enum TipoSetor {
   ACESSIVEL
 }
 
+// ADMIN
+
+model Admin {
+  id           String     @id @default(uuid())
+  nome         String
+  email        String     @unique
+  senha        String
+  role         AdminRole  @default(OPERACIONAL)
+  ativo        Boolean    @default(true)
+  criadoEm     DateTime   @default(now())
+  atualizadoEm DateTime   @updatedAt
+
+  jogosCriados     Jogo[] @relation("JogoCriadoPor")
+  jogosAtualizados Jogo[] @relation("JogoAtualizadoPor")
+
+  @@map("admins")
+}
+
+// TORCEDOR
+
+model Torcedor {
+  id                 String      @id @default(uuid())
+  matricula          String      @unique
+  nome               String
+  email              String      @unique
+  senha              String
+  telefone           String?
+  cpf                String?     @unique
+  dataNascimento     DateTime?
+  genero             String?
+  fotoUrl            String?
+  enderecoLogradouro String?
+  enderecoNumero     String?
+  enderecoBairro     String?
+  enderecoCidade     String?
+  enderecoUF         String?
+  enderecoCEP        String?
+
+  statusSocio       StatusSocio?
+  inadimplenteDesde DateTime?
+
+  aceitaTermosEm    DateTime?
+  aceitaMarketing   Boolean?  @default(false)
+  aceitaMarketingEm DateTime?
+  origemCadastro    String?
+
+  documentoFrenteUrl String?
+  documentoVersoUrl  String?
+  gatewayClienteId   String?
+  faceId             String?
+
+  emailVerificado    Boolean   @default(false)
+  emailToken         String?   @unique
+  emailTokenExpiraEm DateTime?
+  senhaToken         String?   @unique
+  senhaTokenExpiraEm DateTime?
+
+  assinaturas      Assinatura[]
+  pagamentosSocio  PagamentoSocio[]
+  pedidos          Pedido[]
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([statusSocio])
+  @@index([cpf])
+  @@index([email])
+  @@map("torcedores")
+}
+
+// PLANOS E ASSINATURAS (sócio-torcedor)
+
+model Plano {
+  id            String        @id @default(uuid())
+  nome          String        @unique
+  descricao     String?
+  valor         Decimal       @db.Decimal(10, 2)
+  periodicidade Periodicidade
+  isFeatured    Boolean       @default(false)
+  badgeLabel    String?
+  ordem         Int           @default(0)
+
+  assinaturas Assinatura[]
+  beneficios  Beneficio[]
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@map("planos")
+}
+
+model Beneficio {
+  id        String  @id @default(uuid())
+  slug      String  @unique
+  titulo    String
+  descricao String?
+  icone     String?
+  ativo     Boolean @default(true)
+  ordem     Int     @default(0)
+  destaque  Boolean @default(false)
+  observacao String?
+
+  planoId String
+  plano   Plano  @relation(fields: [planoId], references: [id], onDelete: Cascade)
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([planoId])
+  @@map("beneficios")
+}
+
+model Assinatura {
+  id         String           @id @default(uuid())
+  torcedorId String
+  planoId    String
+  status     StatusAssinatura @default(ATIVA)
+
+  inicioEm          DateTime
+  expiraEm          DateTime?
+  proximaCobrancaEm DateTime?
+  canceladaEm       DateTime?
+  motivoCancelamento String?
+  suspensaEm        DateTime?
+  retomadaEm        DateTime?
+
+  periodicidade       Periodicidade @default(MENSAL)
+  valorAtual          Decimal?      @db.Decimal(10, 2)
+  moeda               String        @default("BRL")
+  gatewayClienteId    String?
+  gatewayAssinaturaId String?
+
+  torcedor Torcedor         @relation(fields: [torcedorId], references: [id], onDelete: Restrict)
+  plano    Plano            @relation(fields: [planoId], references: [id], onDelete: Restrict)
+  faturas  Fatura[]
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([torcedorId, status])
+  @@index([planoId])
+  @@index([status, proximaCobrancaEm])
+  @@map("assinaturas")
+}
+
+model Fatura {
+  id           String       @id @default(uuid())
+  assinaturaId String
+  competencia  String
+  valor        Decimal      @db.Decimal(10, 2)
+  status       StatusFatura @default(ABERTA)
+  vencimentoEm DateTime
+  pagoEm       DateTime?
+  referencia   String?      @unique
+  metodo       MetodoPagamento?
+
+  assinatura      Assinatura       @relation(fields: [assinaturaId], references: [id])
+  pagamentosSocio PagamentoSocio[]
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([assinaturaId, status, vencimentoEm])
+  @@map("faturas")
+}
+
+
+model PagamentoSocio {
+  id             String               @id @default(uuid())
+  torcedorId     String
+  faturaId       String?
+  valor          Decimal              @db.Decimal(10, 2)
+  status         StatusPagamentoSocio @default(PENDENTE)
+  dataVencimento DateTime
+  pagoEm         DateTime?
+  referencia     String?              @unique
+  metodo         MetodoPagamento
+  descricao      String?
+  gatewayPaymentId String?
+
+  torcedor Torcedor @relation(fields: [torcedorId], references: [id])
+  fatura   Fatura?  @relation(fields: [faturaId], references: [id], onDelete: SetNull)
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([torcedorId])
+  @@index([faturaId])
+  @@index([status, dataVencimento])
+  @@map("pagamentos_socio")
+}
+
+// JOGOS E SETORES
+
 model Jogo {
   id        String   @id @default(uuid())
   nome      String
@@ -275,9 +295,8 @@ model Jogo {
   local     String   @default("Bento Freitas")
   descricao String?
 
-  lotes     Lote[]
-  ingressos Ingresso[]
-  setores   JogoSetor[]
+  setores JogoSetor[]
+  lotes   Lote[]
 
   criadoPorId     String?
   atualizadoPorId String?
@@ -292,27 +311,25 @@ model Jogo {
 }
 
 model Setor {
-  id         String @id @default(uuid())
-  slug       String @unique
-  nome       String
-  capacidade Int
+  id   String    @id @default(uuid())
+  slug String    @unique
+  nome String    @unique
+  tipo TipoSetor @default(ARQUIBANCADA)
 
-  criadoEm     DateTime     @default(now())
-  atualizadoEm DateTime     @updatedAt
-  jogos        JogoSetor[]
-  pedidos      ItemPedido[]
+  jogos JogoSetor[]
 
-  @@unique([nome])
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
   @@map("setores")
 }
 
 model JogoSetor {
-  id         String    @id @default(uuid())
+  id         String  @id @default(uuid())
   jogoId     String
   setorId    String
   capacidade Int
-  aberto     Boolean   @default(true)
-  tipo       TipoSetor @default(ARQUIBANCADA)
+  aberto     Boolean @default(true)
 
   jogo  Jogo   @relation(fields: [jogoId], references: [id])
   setor Setor  @relation(fields: [setorId], references: [id])
@@ -322,55 +339,99 @@ model JogoSetor {
   atualizadoEm DateTime @updatedAt
 
   @@unique([jogoId, setorId])
-  @@index([jogoId, setorId])
+  @@index([jogoId])
   @@map("jogos_setores")
 }
 
+// LOTES, PEDIDOS E INGRESSOS
+
 model Lote {
   id            String    @id @default(uuid())
+  jogoSetorId   String
+  jogoId        String    
   nome          String
   tipo          TipoLote  @default(INTEIRA)
-  quantidade    Int? 
+  quantidade    Int?
   precoUnitario Decimal   @db.Decimal(10, 2)
   inicioVendas  DateTime?
   fimVendas     DateTime?
   limitePorCPF  Int?
 
-  jogoId      String
-  jogoSetorId String
-
-  jogo      Jogo       @relation(fields: [jogoId], references: [id])
-  jogoSetor JogoSetor  @relation(fields: [jogoSetorId], references: [id])
-  ingressos Ingresso[]
+  jogoSetor   JogoSetor    @relation(fields: [jogoSetorId], references: [id])
+  jogo        Jogo         @relation(fields: [jogoId], references: [id])
+  itensPedido ItemPedido[]
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
-  @@index([jogoId, nome])
   @@index([jogoSetorId])
+  @@index([jogoId])
   @@map("lotes")
+}
+
+model Pedido {
+  id         String       @id @default(uuid())
+  torcedorId String
+  status     StatusPedido @default(PENDENTE)
+  expiraEm   DateTime?    
+
+  torcedor  Torcedor           @relation(fields: [torcedorId], references: [id])
+  itens     ItemPedido[]
+  pagamento PagamentoIngresso?
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([torcedorId])
+  @@index([status, expiraEm])
+  @@map("pedidos")
+}
+
+model ItemPedido {
+  id            String  @id @default(uuid())
+  pedidoId      String
+  loteId        String
+  valorUnitario Decimal @db.Decimal(10, 2)
+
+  pedido   Pedido    @relation(fields: [pedidoId], references: [id])
+  lote     Lote      @relation(fields: [loteId], references: [id])
+  ingresso Ingresso?
+
+  @@index([pedidoId])
+  @@index([loteId])
+  @@map("itens_pedido")
+}
+
+model PagamentoIngresso {
+  id         String                  @id @default(uuid())
+  pedidoId   String                  @unique
+  total      Decimal                 @db.Decimal(10, 2)
+  status     StatusPagamentoIngresso @default(AGUARDANDO)
+  provider   String                  
+  externalId String?                
+
+  pedido Pedido @relation(fields: [pedidoId], references: [id])
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@map("pagamentos_ingresso")
 }
 
 model Ingresso {
   id           String         @id @default(uuid())
-  torcedorId   String?
-  jogoId       String
-  loteId       String?
+  itemPedidoId String         @unique
   qrCode       String         @unique
-  valor        Decimal        @db.Decimal(10, 2)
   status       StatusIngresso @default(VALIDO)
-  criadoEm     DateTime       @default(now())
   usadoEm      DateTime?
-  atualizadoEm DateTime       @updatedAt
-  pagamentoId  String?        @unique
 
-  socio     Torcedor?  @relation("IngressoSocio", fields: [torcedorId], references: [id])
-  jogo      Jogo       @relation(fields: [jogoId], references: [id])
-  lote      Lote?      @relation(fields: [loteId], references: [id])
-  pagamento Pagamento? @relation(fields: [pagamentoId], references: [id])
-  checkins  Checkin[]
+  itemPedido ItemPedido @relation(fields: [itemPedidoId], references: [id])
+  checkins   Checkin[]
 
-  @@index([jogoId, status, loteId])
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([status])
   @@map("ingressos")
 }
 
@@ -385,49 +446,4 @@ model Checkin {
 
   @@index([ingressoId])
   @@map("checkins")
-}
-
-model Pedido {
-  id         String   @id @default(uuid())
-  torcedorId String
-  torcedor   Torcedor @relation(fields: [torcedorId], references: [id])
-
-  status       StatusPedido @default(RASCUNHO)
-  total        Decimal      @default(0)
-  criadoEm     DateTime     @default(now())
-  atualizadoEm DateTime     @updatedAt
-  expiraEm     DateTime? // usado se quiser controlar tempo de reserva
-
-  itens       ItemPedido[] // relação 1:N
-  pagamentoId String?
-  pagamento   Pagamento?   @relation(fields: [pagamentoId], references: [id])
-}
-
-model ItemPedido {
-  id       String @id @default(uuid())
-  pedidoId String
-  pedido   Pedido @relation(fields: [pedidoId], references: [id])
-
-  setorId String
-  setor   Setor  @relation(fields: [setorId], references: [id])
-
-  tipo  TipoIngresso // INTEIRA | MEIA
-  preco Decimal
-
-  nomeTitular String?
-  torcedorCpf String?
-}
-
-enum StatusPedido {
-  RASCUNHO
-  RESERVA_ATIVA
-  PENDENTE_PAGAMENTO
-  PAGO
-  CANCELADO
-  EXPIRADO
-}
-
-enum TipoIngresso {
-  INTEIRA
-  MEIA
 }
