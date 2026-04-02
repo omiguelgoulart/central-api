@@ -10,7 +10,7 @@ export class JogoSetorRepository {
                 jogoId: data.jogoId,
                 setorId: data.setorId,
                 capacidade: data.capacidade,
-                tipo: data.tipo,
+                aberto: data.aberto ?? true,
             },
         });
     }
@@ -38,7 +38,6 @@ export class JogoSetorRepository {
                 jogoId: data.jogoId,
                 setorId: data.setorId,
                 capacidade: data.capacidade,
-                tipo: data.tipo,
                 aberto: data.aberto,
             },
         });
