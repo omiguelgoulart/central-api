@@ -2,8 +2,15 @@ import { prisma } from "../../../lib/prisma";
 import redis from "../../../lib/redis";
 import { CheckoutConfirmarInput, ItemCreateInput, ItemPatchInput, PedidoCreateInput, PedidoPatchInput, ReservaBody } from "../types/reserva.type";
 
-type ItemPedidoComPreco = PedidoCreateInput["itens"][number] & { preco: number };
-type CheckoutItemComPreco = CheckoutConfirmarInput["itens"][number] & { preco: number };
+type ItemPedidoComValor = {
+  loteId: string;
+  qtd: number;
+};
+
+type CheckoutItemComValor = {
+  loteId: string;
+  qtd: number;
+};
 
 export class ReservaRepository {
   constructor(
@@ -12,12 +19,12 @@ export class ReservaRepository {
     private readonly ttlMin = Number(process.env.RESERVA_TTL_MIN ?? 10)
   ) { }
 
-  private key(partidaId: string, setorId: string) {
-    return `reserva:${partidaId}:${setorId}`;
+  private key(jogoId: string, setorId: string) {
+    return `reserva:${jogoId}:${setorId}`;
   }
 
   async segurarReserva(data: ReservaBody) {
-    const k = this.key(data.partidaId, data.setorId);
+    const k = this.key(data.jogoId, data.setorId);
     const current = Number(await this.cache.get(k)) || 0;
     const novoValor = current + Number(data.qtd);
     await this.cache.set(k, novoValor, "EX", this.ttlMin * 60);
@@ -25,15 +32,15 @@ export class ReservaRepository {
   }
 
   async liberarReserva(data: ReservaBody) {
-    const k = this.key(data.partidaId, data.setorId);
+    const k = this.key(data.jogoId, data.setorId);
     const current = Number(await this.cache.get(k)) || 0;
     const novoValor = Math.max(0, current - Number(data.qtd));
     await this.cache.set(k, novoValor);
     return { ok: true, reservado: novoValor };
   }
 
-  async listarReservas(partidaId: string) {
-    const keys = await this.cache.keys(`reserva:${partidaId}:*`);
+  async listarReservas(jogoId: string) {
+    const keys = await this.cache.keys(`reserva:${jogoId}:*`);
     const result: Record<string, number> = {};
     for (const k of keys) {
       const setorId = k.split(":")[2];
@@ -46,33 +53,48 @@ export class ReservaRepository {
     return this.db.setor.findUnique({ where: { id: setorId } });
   }
 
-  async getReservadoRedis(partidaId: string, setorId: string) {
-    return Number(await this.cache.get(this.key(partidaId, setorId))) || 0;
+  async getJogoSetorByIds(jogoId: string, setorId: string) {
+    return this.db.jogoSetor.findUnique({
+      where: { jogoId_setorId: { jogoId, setorId } },
+    });
   }
 
-  async getVendidosSetor(setorId: string) {
-    return this.db.itemPedido.count({ where: { setorId, pedido: { status: "PAGO" } } });
+  async getReservadoRedis(jogoId: string, setorId: string) {
+    return Number(await this.cache.get(this.key(jogoId, setorId))) || 0;
+  }
+
+  async getVendidosSetor(jogoId: string, setorId: string) {
+    return this.db.itemPedido.count({
+      where: {
+        lote: {
+          jogoSetor: {
+            jogoId,
+            setorId,
+          },
+        },
+        pedido: { status: "PAGO" },
+      },
+    });
   }
 
   async getLoteById(loteId: string) {
-    return this.db.lote.findUnique({ where: { id: loteId } });
+    return this.db.lote.findUnique({
+      where: { id: loteId },
+      include: { jogoSetor: { include: { setor: true } } },
+    });
   }
 
-  async createPedido(data: PedidoCreateInput & { itensComPreco: ItemPedidoComPreco[]; total: number }) {
+  async createPedido(data: PedidoCreateInput & { itensComValor: ItemPedidoComValor[]; total: number }) {
     return this.db.pedido.create({
       data: {
         torcedorId: data.torcedorId,
-        status: "RASCUNHO",
-        total: data.total,
+        status: "PENDENTE",
         expiraEm: data.expiraEm ? new Date(data.expiraEm) : undefined,
         itens: {
-          create: data.itensComPreco.flatMap((i) =>
-            Array.from({ length: i.qtd }).map((_, idx) => ({
-              setorId: i.setorId,
-              tipo: i.tipo,
-              preco: i.preco,
-              nomeTitular: i.titulares?.[idx]?.nome ?? null,
-              torcedorCpf: i.titulares?.[idx]?.cpf ?? null,
+          create: data.itensComValor.flatMap((i) =>
+            Array.from({ length: i.qtd }).map((_) => ({
+              loteId: i.loteId,
+              valorUnitario: 0,
             }))
           ),
         },
@@ -82,11 +104,17 @@ export class ReservaRepository {
   }
 
   async getAllPedidos() {
-    return this.db.pedido.findMany({ orderBy: { criadoEm: "desc" }, include: { itens: true } });
+    return this.db.pedido.findMany({
+      orderBy: { criadoEm: "desc" },
+      include: { itens: true },
+    });
   }
 
   async getPedidoById(id: string) {
-    return this.db.pedido.findUnique({ where: { id }, include: { itens: true } });
+    return this.db.pedido.findUnique({
+      where: { id },
+      include: { itens: { include: { lote: { include: { jogoSetor: { include: { setor: true } } } } } } },
+    });
   }
 
   async updatePedido(id: string, patch: PedidoPatchInput) {
@@ -94,7 +122,6 @@ export class ReservaRepository {
       where: { id },
       data: {
         status: patch.status,
-        total: typeof patch.total === "number" ? patch.total : undefined,
         expiraEm: patch.expiraEm ? new Date(patch.expiraEm) : undefined,
       },
     });
@@ -105,15 +132,12 @@ export class ReservaRepository {
     return this.db.pedido.delete({ where: { id } });
   }
 
-  async addItensPedido(pedidoId: string, input: ItemCreateInput, preco: number) {
+  async addItensPedido(pedidoId: string, input: ItemCreateInput, valorUnitario: number) {
     return this.db.itemPedido.createMany({
-      data: Array.from({ length: input.qtd }).map((_, idx) => ({
+      data: Array.from({ length: input.qtd }).map((_) => ({
         pedidoId,
-        setorId: input.setorId,
-        tipo: input.tipo,
-        preco,
-        nomeTitular: input.titulares?.[idx]?.nome ?? null,
-        torcedorCpf: input.titulares?.[idx]?.cpf ?? null,
+        loteId: input.loteId,
+        valorUnitario,
       })),
     });
   }
@@ -122,19 +146,16 @@ export class ReservaRepository {
     return this.db.itemPedido.findUnique({ where: { id: itemId } });
   }
 
-  async updateItem(itemId: string, patch: ItemPatchInput) {
+  async updateItem(itemId: string, _patch: ItemPatchInput) {
     return this.db.itemPedido.update({
       where: { id: itemId },
       data: {
-        tipo: patch.tipo,
-        nomeTitular: patch.nomeTitular,
-        torcedorCpf: patch.torcedorCpf,
       },
     });
   }
 
-  async updateItemPreco(itemId: string, preco: number) {
-    return this.db.itemPedido.update({ where: { id: itemId }, data: { preco } });
+  async updateItemValor(itemId: string, valorUnitario: number) {
+    return this.db.itemPedido.update({ where: { id: itemId }, data: { valorUnitario } });
   }
 
   async deleteItem(itemId: string) {
@@ -143,29 +164,24 @@ export class ReservaRepository {
 
   async recalcPedidoTotal(pedidoId: string) {
     const itens = await this.db.itemPedido.findMany({ where: { pedidoId } });
-    const total = itens.reduce((sum, it) => sum + Number(it.preco), 0);
-    await this.db.pedido.update({ where: { id: pedidoId }, data: { total } });
+    const total = itens.reduce((sum, it) => sum + Number(it.valorUnitario), 0);
     return total;
   }
 
   async confirmarPedido(pedidoId: string) {
-    return this.db.pedido.update({ where: { id: pedidoId }, data: { status: "RESERVA_ATIVA" } });
+    return this.db.pedido.update({ where: { id: pedidoId }, data: { status: "PAGO" } });
   }
 
-  async createCheckoutPedido(data: Omit<CheckoutConfirmarInput, "itens"> & { itens: CheckoutItemComPreco[]; total: number }) {
+  async createCheckoutPedido(data: Omit<CheckoutConfirmarInput, "itens"> & { itens: CheckoutItemComValor[]; total: number }) {
     return this.db.pedido.create({
       data: {
         torcedorId: data.torcedorId,
-        status: "RESERVA_ATIVA",
-        total: data.total,
+        status: "PAGO",
         itens: {
           create: data.itens.flatMap((i) =>
-            Array.from({ length: i.qtd }).map((_, idx) => ({
-              setorId: i.setorId,
-              tipo: i.tipo,
-              preco: i.preco,
-              nomeTitular: i.titulares?.[idx]?.nome ?? null,
-              torcedorCpf: i.titulares?.[idx]?.cpf ?? null,
+            Array.from({ length: i.qtd }).map((_) => ({
+              loteId: i.loteId,
+              valorUnitario: 0,
             }))
           ),
         },
