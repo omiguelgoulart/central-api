@@ -24,18 +24,16 @@ export function randomDigits(len: number): string {
   for (let i = 0; i < len; i++) {
     out += (bytes[i] % 10).toString();
   }
-  // evita sequências triviais tipo "000000000"
   if (/^0+$/.test(out)) return randomDigits(len);
   return out;
 }
 
 export function gerarMatricula(): string {
-  const corpo = randomDigits(9);         // 9 dígitos base
-  const dv = luhnCheckDigit(corpo);      // dígito verificador
-  return `${corpo}${dv}`;                // total 10 dígitos
+  const corpo = randomDigits(9);
+  const dv = luhnCheckDigit(corpo);
+  return `${corpo}${dv}`;
 }
 
-// opcional: validar formato rapidamente
 export function isMatriculaValida(m: string): boolean {
   if (!/^\d{10}$/.test(m)) return false;
   const corpo = m.slice(0, 9);
