@@ -23,69 +23,30 @@ export class JogoRepository {
         });
     }
 
-async getJogoById(id: string) {
-  return this.prismaClient.jogo.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      nome: true,
-      data: true,
-      local: true,
-      descricao: true,
-      criadoEm: true,
-      atualizadoEm: true,
-
-      criadoPor: true,
-      atualizadoPor: true,
-
-      lotes: {
-        select: {
-          id: true,
-          nome: true,
-          tipo: true,
-          quantidade: true,
-          precoUnitario: true,
-          inicioVendas: true,
-          fimVendas: true,
-          limitePorCPF: true,
-          jogoId: true,
-          jogoSetorId: true,
-          criadoEm: true,
-          atualizadoEm: true,
-
-          jogoSetor: {
+    async getJogoById(id: string) {
+        return this.prismaClient.jogo.findUnique({
+            where: { id },
             select: {
-              id: true,
-              capacidade: true,
-              aberto: true,
-              jogoId: true,
-              setorId: true,
-              criadoEm: true,
-              atualizadoEm: true,
-
-              setor: true,
+                id: true,
+                nome: true,
+                data: true,
+                local: true,
+                descricao: true,
+                setores: {
+                    include: {
+                        setor: true,
+                    },
+                },
+                lotes: {
+                    select: {
+                        id: true,
+                    },
+                },
+                criadoPor: true,
+                atualizadoPor: true,
             },
-          },
-        },
-      },
-
-      setores: {
-        select: {
-          id: true,
-          capacidade: true,
-          aberto: true,
-          jogoId: true,
-          setorId: true,
-          criadoEm: true,
-          atualizadoEm: true,
-
-          setor: true,
-          lotes: true,
-        },
-      },
-    },
-  });
-}
+        });
+    }
 
     async deleteJogo(id: string) {
         return this.prismaClient.jogo.delete({
