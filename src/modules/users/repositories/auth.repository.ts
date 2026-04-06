@@ -6,9 +6,10 @@ import { prisma } from "../../../lib/prisma";
 export class AuthRepository {
   constructor(private readonly prismaClient = prisma) { }
 
-  forgotPassword(_email: string) {
-    throw new Error("Method not implemented.");
+  async forgotPassword(email: string) {
+    return this.recoverPassword(email);
   }
+
   async findUserByEmail(email: string) {
     return this.prismaClient.torcedor.findUnique({
       where: { email },

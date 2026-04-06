@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { ZodError } from "zod";
 
-import { loginSchema, resetPasswordSchema } from "../schemas/auth.schema";
+import { forgotPasswordSchema, loginSchema, resetPasswordSchema } from "../schemas/auth.schema";
 import { AuthService } from "../services/auth.service";
 
 export class AuthController {
@@ -24,7 +24,7 @@ export class AuthController {
 
     async forgotPassword(req: Request, res: Response) {
         try {
-            const data = loginSchema.parse(req.body);
+            const data = forgotPasswordSchema.parse(req.body);
             const result = await this.service.forgotPassword(data.email);
             res.status(200).json(result);
         } catch (error) {
