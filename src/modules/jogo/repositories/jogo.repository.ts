@@ -23,30 +23,69 @@ export class JogoRepository {
         });
     }
 
-    async getJogoById(id: string) {
-        return prisma.jogo.findUnique({
-            where: { id },
-            include: {
-                criadoPor: true,
-                atualizadoPor: true,
-                lotes: {
-                    include: {
-                        jogoSetor: {
-                            include: {
-                                setor: true,
-                            },
-                        },
-                    },
-                },
-                setores: {
-                    include: {
-                        setor: true,
-                        lotes: true,
-                    },
-                },
-            }
-        });
-    }
+async getJogoById(id: string) {
+  return this.prismaClient.jogo.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      nome: true,
+      data: true,
+      local: true,
+      descricao: true,
+      criadoEm: true,
+      atualizadoEm: true,
+
+      criadoPor: true,
+      atualizadoPor: true,
+
+      lotes: {
+        select: {
+          id: true,
+          nome: true,
+          tipo: true,
+          quantidade: true,
+          precoUnitario: true,
+          inicioVendas: true,
+          fimVendas: true,
+          limitePorCPF: true,
+          jogoId: true,
+          jogoSetorId: true,
+          criadoEm: true,
+          atualizadoEm: true,
+
+          jogoSetor: {
+            select: {
+              id: true,
+              capacidade: true,
+              aberto: true,
+              jogoId: true,
+              setorId: true,
+              criadoEm: true,
+              atualizadoEm: true,
+
+              setor: true,
+            },
+          },
+        },
+      },
+
+      setores: {
+        select: {
+          id: true,
+          capacidade: true,
+          aberto: true,
+          jogoId: true,
+          setorId: true,
+          criadoEm: true,
+          atualizadoEm: true,
+
+          setor: true,
+          lotes: true,
+        },
+      },
+    },
+  });
+}
 
     async deleteJogo(id: string) {
         return this.prismaClient.jogo.delete({
