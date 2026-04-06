@@ -1,19 +1,36 @@
+import { gerarMatricula } from "../../../utils/matricula";
 import { UserRepository } from "../repositories/users.repository";
 import { CreateUsuarioInput, UpdateUsuarioInput } from "../types/users.type";
 
 export class UserService {
     constructor(private readonly repository = new UserRepository()) { }
 
+    private async gerarMatriculaUnica() {
+        const MAX_TENTATIVAS = 10;
+
+        for (let tentativa = 0; tentativa < MAX_TENTATIVAS; tentativa++) {
+            const matricula = gerarMatricula();
+            const matriculaExistente = await this.repository.getUserByMatricula(matricula);
+
+            if (!matriculaExistente) {
+                return matricula;
+            }
+        }
+
+        throw new Error('Não foi possível gerar uma matrícula única');
+    }
+
     async createUser(data: CreateUsuarioInput) {
         const emailExistente = await this.repository.getUserByEmail(data.email);
         if (emailExistente) {
             throw new Error('Já existe um usuário com esse email');
         }
-        const matriculaExistente = await this.repository.getUserByMatricula(String(data.matricula));
-        if (matriculaExistente) {
-            throw new Error('Já existe um usuário com essa matrícula');
-        }
-        const newUser = await this.repository.createUser(data);
+
+        const matricula = await this.gerarMatriculaUnica();
+        const newUser = await this.repository.createUser({
+            ...data,
+            matricula,
+        });
 
         return {
             message: 'Usuário criado com sucesso',
