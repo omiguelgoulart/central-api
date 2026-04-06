@@ -4,10 +4,10 @@ import { CreateUsuarioInput, UpdateUsuarioInput } from "../types/users.type";
 export class UserRepository {
     constructor(private readonly prismaClient = prisma) { }
 
-    async createUser(data: CreateUsuarioInput) {
+    async createUser(data: CreateUsuarioInput & { matricula: string }) {
         return this.prismaClient.torcedor.create({
             data: {
-                matricula: String(data.matricula),
+                matricula: data.matricula,
                 nome: data.nome,
                 email: data.email,
                 senha: data.senha,

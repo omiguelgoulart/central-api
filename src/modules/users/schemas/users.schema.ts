@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const usuarioSchema = z.object({
-    matricula: z.string().min(1, "Matrícula é obrigatória"),
+    matricula: z.string().min(1, "Matrícula é obrigatória").optional(),
     nome: z.string().min(1, "Nome é obrigatório"),
     email: z.string().email("E-mail inválido"),
     senha: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
