@@ -1,10 +1,29 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
+import { redefinicaoSenhaTemplate } from "../../emails/email-templates/redefinicao-senha.template";
+import { sendEmail } from "../../emails/services/email.service";
 import { AuthRepository } from "../repositories/auth.repository";
 
 export class AuthService {
     constructor(private readonly repository = new AuthRepository()) { }
+
+    private getPasswordResetBaseUrl(): string {
+        if (process.env.PASSWORD_RESET_URL) {
+            return process.env.PASSWORD_RESET_URL;
+        }
+
+        const frontendUrl = process.env.FRONTEND_URL
+            ?.split(",")
+            .map((origin) => origin.trim())
+            .find(Boolean);
+
+        if (frontendUrl) {
+            return `${frontendUrl.replace(/\/$/, "")}/reset-password`;
+        }
+
+        return "http://localhost:3000/reset-password";
+    }
 
     async login(email: string, senha: string) {
         const mensagemPadrao = "Login ou senha incorretos";
@@ -55,7 +74,26 @@ export class AuthService {
             throw new Error("Email não encontrado");
         }
 
-        return this.repository.forgotPassword(email);
+        const recovery = await this.repository.forgotPassword(email);
+        if (!recovery?.senhaToken) {
+            throw new Error("Não foi possível gerar token de recuperação");
+        }
+
+        const html = redefinicaoSenhaTemplate({
+            nome: user.nome,
+            token: recovery.senhaToken,
+            linkBase: this.getPasswordResetBaseUrl(),
+        });
+
+        await sendEmail({
+            to: user.email,
+            subject: "Redefinição de senha",
+            html,
+        });
+
+        return {
+            message: "E-mail de redefinição enviado com sucesso",
+        };
     }
 
 }

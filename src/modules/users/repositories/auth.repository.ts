@@ -1,4 +1,4 @@
-import { compare, hash } from "bcryptjs";
+import { compare } from "bcryptjs";
 import { sign } from "jsonwebtoken";
 
 import { prisma } from "../../../lib/prisma";
@@ -63,9 +63,7 @@ export class AuthRepository {
     });
   }
 
-  async resetPassword(token: string, novaSenha: string) {
-    const senhaHash = await hash(novaSenha, 10);
-
+  async resetPassword(token: string, senhaHash: string) {
     return this.prismaClient.torcedor.update({
       where: { senhaToken: token },
       data: {
