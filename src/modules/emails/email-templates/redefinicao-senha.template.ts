@@ -9,8 +9,8 @@ export const redefinicaoSenhaTemplate = ({
     token,
     linkBase,
 }: RedefinicaoSenhaProps): string => {
-    const link = `${linkBase}?token=${encodeURIComponent(token)}`;
-
+    const link = `${linkBase}?token=${token}`;
+    
     return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>

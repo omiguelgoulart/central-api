@@ -10,7 +10,7 @@ export class AuthService {
 
     private getPasswordResetBaseUrl(): string {
         if (process.env.PASSWORD_RESET_URL) {
-            return process.env.PASSWORD_RESET_URL;
+            return process.env.PASSWORD_RESET_URL.replace(/\/$/, "");
         }
 
         const frontendUrl = process.env.FRONTEND_URL
@@ -19,10 +19,10 @@ export class AuthService {
             .find(Boolean);
 
         if (frontendUrl) {
-            return `${frontendUrl.replace(/\/$/, "")}/reset-password`;
+            return `${frontendUrl.replace(/\/$/, "")}/novaSenha`;
         }
 
-        return "http://localhost:3000/reset-password";
+        return "http://localhost:3000/novaSenha";
     }
 
     async login(email: string, senha: string) {
