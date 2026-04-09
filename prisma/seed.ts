@@ -1,520 +1,373 @@
 ﻿import { prisma } from "../src/lib/prisma";
+import { Periodicidade, StatusSocio, StatusAssinatura, StatusFatura, MetodoPagamento, TipoSetor, StatusIngresso, StatusPedido, TipoLote, StatusPagamentoSocio } from '@prisma/client'
+import { fakerPT_BR as faker } from '@faker-js/faker'
 
-type SeedJogo = {
-  nome: string;
-  data: Date;
-  local: string;
-  descricao?: string;
-};
-
-type SeedPlano = {
-  nome: string;
-  descricao?: string;
-  valor: number;
-  periodicidade: "MENSAL" | "TRIMESTRAL" | "SEMESTRAL" | "ANUAL";
-  isFeatured?: boolean;
-  badgeLabel?: string;
-  ordem: number;
-};
-
-type SeedBeneficio = {
-  slug: string;
-  titulo: string;
-  descricao?: string;
-  icone?: string;
-  ativo?: boolean;
-  ordem: number;
-  destaque?: boolean;
-  observacao?: string;
-  planoNome: string;
-};
-
-type SeedSetor = {
-  slug: string;
-  nome: string;
-  tipo: "ARQUIBANCADA" | "CADEIRA" | "CAMAROTE" | "VISITANTE" | "ACESSIVEL";
-};
-
-type SeedJogoSetor = {
-  jogoNome: string;
-  setorSlug: string;
-  capacidade: number;
-  aberto: boolean;
-};
-
-const jogosBrasilDePelotas: SeedJogo[] = [
-  {
-    nome: "Brasil x Caxias",
-    data: new Date("2026-04-12T19:00:00.000Z"),
-    local: "Estadio Bento Freitas, Pelotas",
-    descricao: "Campeonato Brasileiro Serie D 2026",
-  },
-  {
-    nome: "Brasil x Sao Jose-RS",
-    data: new Date("2026-04-26T19:00:00.000Z"),
-    local: "Estadio Bento Freitas, Pelotas",
-    descricao: "Campeonato Brasileiro Serie D 2026",
-  },
-  {
-    nome: "Brasil x Novo Hamburgo",
-    data: new Date("2026-05-10T19:00:00.000Z"),
-    local: "Estadio Bento Freitas, Pelotas",
-    descricao: "Campeonato Brasileiro Serie D 2026",
-  },
-  {
-    nome: "Brasil x Avenida",
-    data: new Date("2026-05-24T19:00:00.000Z"),
-    local: "Estadio Bento Freitas, Pelotas",
-    descricao: "Campeonato Brasileiro Serie D 2026",
-  },
-  {
-    nome: "Brasil x Aimore",
-    data: new Date("2026-06-07T19:00:00.000Z"),
-    local: "Estadio Bento Freitas, Pelotas",
-    descricao: "Campeonato Brasileiro Serie D 2026",
-  },
-];
-
-const planos: SeedPlano[] = [
-  {
-    nome: "Xavante",
-    descricao: "Plano de entrada para apoiar o Brasil em todos os jogos.",
-    valor: 19.9,
-    periodicidade: "MENSAL",
-    ordem: 1,
-  },
-  {
-    nome: "Rubro Negro",
-    descricao: "Mais vantagens em ingressos e prioridade na compra no Bento Freitas.",
-    valor: 39.9,
-    periodicidade: "MENSAL",
-    isFeatured: true,
-    badgeLabel: "Mais querido",
-    ordem: 2,
-  },
-  {
-    nome: "Bento Freitas",
-    descricao: "Plano premium para quem vive o Xavante todos os dias.",
-    valor: 69.9,
-    periodicidade: "MENSAL",
-    badgeLabel: "Experiencia",
-    ordem: 3,
-  },
-];
-
-const beneficios: SeedBeneficio[] = [
-  {
-    slug: "xavante-desconto-ingresso",
-    titulo: "10% de desconto em ingressos no Bento Freitas",
-    descricao: "Desconto aplicado na compra de ingressos selecionados.",
-    ordem: 1,
-    destaque: true,
-    planoNome: "Xavante",
-  },
-  {
-    slug: "xavante-carteirinha-digital",
-    titulo: "Carteirinha digital rubro-negra",
-    descricao: "Acesso rapido no app com QR Code de socio.",
-    ordem: 2,
-    planoNome: "Xavante",
-  },
-  {
-    slug: "rubro-negro-prioridade-compra",
-    titulo: "Prioridade na compra de mandos do Xavante",
-    descricao: "Janela antecipada para compra de ingressos.",
-    ordem: 1,
-    destaque: true,
-    planoNome: "Rubro Negro",
-  },
-  {
-    slug: "rubro-negro-desconto-loja",
-    titulo: "15% na loja oficial",
-    descricao: "Desconto em produtos oficiais participantes.",
-    ordem: 2,
-    planoNome: "Rubro Negro",
-  },
-  {
-    slug: "bento-freitas-prioridade-maxima",
-    titulo: "Prioridade maxima em jogos decisivos",
-    descricao: "Abertura exclusiva para classicos e decisoes.",
-    ordem: 1,
-    destaque: true,
-    planoNome: "Bento Freitas",
-  },
-  {
-    slug: "bento-freitas-experiencias-exclusivas",
-    titulo: "Experiencias exclusivas no estadio",
-    descricao: "Sorteios para visitas, tunel de acesso e eventos do clube.",
-    ordem: 2,
-    planoNome: "Bento Freitas",
-  },
-];
-
-const setores: SeedSetor[] = [
-  {
-    slug: "arquibancada-lobo",
-    nome: "Arquibancada Lobo",
-    tipo: "ARQUIBANCADA",
-  },
-  {
-    slug: "arquibancada-central",
-    nome: "Arquibancada Central",
-    tipo: "ARQUIBANCADA",
-  },
-  {
-    slug: "cadeira-coberta",
-    nome: "Cadeira Coberta",
-    tipo: "CADEIRA",
-  },
-  {
-    slug: "camarote-rubronegro",
-    nome: "Camarote Rubro-Negro",
-    tipo: "CAMAROTE",
-  },
-  {
-    slug: "visitante",
-    nome: "Setor Visitante",
-    tipo: "VISITANTE",
-  },
-  {
-    slug: "acessivel",
-    nome: "Setor Acessivel",
-    tipo: "ACESSIVEL",
-  },
-];
-
-const jogosSetores: SeedJogoSetor[] = [
-  { jogoNome: "Brasil x Caxias", setorSlug: "arquibancada-lobo", capacidade: 4500, aberto: true },
-  { jogoNome: "Brasil x Caxias", setorSlug: "arquibancada-central", capacidade: 3200, aberto: true },
-  { jogoNome: "Brasil x Caxias", setorSlug: "cadeira-coberta", capacidade: 1400, aberto: true },
-  { jogoNome: "Brasil x Caxias", setorSlug: "camarote-rubronegro", capacidade: 280, aberto: true },
-  { jogoNome: "Brasil x Caxias", setorSlug: "visitante", capacidade: 1200, aberto: true },
-  { jogoNome: "Brasil x Caxias", setorSlug: "acessivel", capacidade: 180, aberto: true },
-
-  { jogoNome: "Brasil x Sao Jose-RS", setorSlug: "arquibancada-lobo", capacidade: 4300, aberto: true },
-  { jogoNome: "Brasil x Sao Jose-RS", setorSlug: "arquibancada-central", capacidade: 3000, aberto: true },
-  { jogoNome: "Brasil x Sao Jose-RS", setorSlug: "cadeira-coberta", capacidade: 1300, aberto: true },
-  { jogoNome: "Brasil x Sao Jose-RS", setorSlug: "camarote-rubronegro", capacidade: 260, aberto: true },
-  { jogoNome: "Brasil x Sao Jose-RS", setorSlug: "visitante", capacidade: 1000, aberto: true },
-  { jogoNome: "Brasil x Sao Jose-RS", setorSlug: "acessivel", capacidade: 180, aberto: true },
-
-  { jogoNome: "Brasil x Novo Hamburgo", setorSlug: "arquibancada-lobo", capacidade: 4200, aberto: true },
-  { jogoNome: "Brasil x Novo Hamburgo", setorSlug: "arquibancada-central", capacidade: 2900, aberto: true },
-  { jogoNome: "Brasil x Novo Hamburgo", setorSlug: "cadeira-coberta", capacidade: 1250, aberto: true },
-  { jogoNome: "Brasil x Novo Hamburgo", setorSlug: "camarote-rubronegro", capacidade: 250, aberto: true },
-  { jogoNome: "Brasil x Novo Hamburgo", setorSlug: "visitante", capacidade: 900, aberto: true },
-  { jogoNome: "Brasil x Novo Hamburgo", setorSlug: "acessivel", capacidade: 180, aberto: true },
-
-  { jogoNome: "Brasil x Avenida", setorSlug: "arquibancada-lobo", capacidade: 4100, aberto: true },
-  { jogoNome: "Brasil x Avenida", setorSlug: "arquibancada-central", capacidade: 2850, aberto: true },
-  { jogoNome: "Brasil x Avenida", setorSlug: "cadeira-coberta", capacidade: 1200, aberto: true },
-  { jogoNome: "Brasil x Avenida", setorSlug: "camarote-rubronegro", capacidade: 230, aberto: true },
-  { jogoNome: "Brasil x Avenida", setorSlug: "visitante", capacidade: 850, aberto: true },
-  { jogoNome: "Brasil x Avenida", setorSlug: "acessivel", capacidade: 180, aberto: true },
-
-  { jogoNome: "Brasil x Aimore", setorSlug: "arquibancada-lobo", capacidade: 4400, aberto: true },
-  { jogoNome: "Brasil x Aimore", setorSlug: "arquibancada-central", capacidade: 3100, aberto: true },
-  { jogoNome: "Brasil x Aimore", setorSlug: "cadeira-coberta", capacidade: 1350, aberto: true },
-  { jogoNome: "Brasil x Aimore", setorSlug: "camarote-rubronegro", capacidade: 270, aberto: true },
-  { jogoNome: "Brasil x Aimore", setorSlug: "visitante", capacidade: 1100, aberto: true },
-  { jogoNome: "Brasil x Aimore", setorSlug: "acessivel", capacidade: 180, aberto: true },
-];
-
-async function removerJogosSelecaoAntigos() {
-  const nomesSelecaoAntigos = [
-    "Brasil x Equador",
-    "Brasil x Paraguai",
-    "Brasil x Chile",
-    "Brasil x Bolivia",
-    "Brasil x Argentina",
-  ];
-
-  await prisma.jogo.deleteMany({
-    where: {
-      nome: {
-        in: nomesSelecaoAntigos,
-      },
-    },
-  });
-}
-
-async function normalizarPlanosLegados() {
-  const renomeacoes: Array<{ de: string; para: string }> = [
-    { de: "Fan", para: "Xavante" },
-    { de: "Apaixonado", para: "Rubro Negro" },
-    { de: "Nacao", para: "Bento Freitas" },
-  ];
-
-  for (const item of renomeacoes) {
-    const planoAntigo = await prisma.plano.findUnique({
-      where: { nome: item.de },
-      select: { id: true },
-    });
-
-    if (!planoAntigo) {
-      continue;
-    }
-
-    const planoNovo = await prisma.plano.findUnique({
-      where: { nome: item.para },
-      select: { id: true },
-    });
-
-    if (planoNovo) {
-      await prisma.beneficio.updateMany({
-        where: { planoId: planoAntigo.id },
-        data: { planoId: planoNovo.id },
-      });
-
-      await prisma.plano.deleteMany({
-        where: {
-          id: planoAntigo.id,
-          assinaturas: { none: {} },
-        },
-      });
-
-      continue;
-    }
-
-    await prisma.plano.update({
-      where: { id: planoAntigo.id },
-      data: { nome: item.para },
-    });
-  }
-}
-
-async function removerBeneficiosLegados() {
-  const slugsLegados = [
-    "fan-desconto-ingresso",
-    "fan-carteirinha-digital",
-    "apaixonado-prioridade-compra",
-    "apaixonado-desconto-loja",
-    "nacao-prioridade-maxima",
-    "nacao-experiencias-exclusivas",
-  ];
-
-  await prisma.beneficio.deleteMany({
-    where: {
-      slug: {
-        in: slugsLegados,
-      },
-    },
-  });
-}
-
-async function seedJogosBrasilDePelotas() {
-  let criados = 0;
-
-  for (const jogo of jogosBrasilDePelotas) {
-    const existente = await prisma.jogo.findFirst({
-      where: {
-        nome: jogo.nome,
-        data: jogo.data,
-      },
-      select: { id: true },
-    });
-
-    if (existente) {
-      continue;
-    }
-
-    await prisma.jogo.create({
-      data: {
-        nome: jogo.nome,
-        data: jogo.data,
-        local: jogo.local,
-        descricao: jogo.descricao,
-      },
-    });
-
-    criados += 1;
-  }
-
-  const total = await prisma.jogo.count();
-  return { criados, total };
-}
-
-async function seedSetores() {
-  let processados = 0;
-
-  for (const setor of setores) {
-    await prisma.setor.upsert({
-      where: { slug: setor.slug },
-      update: {
-        nome: setor.nome,
-        tipo: setor.tipo,
-      },
-      create: {
-        slug: setor.slug,
-        nome: setor.nome,
-        tipo: setor.tipo,
-      },
-    });
-
-    processados += 1;
-  }
-
-  const total = await prisma.setor.count();
-  return { processados, total };
-}
-
-async function seedJogosSetores() {
-  const jogos = await prisma.jogo.findMany({
-    select: { id: true, nome: true },
-  });
-  const setoresCadastrados = await prisma.setor.findMany({
-    select: { id: true, slug: true },
-  });
-
-  const jogoIdPorNome = new Map(jogos.map((jogo) => [jogo.nome, jogo.id]));
-  const setorIdPorSlug = new Map(setoresCadastrados.map((setor) => [setor.slug, setor.id]));
-
-  let processados = 0;
-
-  for (const jogoSetor of jogosSetores) {
-    const jogoId = jogoIdPorNome.get(jogoSetor.jogoNome);
-    const setorId = setorIdPorSlug.get(jogoSetor.setorSlug);
-
-    if (!jogoId) {
-      throw new Error(`Jogo nao encontrado para jogoSetor: ${jogoSetor.jogoNome}`);
-    }
-    if (!setorId) {
-      throw new Error(`Setor nao encontrado para jogoSetor: ${jogoSetor.setorSlug}`);
-    }
-
-    await prisma.jogoSetor.upsert({
-      where: {
-        jogoId_setorId: {
-          jogoId,
-          setorId,
-        },
-      },
-      update: {
-        capacidade: jogoSetor.capacidade,
-        aberto: jogoSetor.aberto,
-      },
-      create: {
-        jogoId,
-        setorId,
-        capacidade: jogoSetor.capacidade,
-        aberto: jogoSetor.aberto,
-      },
-    });
-
-    processados += 1;
-  }
-
-  const total = await prisma.jogoSetor.count();
-  return { processados, total };
-}
-
-async function seedPlanos() {
-  let criados = 0;
-
-  for (const plano of planos) {
-    await prisma.plano.upsert({
-      where: { nome: plano.nome },
-      update: {
-        descricao: plano.descricao,
-        valor: plano.valor,
-        periodicidade: plano.periodicidade,
-        isFeatured: plano.isFeatured ?? false,
-        badgeLabel: plano.badgeLabel,
-        ordem: plano.ordem,
-      },
-      create: {
-        nome: plano.nome,
-        descricao: plano.descricao,
-        valor: plano.valor,
-        periodicidade: plano.periodicidade,
-        isFeatured: plano.isFeatured ?? false,
-        badgeLabel: plano.badgeLabel,
-        ordem: plano.ordem,
-      },
-    });
-
-    criados += 1;
-  }
-
-  const total = await prisma.plano.count();
-  return { criados, total };
-}
-
-async function seedBeneficios() {
-  const planosCadastrados = await prisma.plano.findMany({
-    select: { id: true, nome: true },
-  });
-
-  const planoIdPorNome = new Map(planosCadastrados.map((plano) => [plano.nome, plano.id]));
-
-  let criados = 0;
-
-  for (const beneficio of beneficios) {
-    const planoId = planoIdPorNome.get(beneficio.planoNome);
-
-    if (!planoId) {
-      throw new Error(`Plano nao encontrado para o beneficio: ${beneficio.planoNome}`);
-    }
-
-    await prisma.beneficio.upsert({
-      where: { slug: beneficio.slug },
-      update: {
-        titulo: beneficio.titulo,
-        descricao: beneficio.descricao,
-        icone: beneficio.icone,
-        ativo: beneficio.ativo ?? true,
-        ordem: beneficio.ordem,
-        destaque: beneficio.destaque ?? false,
-        observacao: beneficio.observacao,
-        planoId,
-      },
-      create: {
-        slug: beneficio.slug,
-        titulo: beneficio.titulo,
-        descricao: beneficio.descricao,
-        icone: beneficio.icone,
-        ativo: beneficio.ativo ?? true,
-        ordem: beneficio.ordem,
-        destaque: beneficio.destaque ?? false,
-        observacao: beneficio.observacao,
-        planoId,
-      },
-    });
-
-    criados += 1;
-  }
-
-  const total = await prisma.beneficio.count();
-  return { criados, total };
+// Utilitário para datas
+const subMonths = (date: Date, months: number) => {
+  const d = new Date(date);
+  d.setMonth(d.getMonth() - months);
+  return d;
 }
 
 async function main() {
-  await removerJogosSelecaoAntigos();
-  await normalizarPlanosLegados();
-  await removerBeneficiosLegados();
-  const jogos = await seedJogosBrasilDePelotas();
-  const setoresSeed = await seedSetores();
-  const jogosSetoresSeed = await seedJogosSetores();
-  const planosSeed = await seedPlanos();
-  const beneficiosSeed = await seedBeneficios();
+  console.log('🔴⚫ INICIANDO SEED DO XAVANTE...')
 
-  console.log(
-    [
-      `Jogos: ${jogos.criados} criado(s), total ${jogos.total}`,
-      `Setores: ${setoresSeed.processados} processado(s), total ${setoresSeed.total}`,
-      `JogosSetores: ${jogosSetoresSeed.processados} processado(s), total ${jogosSetoresSeed.total}`,
-      `Planos: ${planosSeed.criados} processado(s), total ${planosSeed.total}`,
-      `Beneficios: ${beneficiosSeed.criados} processado(s), total ${beneficiosSeed.total}`,
-    ].join(" | "),
-  );
+  // 1. LIMPEZA DO BANCO
+  console.log('🧹 Limpando dados antigos...')
+  await prisma.checkin.deleteMany()
+  await prisma.ingresso.deleteMany()
+  await prisma.itemPedido.deleteMany()
+  await prisma.pedido.deleteMany()
+  await prisma.pagamentoIngresso.deleteMany()
+  await prisma.pagamentoSocio.deleteMany()
+  await prisma.fatura.deleteMany()
+  await prisma.assinatura.deleteMany()
+  await prisma.beneficio.deleteMany()
+  await prisma.lote.deleteMany()
+  await prisma.jogoSetor.deleteMany()
+  await prisma.jogo.deleteMany()
+  await prisma.setor.deleteMany()
+  await prisma.plano.deleteMany()
+  await prisma.torcedor.deleteMany()
+  await prisma.admin.deleteMany()
+
+  // 2. ADMIN
+  await prisma.admin.create({
+    data: {
+      nome: 'Miguel Goulart',
+      email: 'admin@gebrasil.com.br',
+      senha: '@Senha123', // Senha hash ficticia
+      role: 'SUPER_ADMIN',
+    }
+  })
+
+  // 3. SETORES (BENTO FREITAS)
+  console.log('🏟️  Construindo o Bento Freitas...')
+  const setoresData = [
+    {
+      nome: "Arquibancada JK (Juscelino)",
+      slug: "jk",
+      tipo: TipoSetor.ARQUIBANCADA,
+    },
+    {
+      nome: "Arquibancada Social",
+      slug: "social",
+      tipo: TipoSetor.ARQUIBANCADA,
+    },
+    {
+      nome: "Arquibancada Norte",
+      slug: "norte",
+      tipo: TipoSetor.ARQUIBANCADA,
+    },
+    {
+      nome: "Arquibancada Sul",
+      slug: "sul",
+      tipo: TipoSetor.ARQUIBANCADA,
+    },
+    {
+      nome: "Cadeiras Cativas",
+      slug: "cativas",
+      tipo: TipoSetor.CADEIRA,
+    },
+    {
+      nome: "Arquibancada Norte (Visitante)",
+      slug: "norte-visitante",
+      tipo: TipoSetor.VISITANTE,
+    },
+  ];
+
+  const setoresMap = new Map()
+  for (const s of setoresData) {
+    const setor = await prisma.setor.create({ data: { slug: s.slug, nome: s.nome } })
+    setoresMap.set(s.nome, setor)
+  }
+
+  // 4. PLANOS DE SÓCIO
+  console.log('💳 Criando planos de sócio...')
+  const planosData = [
+    {
+      nome: 'Sócio Xavante Popular',
+      valor: 49.90,
+      periodicidade: Periodicidade.MENSAL,
+      beneficios: ['Acesso Arquibancada Norte', 'Carteirinha Digital']
+    },
+    {
+      nome: 'Sócio Coração Xavante',
+      valor: 89.90,
+      periodicidade: Periodicidade.MENSAL,
+      beneficios: ['Acesso Total Arquibancadas', 'Camisa Oficial 2025', 'Desconto Rede Parceiros']
+    },
+    {
+      nome: 'Sócio Avante (Cadeira)',
+      valor: 159.90,
+      periodicidade: Periodicidade.MENSAL,
+      beneficios: ['Cadeira Cativa Garantida', 'Acesso VIP', 'Estacionamento', 'Kit Boas-vindas']
+    },
+    {
+      nome: 'Sócio Torcedor Vitalício',
+      valor: 999.90,
+      periodicidade: Periodicidade.ANUAL,
+      beneficios: ['Cadeira Cativa Vitalícia', 'Acesso VIP + Lounge', 'Estacionamento Premium', 'Camisa Autografada', 'Visita ao Clube']
+    },
+    {
+      nome: 'Sócio Estudante Xavante',
+      valor: 29.90,
+      periodicidade: Periodicidade.MENSAL,
+      beneficios: ['Acesso Arquibancada Norte', 'Carteirinha Digital', 'Desconto em Lojas Parceiras']
+    },
+    {
+      nome: 'Sócio Xavante Social',
+      valor: 9.90,
+      periodicidade: Periodicidade.MENSAL,
+      beneficios: ['Acesso a Eventos Exclusivos', 'Descontos em Produtos Oficiais', 'Carteirinha Digital']
+    }
+  ]
+
+  const planos = []
+  for (const p of planosData) {
+    const plano = await prisma.plano.create({
+      data: {
+        nome: p.nome,
+        valor: p.valor,
+        periodicidade: p.periodicidade,
+        beneficios: {
+          create: p.beneficios.map(b => ({
+            titulo: b,
+            slug: faker.helpers.slugify(b + '-' + p.nome).toLowerCase(),
+            ativo: true
+          }))
+        }
+      }
+    })
+    planos.push(plano)
+  }
+
+  // 5. CALENDÁRIO DE JOGOS (Passado e Futuro)
+  console.log('⚽ Agendando jogos do Gauchão e Série D...')
+  const hoje = new Date()
+
+  const listaJogos = [
+    // Jogos Passados (Terão checkins e status USADO)
+    { nome: 'Brasil x São Luiz', data: subMonths(hoje, 2), adv: 'São Luiz', passado: true },
+    { nome: 'Brasil x Ypiranga', data: subMonths(hoje, 1), adv: 'Ypiranga', passado: true },
+    { nome: 'Brasil x Novo Hamburgo', data: new Date(hoje.getTime() - 86400000 * 7), adv: 'Novo Hamburgo', passado: true }, // 7 dias atrás
+
+    // Jogos Futuros (Venda aberta)
+    { nome: 'Brasil x Pelotas (BRA-PEL)', data: new Date(hoje.getTime() + 86400000 * 3), adv: 'Pelotas', passado: false, classico: true },
+    { nome: 'Brasil x Internacional', data: new Date(hoje.getTime() + 86400000 * 10), adv: 'Internacional', passado: false },
+    { nome: 'Brasil x Caxias', data: new Date(hoje.getTime() + 86400000 * 17), adv: 'Caxias', passado: false },
+  ]
+
+  const jogosCriados = []
+
+  for (const j of listaJogos) {
+    const jogo = await prisma.jogo.create({
+      data: {
+        nome: j.nome,
+        data: j.data,
+        local: 'Estádio Bento Freitas',
+        descricao: j.classico ? 'O maior clássico do interior!' : `Rodada do campeonato contra ${j.adv}`,
+      }
+    })
+
+    // Criar Lotes e Setores para o jogo
+    const lotesDoJogo = []
+    for (const [nomeSetor, setorObj] of setoresMap) {
+      const jogoSetor = await prisma.jogoSetor.create({
+        data: {
+          jogoId: jogo.id,
+          setorId: setorObj.id,
+          capacidade: nomeSetor === "Arquibancada Norte (Visitante)" ? 1000 : 2500,
+        }
+      })
+
+      // Preço dinâmico (mais caro no clássico)
+      let precoBase = 40.00
+      if (nomeSetor.includes('Cadeira')) precoBase = 120.00
+      if (j.classico) precoBase *= 1.5
+
+      const lote = await prisma.lote.create({
+        data: {
+          nome: 'Lote 1 - Antecipado',
+          jogoId: jogo.id,
+          jogoSetorId: jogoSetor.id,
+          precoUnitario: precoBase,
+          quantidade: 500,
+          inicioVendas: subMonths(hoje, 3), // Vendas começaram 3 meses atrás
+          tipo: TipoLote.INTEIRA
+        }
+      })
+      lotesDoJogo.push({ lote, setorObj, jogoSetor })
+    }
+
+    jogosCriados.push({ ...jogo, lotes: lotesDoJogo, passado: j.passado })
+  }
+
+  // 6. POPULAÇÃO DE TORCEDORES (A parte pesada)
+  console.log('👥 Invasão da torcida Xavante (Gerando 50 torcedores)...')
+
+  const NUM_TORCEDORES = 50
+  const metodosPagamento = [MetodoPagamento.PIX, MetodoPagamento.CARTAO_CREDITO, MetodoPagamento.BOLETO]
+
+  for (let i = 0; i < NUM_TORCEDORES; i++) {
+    const sexo = faker.person.sexType()
+    const nome = faker.person.firstName(sexo) + ' ' + faker.person.lastName(sexo)
+    const ehSocio = Math.random() > 0.4 // 60% são sócios
+
+    // Status do sócio (alguns inadimplentes)
+    let statusSocio: StatusSocio | null = ehSocio ? StatusSocio.ATIVO : null
+    if (ehSocio && Math.random() > 0.8) statusSocio = StatusSocio.INADIMPLENTE
+
+    const torcedor = await prisma.torcedor.create({
+      data: {
+        nome,
+        email: faker.internet.email({ firstName: nome.split(' ')[0], lastName: nome.split(' ')[1] }),
+        senha: '123',
+        matricula: ehSocio ? faker.string.numeric(6) : faker.string.numeric(8), // sócios tem matrícula menor rs
+        cpf: faker.number.int({ min: 10000000000, max: 99999999999 }).toString(),
+        telefone: faker.phone.number(),
+        dataNascimento: faker.date.birthdate({ min: 16, max: 70, mode: 'age' }),
+        enderecoCidade: 'Pelotas',
+        enderecoUF: 'RS',
+        statusSocio: ehSocio ? statusSocio : null,
+        criadoEm: faker.date.past({ years: 2 })
+      }
+    })
+
+    // === SE FOR SÓCIO: GERAR ASSINATURA E HISTÓRICO DE FATURAS ===
+    if (ehSocio) {
+      const plano = planos[Math.floor(Math.random() * planos.length)]
+
+      const assinatura = await prisma.assinatura.create({
+        data: {
+          torcedorId: torcedor.id,
+          planoId: plano.id,
+          status: statusSocio === StatusSocio.INADIMPLENTE ? StatusAssinatura.SUSPENSA : StatusAssinatura.ATIVA,
+          inicioEm: subMonths(hoje, 8), // Sócio há 8 meses
+          valorAtual: plano.valor,
+          periodicidade: Periodicidade.MENSAL,
+          proximaCobrancaEm: new Date(hoje.getFullYear(), hoje.getMonth() + 1, 10)
+        }
+      })
+
+      // Gerar faturas dos últimos 6 meses
+      for (let m = 0; m < 6; m++) {
+        const dataRef = subMonths(hoje, m)
+        const vencimento = new Date(dataRef.getFullYear(), dataRef.getMonth(), 10)
+
+        // Lógica de pagamento:
+        // Se o sócio é INADIMPLENTE, ele não pagou as últimas 2 faturas (m=0 e m=1)
+        let estaPaga = true
+        if (statusSocio === StatusSocio.INADIMPLENTE && m < 2) estaPaga = false
+
+        if (estaPaga) {
+          const fatura = await prisma.fatura.create({
+            data: {
+              assinaturaId: assinatura.id,
+              competencia: `${dataRef.getFullYear()}-${(dataRef.getMonth() + 1).toString().padStart(2, '0')}`,
+              valor: plano.valor,
+              status: StatusFatura.PAGA,
+              vencimentoEm: vencimento,
+              pagoEm: vencimento,
+              metodo: metodosPagamento[Math.floor(Math.random() * metodosPagamento.length)],
+            }
+          })
+
+          // Criar pagamento socio associado
+          await prisma.pagamentoSocio.create({
+            data: {
+              faturaId: fatura.id,
+              torcedorId: torcedor.id,
+              valor: plano.valor,
+              status: StatusPagamentoSocio.PAGO,
+              dataVencimento: vencimento,
+              pagoEm: vencimento,
+              metodo: metodosPagamento[Math.floor(Math.random() * metodosPagamento.length)],
+              descricao: `Mensalidade Sócio - Ref ${dataRef.getMonth() + 1}/${dataRef.getFullYear()}`
+            }
+          })
+        } else {
+          // Fatura em aberto/atrasada
+          await prisma.fatura.create({
+            data: {
+              assinaturaId: assinatura.id,
+              competencia: `${dataRef.getFullYear()}-${(dataRef.getMonth() + 1).toString().padStart(2, '0')}`,
+              valor: plano.valor,
+              status: vencimento < hoje ? StatusFatura.ATRASADA : StatusFatura.ABERTA,
+              vencimentoEm: vencimento,
+              metodo: MetodoPagamento.BOLETO
+            }
+          })
+        }
+      }
+    }
+
+    // === COMPRA DE INGRESSOS (PARA SÓCIOS E NÃO SÓCIOS) ===
+    // Sócio vai em 80% dos jogos, não sócio vai em 30%
+    const chanceIrNoJogo = ehSocio ? 0.8 : 0.3
+
+    for (const jogoData of jogosCriados) {
+      if (Math.random() > chanceIrNoJogo) continue; // Pulou esse jogo
+
+      // Se for sócio inadimplente, não compra ingresso
+      if (ehSocio && statusSocio === StatusSocio.INADIMPLENTE) continue;
+
+      // Escolher um lote aleatório do jogo
+      const { lote } = jogoData.lotes[Math.floor(Math.random() * jogoData.lotes.length)]
+
+      // Criar Pedido
+      const pedido = await prisma.pedido.create({
+        data: {
+          torcedorId: torcedor.id,
+          status: StatusPedido.PAGO,
+          criadoEm: jogoData.passado ? subMonths(jogoData.data, 0) : new Date(),
+        }
+      })
+
+      // Criar ItemPedido
+      const itemPedido = await prisma.itemPedido.create({
+        data: {
+          pedidoId: pedido.id,
+          loteId: lote.id,
+          valorUnitario: lote.precoUnitario,
+        }
+      })
+
+      // Criar Ingresso
+      const ingresso = await prisma.ingresso.create({
+        data: {
+          itemPedidoId: itemPedido.id,
+          qrCode: faker.string.uuid(),
+          status: jogoData.passado ? StatusIngresso.USADO : StatusIngresso.VALIDO,
+          usadoEm: jogoData.passado ? jogoData.data : null,
+        }
+      })
+
+      // === SE O JOGO JÁ PASSOU, FAZ O CHECKIN NA CATRACA ===
+      if (jogoData.passado) {
+        await prisma.checkin.create({
+          data: {
+            ingressoId: ingresso.id,
+            feitoEm: jogoData.data,
+            local: `Catraca 0${faker.number.int({ min: 1, max: 9 })}`
+          }
+        })
+      }
+    }
+  }
+
+  console.log('✅ SEED FINALIZADO COM SUCESSO!')
+  console.log(`📊 Total de Torcedores: ${await prisma.torcedor.count()}`)
+  console.log(`🎫 Total de Ingressos: ${await prisma.ingresso.count()}`)
+  console.log(`💰 Total de Faturas: ${await prisma.fatura.count()}`)
 }
 
 main()
-  .catch((error) => {
-    console.error("Erro ao executar seed:", error);
-    process.exit(1);
+  .catch((e) => {
+    console.error(e)
+    process.exit(1)
   })
   .finally(async () => {
-    await prisma.$disconnect();
-  });
+    await prisma.$disconnect()
+  })
 
