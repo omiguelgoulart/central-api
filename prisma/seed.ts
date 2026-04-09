@@ -204,9 +204,9 @@ async function main() {
   }
 
   // 6. POPULAÇÃO DE TORCEDORES (A parte pesada)
-  console.log('👥 Invasão da torcida Xavante (Gerando 50 torcedores)...')
+  console.log('👥 Invasão da torcida Xavante (Gerando 150 torcedores)...')
 
-  const NUM_TORCEDORES = 50
+  const NUM_TORCEDORES = 150
   const metodosPagamento = [MetodoPagamento.PIX, MetodoPagamento.CARTAO_CREDITO, MetodoPagamento.BOLETO]
 
   for (let i = 0; i < NUM_TORCEDORES; i++) {
