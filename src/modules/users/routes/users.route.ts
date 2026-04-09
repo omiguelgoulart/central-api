@@ -13,7 +13,7 @@ const controller = new UsersController(service);
 
 usersRouter.post("/", (req, res) => controller.createUser(req, res));
 
-usersRouter.post("/verify-email", (req, _res) => controller.verifyEmail(req.body.token));
+usersRouter.post("/verify-email", (req, res) => controller.verifyEmail(req, res));
 
 usersRouter.get("/me", verificaToken, (req, res) => controller.getUserByToken(req, res));
 

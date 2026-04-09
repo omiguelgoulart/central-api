@@ -1,9 +1,61 @@
+import crypto from "crypto";
+
+import { boasVindasTemplate } from "../../emails/email-templates/boas-vindas.template";
+import { verificacaoEmailTemplate } from "../../emails/email-templates/verificacao-email.template";
+import { sendEmail } from "../../emails/services/email.service";
 import { gerarMatricula } from "../../../utils/matricula";
 import { UserRepository } from "../repositories/users.repository";
 import { CreateUsuarioInput, UpdateUsuarioInput } from "../types/users.type";
 
 export class UserService {
     constructor(private readonly repository = new UserRepository()) { }
+
+    private getEmailVerificationBaseUrl(): string {
+        if (process.env.EMAIL_VERIFICATION_URL) {
+            return process.env.EMAIL_VERIFICATION_URL.replace(/\/$/, "");
+        }
+
+        const frontendUrl = process.env.FRONTEND_URL
+            ?.split(",")
+            .map((origin) => origin.trim())
+            .find(Boolean);
+
+        if (frontendUrl) {
+            return `${frontendUrl.replace(/\/$/, "")}/verificar-email`;
+        }
+
+        return "http://localhost:3000/verificar-email";
+    }
+
+    private async enviarEmailVerificacao(nome: string, email: string, token: string) {
+        const baseUrl = this.getEmailVerificationBaseUrl();
+        const separador = baseUrl.includes("?") ? "&" : "?";
+        const linkVerificacao = `${baseUrl}${separador}token=${encodeURIComponent(token)}`;
+
+        const html = verificacaoEmailTemplate({
+            nome,
+            linkVerificacao,
+        });
+
+        await sendEmail({
+            to: email,
+            subject: "Confirme seu e-mail",
+            html,
+        });
+    }
+
+    private async enviarEmailBoasVindas(nome: string, matricula: string, email: string) {
+        const html = boasVindasTemplate({
+            nome,
+            matricula,
+        });
+
+        await sendEmail({
+            to: email,
+            subject: "Bem-vindo(a) a Central de Torcedores!",
+            html,
+        });
+    }
 
     private async gerarMatriculaUnica() {
         const MAX_TENTATIVAS = 10;
@@ -31,6 +83,12 @@ export class UserService {
             ...data,
             matricula,
         });
+
+        const emailToken = crypto.randomUUID();
+        const emailTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+        await this.repository.updateEmailToken(newUser.id, emailToken, emailTokenExpiry);
+        await this.enviarEmailVerificacao(newUser.nome, newUser.email, emailToken);
 
         return {
             message: 'Usuário criado com sucesso',
@@ -127,6 +185,11 @@ export class UserService {
             throw new Error('Token de email inválido');
         }
         await this.repository.markEmailAsVerified(user.id);
+
+        if (user.email && user.nome && user.matricula) {
+            await this.enviarEmailBoasVindas(user.nome, user.matricula, user.email);
+        }
+
         return { message: 'Email verificado com sucesso' };
     }
 
@@ -136,6 +199,11 @@ export class UserService {
             throw new Error('Usuário não encontrado');
         }
         await this.repository.markEmailAsVerified(id);
+
+        if (user.email && user.nome && user.matricula) {
+            await this.enviarEmailBoasVindas(user.nome, user.matricula, user.email);
+        }
+
         return { message: 'Email verificado com sucesso' };
     }
 

@@ -1,3 +1,4 @@
+import { compraConfirmadaTemplate } from "../../emails/email-templates/compra-confirmada.template";
 import { pedidoConfirmadoTemplate } from "../../emails/email-templates/pedido-confirmado.template";
 import { sendEmail } from "../../emails/services/email.service";
 import { ReservaRepository } from "../repositories/reserva.repository";
@@ -140,6 +141,31 @@ export class ReservaService {
         }
 
         await this.repository.confirmarPedido(pedidoId);
+
+        const torcedor = await this.repository.getTorcedorById(pedido.torcedorId);
+        if (torcedor?.email) {
+            const jogo = pedido.itens[0]?.lote?.jogo;
+            const html = pedidoConfirmadoTemplate({
+                nome: torcedor.nome,
+                pedidoId: pedido.id,
+                total: pedido.itens.reduce((sum, item) => sum + Number(item.valorUnitario), 0),
+                itens: pedido.itens.map((item) => ({
+                    setor: item.lote?.jogoSetor?.setor?.nome ?? "N/A",
+                    tipo: item.lote?.tipo ?? "INTEIRA",
+                    preco: Number(item.valorUnitario),
+                })),
+                evento: jogo?.nome,
+                data: jogo?.data ? new Date(jogo.data).toLocaleDateString("pt-BR") : undefined,
+                local: jogo?.local,
+            });
+
+            this.sendEmailFn({
+                to: torcedor.email,
+                subject: "Pedido Confirmado!",
+                html,
+            }).catch((err) => console.error("Erro email pedido confirmado:", err));
+        }
+
         return { message: "Pedido confirmado e reservado com sucesso" };
     }
 
@@ -168,19 +194,22 @@ export class ReservaService {
 
         const torcedor = await this.repository.getTorcedorById(data.torcedorId);
         if (torcedor?.email) {
+            const primeiroLote = await this.repository.getLoteById(data.itens[0].loteId);
+
             this.sendEmailFn({
                 to: torcedor.email,
-                subject: "Pedido Confirmado!",
-                html: String(pedidoConfirmadoTemplate({
-                    nome: torcedor.nome,
+                subject: "Compra Confirmada!",
+                html: compraConfirmadaTemplate({
+                    nomeTorcedor: torcedor.nome,
+                    numeroIngresso: pedido.id.slice(0, 8).toUpperCase(),
+                    evento: primeiroLote?.jogo?.nome ?? "Partida",
+                    data: primeiroLote?.jogo?.data
+                        ? new Date(primeiroLote.jogo.data).toLocaleDateString("pt-BR")
+                        : "A definir",
+                    local: primeiroLote?.jogo?.local ?? "A definir",
+                    valor: total,
                     pedidoId: pedido.id,
-                    total,
-                    itens: pedido.itens.map((item: any) => ({
-                        setor: item.lote?.jogoSetor?.setor?.nome ?? "N/A",
-                        tipo: item.lote?.tipo ?? "INTEIRA",
-                        preco: Number(item.valorUnitario),
-                    })),
-                })),
+                }),
             }).catch((err) => console.error("Erro email pedido confirmado:", err));
         }
 

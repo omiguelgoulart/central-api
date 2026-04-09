@@ -33,7 +33,7 @@ export class UsersController {
     }
 
     async getUserByToken(req: Request, res: Response) {
-        const userId = req.userLogadoId 
+        const userId = req.userLogadoId
         if (!userId) {
             res.status(401).json({ error: 'Usuário não autenticado' });
             return;
@@ -45,7 +45,7 @@ export class UsersController {
             console.error(error);
             res.status(500).json({ error: 'Erro ao buscar usuário', detalhe: String(error) });
         }
-        
+
     }
 
 
@@ -119,13 +119,19 @@ export class UsersController {
         }
     }
 
-    async verifyEmail(token: string) {
+    async verifyEmail(req: Request, res: Response) {
         try {
+            const token = String(req.body?.token ?? "").trim();
+            if (!token) {
+                res.status(400).json({ error: 'Token de email é obrigatório' });
+                return;
+            }
+
             const result = await this.service.verifyEmailToken(token);
-            return result;
+            res.status(200).json(result);
         } catch (error) {
             console.error(error);
-            throw new Error('Erro ao verificar email');
+            res.status(500).json({ error: 'Erro ao verificar email', detalhe: String(error) });
         }
     }
 

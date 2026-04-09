@@ -80,7 +80,10 @@ export class ReservaRepository {
   async getLoteById(loteId: string) {
     return this.db.lote.findUnique({
       where: { id: loteId },
-      include: { jogoSetor: { include: { setor: true } } },
+      include: {
+        jogoSetor: { include: { setor: true } },
+        jogo: true,
+      },
     });
   }
 
@@ -113,7 +116,18 @@ export class ReservaRepository {
   async getPedidoById(id: string) {
     return this.db.pedido.findUnique({
       where: { id },
-      include: { itens: { include: { lote: { include: { jogoSetor: { include: { setor: true } } } } } } },
+      include: {
+        itens: {
+          include: {
+            lote: {
+              include: {
+                jogoSetor: { include: { setor: true } },
+                jogo: true,
+              },
+            },
+          },
+        },
+      },
     });
   }
 
