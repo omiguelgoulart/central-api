@@ -1,9 +1,10 @@
 {
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
     "target": "ES2020",
     "module": "commonjs",
     "moduleResolution": "node",
-    "rootDir": "./src",
+    "rootDir": ".",
     "baseUrl": "./src",
     "paths": {
       "@/*": ["*"]
@@ -14,8 +15,9 @@
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "typeRoots": ["./node_modules/@types", "./src/@types"]
+    "typeRoots": ["./node_modules/@types", "./src/@types"],
+    "types": ["node"]
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts", "prisma/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }
