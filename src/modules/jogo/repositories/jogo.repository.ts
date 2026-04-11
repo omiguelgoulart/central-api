@@ -23,6 +23,20 @@ export class JogoRepository {
         });
     }
 
+    async getProximosJogos(limit = 5) {
+        return this.prismaClient.jogo.findMany({
+            where: {
+                data: {
+                    gte: new Date(),
+                },
+            },
+            orderBy: {
+                data: "asc",
+            },
+            take: limit,
+        });
+    }
+
     async getJogoById(id: string) {
         return this.prismaClient.jogo.findUnique({
             where: { id },

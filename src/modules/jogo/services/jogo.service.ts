@@ -17,6 +17,10 @@ export class JogoService {
         return this.jogoModel.getAllJogos();
     }
 
+    async getProximosJogos(limit = 5) {
+        return this.jogoModel.getProximosJogos(limit);
+    }
+
     async getJogoById(id: string) {
         const jogo = await this.jogoModel.getJogoById(id);
         if (!jogo) {

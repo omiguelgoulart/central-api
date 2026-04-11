@@ -14,6 +14,8 @@ jogoRoutes.post("/", (req, res) => jogoController.createJogo(req, res));
 
 jogoRoutes.get("/", (req, res) => jogoController.getAllJogos(res));
 
+jogoRoutes.get("/proximos", (req, res) => jogoController.getProximosJogos(req, res));
+
 jogoRoutes.get("/:id", (req, res) => jogoController.getJogoById(req, res));
 
 jogoRoutes.delete("/:id", (req, res) => jogoController.deleteJogo(req, res));

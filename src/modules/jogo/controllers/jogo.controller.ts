@@ -33,6 +33,19 @@ export class JogoController {
         }
     }
 
+    async getProximosJogos(req: Request, res: Response) {
+        try {
+            const parsedLimit = Number(req.query.limit);
+            const limit = Number.isNaN(parsedLimit) || parsedLimit <= 0 ? 5 : Math.min(parsedLimit, 20);
+
+            const jogos = await this.jogoService.getProximosJogos(limit);
+            res.status(200).json(jogos);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: 'Erro ao buscar próximos jogos', detalhe: String(error) });
+        }
+    }
+
     async getJogoById(req: Request, res: Response) {
         const { id } = req.params;
         try {
