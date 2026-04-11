@@ -54,7 +54,17 @@ export class JogoRepository {
                 lotes: {
                     select: {
                         id: true,
+                        jogoSetorId: true,
+                        jogoId: true,
+                        nome: true,
+                        tipo: true,
+                        quantidade: true,
                         precoUnitario: true,
+                        inicioVendas: true,
+                        fimVendas: true,
+                        limitePorCPF: true,
+                        criadoEm: true,
+                        atualizadoEm: true,
                     },
                 },
                 criadoPor: true,
