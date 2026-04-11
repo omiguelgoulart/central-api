@@ -8,6 +8,10 @@ import { AuthRepository } from "../repositories/auth.repository";
 export class AuthService {
     constructor(private readonly repository = new AuthRepository()) { }
 
+    private isBcryptHash(value: string): boolean {
+        return /^\$2[aby]\$\d{2}\$.{53}$/.test(value);
+    }
+
     private getPasswordResetBaseUrl(): string {
         if (process.env.PASSWORD_RESET_URL) {
             return process.env.PASSWORD_RESET_URL.replace(/\/$/, "");
@@ -33,7 +37,23 @@ export class AuthService {
             throw new Error(mensagemPadrao);
         }
 
-        const senhaConfere = await bcrypt.compare(senha, user.senha);
+        let senhaConfere = false;
+
+        if (this.isBcryptHash(user.senha)) {
+            senhaConfere = await bcrypt.compare(senha, user.senha);
+        } else {
+            senhaConfere = senha === user.senha;
+
+            if (senhaConfere) {
+                const senhaHash = await bcrypt.hash(senha, 10);
+                try {
+                    await this.repository.updatePasswordById(user.id, senhaHash);
+                } catch (error) {
+                    console.error("Erro ao migrar senha legada para hash:", error);
+                }
+            }
+        }
+
         if (!senhaConfere) {
             throw new Error(mensagemPadrao);
         }

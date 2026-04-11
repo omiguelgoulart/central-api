@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import bcrypt from "bcrypt";
 
 import { boasVindasTemplate } from "../../emails/email-templates/boas-vindas.template";
 import { verificacaoEmailTemplate } from "../../emails/email-templates/verificacao-email.template";
@@ -78,9 +79,12 @@ export class UserService {
             throw new Error('Já existe um usuário com esse email');
         }
 
+        const senhaHash = await bcrypt.hash(data.senha, 10);
+
         const matricula = await this.gerarMatriculaUnica();
         const newUser = await this.repository.createUser({
             ...data,
+            senha: senhaHash,
             matricula,
         });
 
@@ -145,7 +149,13 @@ export class UserService {
                 throw new Error('Já existe um usuário com essa matrícula');
             }
         }
-        return this.repository.updateUser(id, data);
+
+        const updateData: UpdateUsuarioInput = { ...data };
+        if (data.senha) {
+            updateData.senha = await bcrypt.hash(data.senha, 10);
+        }
+
+        return this.repository.updateUser(id, updateData);
     }
 
     async countUsers() {

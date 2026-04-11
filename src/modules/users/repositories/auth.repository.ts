@@ -73,4 +73,13 @@ export class AuthRepository {
       },
     });
   }
+
+  async updatePasswordById(userId: string, senhaHash: string) {
+    return this.prismaClient.torcedor.update({
+      where: { id: userId },
+      data: {
+        senha: senhaHash,
+      },
+    });
+  }
 }
