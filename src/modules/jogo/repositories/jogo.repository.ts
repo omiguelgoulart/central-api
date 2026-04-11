@@ -54,6 +54,7 @@ export class JogoRepository {
                 lotes: {
                     select: {
                         id: true,
+                        precoUnitario: true,
                     },
                 },
                 criadoPor: true,
