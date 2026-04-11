@@ -1,3 +1,4 @@
+import axios from "axios";
 import { Request, Response } from "express";
 import { ZodError } from "zod";
 
@@ -94,6 +95,19 @@ export class AsaasController {
   private handleError(error: unknown, res: Response, fallbackMessage: string, status = 500) {
     if (error instanceof ZodError) {
       res.status(400).json({ error: "Validacao falhou", issues: error.flatten() });
+      return;
+    }
+    if (axios.isAxiosError(error)) {
+      const upstreamStatus = error.response?.status;
+      const upstreamData = error.response?.data;
+      res.status(status).json({
+        error: fallbackMessage,
+        details: {
+          message: error.message,
+          upstreamStatus,
+          upstreamData,
+        },
+      });
       return;
     }
     if (error instanceof Error && (error.message.includes("nao encontrado") || error.message.includes("Informe"))) {
