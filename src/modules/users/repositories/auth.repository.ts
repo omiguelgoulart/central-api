@@ -11,8 +11,15 @@ export class AuthRepository {
   }
 
   async findUserByEmail(email: string) {
-    return this.prismaClient.torcedor.findUnique({
-      where: { email },
+    const emailNormalizado = email.trim();
+
+    return this.prismaClient.torcedor.findFirst({
+      where: {
+        email: {
+          equals: emailNormalizado,
+          mode: "insensitive",
+        },
+      },
       select: {
         id: true,
         nome: true,

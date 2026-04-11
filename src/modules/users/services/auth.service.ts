@@ -12,6 +12,14 @@ export class AuthService {
         return /^\$2[aby]\$\d{2}\$.{53}$/.test(value);
     }
 
+    private async comparaSenhaComHash(candidata: string, hash: string): Promise<boolean> {
+        try {
+            return await bcrypt.compare(candidata, hash);
+        } catch {
+            return false;
+        }
+    }
+
     private getPasswordResetBaseUrl(): string {
         if (process.env.PASSWORD_RESET_URL) {
             return process.env.PASSWORD_RESET_URL.replace(/\/$/, "");
@@ -31,21 +39,39 @@ export class AuthService {
 
     async login(email: string, senha: string) {
         const mensagemPadrao = "Login ou senha incorretos";
-        const user = await this.repository.findUserByEmail(email);
+        const emailNormalizado = email.trim();
+        const senhaNormalizada = senha;
+        const senhaSemEspacos = senha.trim();
+
+        const user = await this.repository.findUserByEmail(emailNormalizado);
 
         if (!user) {
             throw new Error(mensagemPadrao);
         }
 
         let senhaConfere = false;
+        const senhaBanco = user.senha ?? "";
+        const senhaBancoSemEspacos = senhaBanco.trim();
 
-        if (this.isBcryptHash(user.senha)) {
-            senhaConfere = await bcrypt.compare(senha, user.senha);
+        if (this.isBcryptHash(senhaBanco)) {
+            senhaConfere = await this.comparaSenhaComHash(senhaNormalizada, senhaBanco);
+
+            if (!senhaConfere && senhaSemEspacos !== senhaNormalizada) {
+                senhaConfere = await this.comparaSenhaComHash(senhaSemEspacos, senhaBanco);
+            }
         } else {
-            senhaConfere = senha === user.senha;
+            senhaConfere =
+                senhaNormalizada === senhaBanco ||
+                senhaSemEspacos === senhaBanco ||
+                senhaNormalizada === senhaBancoSemEspacos ||
+                senhaSemEspacos === senhaBancoSemEspacos;
 
             if (senhaConfere) {
-                const senhaHash = await bcrypt.hash(senha, 10);
+                const senhaParaHash =
+                    senhaNormalizada === senhaBanco || senhaNormalizada === senhaBancoSemEspacos
+                        ? senhaNormalizada
+                        : senhaSemEspacos;
+                const senhaHash = await bcrypt.hash(senhaParaHash, 10);
                 try {
                     await this.repository.updatePasswordById(user.id, senhaHash);
                 } catch (error) {
