@@ -9,7 +9,7 @@ export class IngressoSimpleController {
     async criarIngressoComPagamento(req: Request, res: Response) {
         try {
             const data = createIngressoComPagamentoSchema.parse(req.body);
-            const userId = (req as any).userId;
+            const userId = req.userLogadoId;
 
             if (!userId) {
                 res.status(401).json({ error: 'Usuário não autenticado' });
