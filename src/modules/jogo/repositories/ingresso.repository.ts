@@ -22,6 +22,22 @@ export class IngressoRepository {
     async getIngressoById(id: string) {
         return this.prismaClient.ingresso.findUnique({
             where: { id },
+            include: {
+                itemPedido: {
+                    include: {
+                        pedido: {
+                            include: {
+                                pagamento: true,
+                            },
+                        },
+                        lote: {
+                            include: {
+                                jogo: true,
+                            },
+                        },
+                    },
+                },
+            },
         });
     }
 

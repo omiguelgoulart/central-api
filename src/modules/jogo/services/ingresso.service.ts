@@ -22,7 +22,27 @@ export class IngressoService {
         if (!ingresso) {
             throw new Error('Ingresso não encontrado');
         }
-        return ingresso;
+
+        const itemPedido = (ingresso as any).itemPedido;
+        const pedido = itemPedido?.pedido;
+        const lote = itemPedido?.lote;
+        const jogo = lote?.jogo;
+
+        return {
+            id: ingresso.id,
+            torcedorId: pedido?.torcedorId ?? null,
+            jogoId: lote?.jogoId ?? "",
+            loteId: itemPedido?.loteId ?? null,
+            qrCode: ingresso.qrCode,
+            valor: itemPedido?.valorUnitario != null ? String(itemPedido.valorUnitario) : "0",
+            status: ingresso.status,
+            criadoEm: ingresso.criadoEm,
+            usadoEm: ingresso.usadoEm,
+            atualizadoEm: ingresso.atualizadoEm,
+            pagamentoId: pedido?.pagamento?.externalId ?? null,
+            jogo: jogo ?? null,
+            lote: lote ?? null,
+        };
     }
 
     async getIngressoByQrCode(qrCode: string) {
