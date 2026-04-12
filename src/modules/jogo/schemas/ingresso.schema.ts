@@ -9,4 +9,9 @@ export const ingressoSchema = z.object({
     usadoEm: z.date().optional(),
 });
 
-export const updateIngressoSchema = ingressoSchema.partial(); 
+export const updateIngressoSchema = ingressoSchema.partial();
+
+export const createIngressoComPagamentoSchema = z.object({
+    loteId: z.string().uuid("ID do lote inválido"),
+    pagamentoId: z.string().optional(),
+}); 
