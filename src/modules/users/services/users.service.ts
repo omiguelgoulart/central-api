@@ -120,6 +120,20 @@ export class UserService {
         return user;
     }
 
+    async getUserByCpf(cpf: string) {
+        const cpfLimpo = cpf.replace(/\D/g, "");
+        if (cpfLimpo.length !== 11) {
+            throw new Error('CPF inválido');
+        }
+
+        const user = await this.repository.getUserByCpf(cpfLimpo);
+        if (!user) {
+            throw new Error('Usuário não encontrado');
+        }
+
+        return user;
+    }
+
     async deleteUser(id: string) {
         const userExistente = await this.repository.getUserById(id);
         if (!userExistente) {

@@ -19,6 +19,8 @@ usersRouter.get("/me", verificaToken, (req, res) => controller.getUserByToken(re
 
 usersRouter.get("/", (req, res) => controller.getAllUsers(res));
 
+usersRouter.get("/cpf/:cpf", verificaToken, (req, res) => controller.getUserByCpf(req, res));
+
 usersRouter.get("/:id", (req, res) => controller.getUserById(req, res));
 
 usersRouter.delete("/:id", (req, res) => controller.deleteUser(req, res));

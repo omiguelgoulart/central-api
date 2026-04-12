@@ -4,6 +4,11 @@ import { CreateUsuarioInput, UpdateUsuarioInput } from "../types/users.type";
 export class UserRepository {
     constructor(private readonly prismaClient = prisma) { }
 
+    private formatCpf(cpfLimpo: string) {
+        if (cpfLimpo.length !== 11) return cpfLimpo;
+        return cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+    }
+
     async createUser(data: CreateUsuarioInput & { matricula: string }) {
         return this.prismaClient.torcedor.create({
             data: {
@@ -85,6 +90,27 @@ export class UserRepository {
     async getUserByMatricula(matricula: string) {
         return this.prismaClient.torcedor.findUnique({
             where: { matricula },
+        });
+    }
+
+    async getUserByCpf(cpf: string) {
+        const cpfLimpo = cpf.replace(/\D/g, "");
+        const cpfFormatado = this.formatCpf(cpfLimpo);
+
+        return this.prismaClient.torcedor.findFirst({
+            where: {
+                OR: [
+                    { cpf },
+                    { cpf: cpfLimpo },
+                    { cpf: cpfFormatado },
+                ],
+            },
+            select: {
+                id: true,
+                nome: true,
+                email: true,
+                cpf: true,
+            },
         });
     }
 

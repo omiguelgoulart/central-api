@@ -60,6 +60,21 @@ export class UsersController {
         }
     }
 
+    async getUserByCpf(req: Request, res: Response) {
+        const { cpf } = req.params;
+        try {
+            const user = await this.service.getUserByCpf(cpf);
+            res.status(200).json(user);
+        } catch (error) {
+            if (error instanceof Error && (error.message === 'CPF inválido' || error.message === 'Usuário não encontrado')) {
+                res.status(400).json({ error: error.message });
+                return;
+            }
+            console.error(error);
+            res.status(500).json({ error: 'Erro ao buscar usuário por CPF', detalhe: String(error) });
+        }
+    }
+
     async deleteUser(req: Request, res: Response) {
         const { id } = req.params;
         try {
