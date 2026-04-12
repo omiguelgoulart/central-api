@@ -1,9 +1,10 @@
 import axios from "axios";
-import { Request, Response } from "express";
 import { ZodError } from "zod";
 
-import { criarClienteSchema, idParamSchema, pagamentoUnionSchema, paymentIdParamSchema } from "../schemas/asaas.schema";
+import { criarClienteSchema, idParamSchema, pagamentoUnionSchema } from "../schemas/asaas.schema";
 import { AsaasService } from "../services/asaas.service";
+
+import type { Request, Response } from "express";
 
 export class AsaasController {
   constructor(private readonly service = new AsaasService()) { }
@@ -45,7 +46,11 @@ export class AsaasController {
 
   async obterQrCodePix(req: Request, res: Response) {
     try {
-      const { paymentId } = paymentIdParamSchema.parse(req.params);
+      const paymentId = req.params.id ?? req.params.paymentId;
+      if (!paymentId) {
+        res.status(400).json({ error: "Validacao falhou", issues: { fieldErrors: { id: ["Obrigatorio"] }, formErrors: [] } });
+        return;
+      }
       const result = await this.service.obterQrCodePix(paymentId);
       res.status(200).json(result);
     } catch (error) {
