@@ -50,5 +50,11 @@ export const pagamentoUnionSchema = z.discriminatedUnion("tipo", [
     }),
 ]);
 
+export const tokenizeCardSchema = z.object({
+    customerId: z.string().min(1),
+    cartao: cartaoSchema,
+    portador: portadorSchema,
+});
+
 export const idParamSchema = z.object({ id: z.string().min(1) });
 export const paymentIdParamSchema = z.object({ paymentId: z.string().min(1) });

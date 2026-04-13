@@ -72,6 +72,10 @@ export class AsaasService {
     return this.asaasRepository.obterBoletoPdf(id);
   }
 
+  async tokenizeCard(params: { customerId: string; cartao: { holderName: string; number: string; expiryMonth: string; expiryYear: string; ccv: string }; portador: { name: string; email: string; cpfCnpj: string; postalCode: string; addressNumber: string; phone: string } }) {
+    return this.asaasRepository.tokenizeCard(params);
+  }
+
   async processarWebhook(rawEvento: unknown) {
     const evento = rawEvento as AsaasWebhookEvent;
     if (!evento?.event) throw new Error("Evento invalido");

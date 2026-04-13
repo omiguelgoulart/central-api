@@ -228,4 +228,18 @@ export class AsaasRepository {
       include: { torcedor: { select: { nome: true, email: true } } },
     });
   }
+
+  async tokenizeCard(params: {
+    customerId: string;
+    cartao: CartaoInfo;
+    portador: PortadorInfo;
+  }) {
+    const payload = {
+      customer: params.customerId,
+      creditCard: buildCreditCardPayload(params.cartao),
+      creditCardHolderInfo: buildHolderInfoPayload(params.portador),
+    };
+    const { data } = await this.asaasClient.post<{ creditCardToken: string; }>("/creditCard/tokenize", payload);
+    return data;
+  }
 }

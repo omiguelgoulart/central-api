@@ -1,7 +1,7 @@
 import axios from "axios";
 import { ZodError } from "zod";
 
-import { criarClienteSchema, idParamSchema, pagamentoUnionSchema } from "../schemas/asaas.schema";
+import { criarClienteSchema, idParamSchema, pagamentoUnionSchema, tokenizeCardSchema } from "../schemas/asaas.schema";
 import { AsaasService } from "../services/asaas.service";
 
 import type { Request, Response } from "express";
@@ -79,6 +79,16 @@ export class AsaasController {
       res.send(pdf);
     } catch (error) {
       this.handleError(error, res, "Erro ao obter PDF", 400);
+    }
+  }
+
+  async tokenizeCard(req: Request, res: Response) {
+    try {
+      const data = tokenizeCardSchema.parse(req.body);
+      const result = await this.service.tokenizeCard(data);
+      res.status(200).json(result);
+    } catch (error) {
+      this.handleError(error, res, "Erro ao tokenizar cartão no Asaas", 502);
     }
   }
 
