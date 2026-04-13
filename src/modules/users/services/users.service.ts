@@ -109,7 +109,36 @@ export class UserService {
         if (!user) {
             throw new Error('Usuário não encontrado');
         }
-        return user;
+
+        const ingressos = (user.pedidos ?? [])
+            .flatMap((pedido) =>
+                (pedido.itens ?? [])
+                    .map((item) => {
+                        if (!item.ingresso) return null;
+
+                        return {
+                            id: item.ingresso.id,
+                            torcedorId: pedido.torcedorId,
+                            jogoId: item.lote?.jogoId ?? "",
+                            loteId: item.loteId ?? null,
+                            qrCode: item.ingresso.qrCode,
+                            valor: String(item.valorUnitario ?? 0),
+                            status: item.ingresso.status,
+                            criadoEm: item.ingresso.criadoEm,
+                            usadoEm: item.ingresso.usadoEm,
+                            atualizadoEm: item.ingresso.atualizadoEm,
+                            pagamentoId: pedido.pagamento?.externalId ?? null,
+                            jogo: item.lote?.jogo ?? null,
+                            lote: item.lote ?? null,
+                        };
+                    })
+                    .filter(Boolean)
+            );
+
+        return {
+            ...user,
+            ingressos,
+        };
     }
 
     async getUserById(id: string) {

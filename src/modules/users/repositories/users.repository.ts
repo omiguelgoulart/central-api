@@ -76,7 +76,21 @@ export class UserRepository {
                         faturas: true,
                     },
                 },
-                pedidos: true,
+                pedidos: {
+                    include: {
+                        pagamento: true,
+                        itens: {
+                            include: {
+                                ingresso: true,
+                                lote: {
+                                    include: {
+                                        jogo: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
             },
         });
     }
