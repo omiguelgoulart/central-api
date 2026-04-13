@@ -20,6 +20,7 @@ ingressoRoutes.post("/", (req, res) => ingressoController.createIngresso(req, re
 ingressoRoutes.post("/pagamento/criar", verificaToken, (req, res) => ingressoSimpleController.criarIngressoComPagamento(req, res));
 
 ingressoRoutes.get("/", (req, res) => ingressoController.getAllIngressos(res));
+ingressoRoutes.get("/:id/qrcode.png", (req, res) => ingressoController.getIngressoQrCodePng(req, res));
 
 ingressoRoutes.get("/:id", (req, res) => ingressoController.getIngressoById(req, res));
 

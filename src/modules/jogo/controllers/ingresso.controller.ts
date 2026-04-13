@@ -66,6 +66,23 @@ export class IngressoController {
         }
     }
 
+    async getIngressoQrCodePng(req: Request, res: Response) {
+        const { id } = req.params;
+        try {
+            const png = await this.ingressoService.getIngressoQrCodePng(id);
+            res.setHeader("Content-Type", "image/png");
+            res.setHeader("Cache-Control", "public, max-age=300");
+            res.status(200).send(png);
+        } catch (error) {
+            if (error instanceof Error && error.message.includes("não encontrado")) {
+                res.status(404).json({ error: error.message });
+                return;
+            }
+            console.error(error);
+            res.status(500).json({ error: 'Erro ao gerar imagem do QR code', detalhe: String(error) });
+        }
+    }
+
     async deleteIngresso(req: Request, res: Response) {
         const { id } = req.params;
         try {

@@ -1,6 +1,7 @@
 import { IngressoRepository } from "../repositories/ingresso.repository";
 import { CreateIngressoInput, UpdateIngressoInput } from "../types/ingresso.type";
 import { IngressoUtil } from "../utils/ingresso.util";
+import { buildQrPayload, toPNG } from "../../../lib/qr";
 
 export class IngressoService {
     constructor(private readonly ingressoRepository: IngressoRepository) { }
@@ -51,6 +52,16 @@ export class IngressoService {
             throw new Error('Ingresso não encontrado');
         }
         return ingresso;
+    }
+
+    async getIngressoQrCodePng(id: string) {
+        const ingresso = await this.ingressoRepository.getIngressoById(id);
+        if (!ingresso) {
+            throw new Error('Ingresso não encontrado');
+        }
+
+        const payload = buildQrPayload(ingresso.id, ingresso.qrCode);
+        return toPNG(payload);
     }
 
     async deleteIngresso(id: string) {
