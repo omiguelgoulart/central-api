@@ -53,6 +53,8 @@ app.use("/beneficio", beneficioRouter);
 app.use("/auth", authRouter);
 app.use("/usuario", usersRouter);
 
+app.use("/admin/login", adminLoginRoutes);
+app.use("/admin/checkin", checkinRoutes);
 app.use("/admin", adminRoutes);
 app.use("/ingresso", ingressoRoutes);
 app.use("/jogo", jogoRoutes);
@@ -67,8 +69,6 @@ app.use("/pedidos", pedidoRoutes);
 app.use("/checkout", checkoutRoutes);
 app.use("/asaas", asaasRoutes);
 app.use("/asaas", asaasWebhookRoutes);
-app.use("/admin/login", adminLoginRoutes);
-app.use("/admin/checkin", checkinRoutes);
 
 app.get("/", (req, res) => {
   res.send("API central de torcedores!");
