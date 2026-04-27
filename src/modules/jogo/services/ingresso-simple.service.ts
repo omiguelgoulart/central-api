@@ -11,6 +11,32 @@ export class IngressoSimpleService {
         data: CreateIngressoComPagamentoInput,
         torcedorId: string
     ) {
+        if (data.pagamentoId) {
+            const pagamentoExistente = await this.db.pagamentoIngresso.findFirst({
+                where: { externalId: data.pagamentoId },
+                include: {
+                    pedido: {
+                        include: {
+                            itens: { include: { ingresso: true } },
+                        },
+                    },
+                },
+            });
+
+            if (pagamentoExistente) {
+                const ingressoExistente = pagamentoExistente.pedido.itens[0]?.ingresso;
+                if (ingressoExistente) {
+                    return {
+                        message: 'Ingresso já gerado para este pagamento',
+                        ingressoId: ingressoExistente.id,
+                        pedidoId: pagamentoExistente.pedidoId,
+                        qrCode: ingressoExistente.qrCode,
+                        ingresso: ingressoExistente,
+                    };
+                }
+            }
+        }
+
         const lote = await this.db.lote.findUnique({
             where: { id: data.loteId },
             include: {
