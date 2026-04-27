@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { ZodError } from "zod";
 
-import { assinaturaSchema } from "../schemas/pagamento.schema";
+import { assinaturaCreateSchema, assinaturaSchema } from "../schemas/pagamento.schema";
 import { AssinaturaService } from "../services/assinatura.service";
 
 export class AssinaturaController {
@@ -9,8 +9,18 @@ export class AssinaturaController {
 
     async createAssinatura(req: Request, res: Response) {
         try {
-            const data = assinaturaSchema.parse(req.body);
-            const result = await this.service.createAssinatura(data);
+            const torcedorId = req.userLogadoId;
+            if (!torcedorId) {
+                res.status(401).json({ error: "Usuário não autenticado" });
+                return;
+            }
+
+            const data = assinaturaCreateSchema.parse(req.body);
+            const result = await this.service.createAssinatura({
+                ...data,
+                torcedorId,
+                status: "ATIVA",
+            });
             res.status(201).json(result);
         } catch (error) {
             this.handleError(error, res, "Erro ao criar assinatura");

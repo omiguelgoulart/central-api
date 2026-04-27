@@ -44,6 +44,14 @@ export const assinaturaSchema = z.object({
     gatewayAssinaturaId: z.string().optional().nullable(),
 });
 
+export const assinaturaCreateSchema = z.object({
+    planoId: z.string().uuid("ID do plano invalido"),
+    inicioEm: z.string().default(() => new Date().toISOString()),
+    expiraEm: z.string().optional().nullable(),
+    proximaCobrancaEm: z.string().optional().nullable(),
+    periodicidade: z.enum(["MENSAL", "TRIMESTRAL", "SEMESTRAL", "ANUAL"]).optional(),
+});
+
 export const pagamentoIngressoSchema = z.object({
     pedidoId: z.string().uuid("ID do pedido invalido"),
     total: z.number().positive("Total deve ser positivo"),
