@@ -34,7 +34,7 @@ export class AuthService {
             return `${frontendUrl.replace(/\/$/, "")}/novaSenha`;
         }
 
-        return "http://localhost:3000/novaSenha";
+        return "https://www.centraltorcedores.com/novaSenha";
     }
 
     async login(email: string, senha: string) {
@@ -98,15 +98,6 @@ export class AuthService {
             email: user.email,
             token,
         };
-    }
-
-    async recoverPassword(email: string) {
-        const user = await this.repository.findUserByEmail(email);
-        if (!user) {
-            throw new Error("Email não encontrado");
-        }
-
-        return this.repository.recoverPassword(email);
     }
 
     async resetPassword(token: string, novaSenha: string) {
