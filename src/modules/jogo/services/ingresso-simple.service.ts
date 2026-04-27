@@ -1,4 +1,6 @@
 
+import { compraConfirmadaTemplate } from '../../emails/email-templates/compra-confirmada.template';
+import { sendEmail } from '../../emails/services/email.service';
 import { prisma } from '../../../lib/prisma';
 import { CreateIngressoComPagamentoInput } from '../types/ingresso.type';
 
@@ -74,6 +76,28 @@ export class IngressoSimpleService {
                     status: 'APROVADO'
                 }
             });
+        }
+
+        const torcedor = await this.db.torcedor.findUnique({
+            where: { id: torcedorId },
+            select: { nome: true, email: true },
+        });
+
+        if (torcedor?.email) {
+            const jogo = lote.jogo;
+            sendEmail({
+                to: torcedor.email,
+                subject: 'Seu ingresso está confirmado!',
+                html: compraConfirmadaTemplate({
+                    nomeTorcedor: torcedor.nome,
+                    numeroIngresso: ingresso.id.slice(0, 8).toUpperCase(),
+                    evento: jogo.nome,
+                    data: jogo.data ? new Date(jogo.data).toLocaleDateString('pt-BR') : 'A definir',
+                    local: jogo.local ?? 'A definir',
+                    valor: Number(lote.precoUnitario),
+                    pedidoId: pedido.id,
+                }),
+            }).catch((err) => console.error('Erro email ingresso:', err));
         }
 
         return {
