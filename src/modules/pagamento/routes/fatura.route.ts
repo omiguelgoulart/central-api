@@ -18,5 +18,6 @@ faturaRoutes.get("/", (_req, res) => controller.getAllFaturas(res));
 faturaRoutes.get("/:id", (req, res) => controller.getFaturaById(req, res));
 faturaRoutes.delete("/:id", (req, res) => controller.deleteFatura(req, res));
 faturaRoutes.patch("/:id", (req, res) => controller.updateFatura(req, res));
+faturaRoutes.post("/:id/boleto", (req, res) => controller.gerarBoleto(req, res));
 
 export { faturaRoutes };

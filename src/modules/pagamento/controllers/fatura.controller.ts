@@ -54,6 +54,15 @@ export class FaturaController {
         }
     }
 
+    async gerarBoleto(req: Request, res: Response) {
+        try {
+            const result = await this.service.gerarBoleto(req.params.id);
+            res.status(200).json(result);
+        } catch (error) {
+            this.handleError(error, res, "Erro ao gerar boleto");
+        }
+    }
+
     private handleError(error: unknown, res: Response, fallbackMessage: string) {
         if (error instanceof ZodError) {
             res.status(400).json({ errors: error.errors });

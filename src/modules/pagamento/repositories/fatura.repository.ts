@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { MetodoPagamento, Prisma, StatusPagamentoSocio } from "@prisma/client";
 
 import { prisma } from "../../../lib/prisma";
 import { CreateFaturaInput, UpdateFaturaInput } from "../types/pagamento.type";
@@ -30,6 +30,48 @@ export class FaturaRepository {
 
     async getFaturaById(id: string) {
         return this.prismaClient.fatura.findUnique({ where: { id }, include: { assinatura: true } });
+    }
+
+    async getFaturaParaBoleto(id: string) {
+        return this.prismaClient.fatura.findUnique({
+            where: { id },
+            include: {
+                assinatura: {
+                    include: {
+                        torcedor: true,
+                        plano: { select: { nome: true } },
+                    },
+                },
+            },
+        });
+    }
+
+    async setReferencia(faturaId: string, referencia: string) {
+        return this.prismaClient.fatura.update({
+            where: { id: faturaId },
+            data: { referencia },
+        });
+    }
+
+    async criarPagamentoSocio(data: {
+        torcedorId: string;
+        faturaId: string;
+        valor: number;
+        status: StatusPagamentoSocio;
+        dataVencimento: Date;
+        referencia: string;
+        metodo: MetodoPagamento;
+        descricao: string;
+        gatewayPaymentId: string;
+    }) {
+        return this.prismaClient.pagamentoSocio.create({ data });
+    }
+
+    async updateTorcedorGatewayClienteId(torcedorId: string, gatewayClienteId: string) {
+        return this.prismaClient.torcedor.update({
+            where: { id: torcedorId },
+            data: { gatewayClienteId },
+        });
     }
 
     async deleteFatura(id: string) {

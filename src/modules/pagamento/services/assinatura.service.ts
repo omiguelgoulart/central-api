@@ -1,3 +1,5 @@
+import { StatusFatura } from "@prisma/client";
+
 import { sendEmail } from "../../emails/services/email.service";
 import { AssinaturaRepository } from "../repositories/assinatura.repository";
 import { CreateAssinaturaInput, UpdateAssinaturaInput } from "../types/pagamento.type";
@@ -9,6 +11,25 @@ import {
     assinaturaCriadaTemplate,
 } from "../../emails/email-templates/assinatura-criada.template";
 
+const MESES = [
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+];
+
+function gerarFaturasAnuais(valorMensal: number, inicioEm: Date) {
+    let mes = inicioEm.getMonth();
+    let ano = inicioEm.getFullYear();
+
+    return Array.from({ length: 12 }, () => {
+        const competencia = `${MESES[mes]}/${ano}`;
+        const vencimentoEm = new Date(ano, mes, 15);
+        const entrada = { competencia, valor: valorMensal, status: "ABERTA" as StatusFatura, vencimentoEm };
+        mes++;
+        if (mes > 11) { mes = 0; ano++; }
+        return entrada;
+    });
+}
+
 export class AssinaturaService {
     constructor(private readonly repository = new AssinaturaRepository()) { }
 
@@ -19,14 +40,18 @@ export class AssinaturaService {
         const plano = await this.repository.getPlanoById(data.planoId);
         if (!plano) throw new Error("Plano nao encontrado");
 
-        const nova = await this.repository.createAssinatura(data);
+        const valorMensal = Number(plano.valor);
+        const inicioEm = new Date(data.inicioEm);
+        const faturas = gerarFaturasAnuais(valorMensal, inicioEm);
+
+        const nova = await this.repository.createAssinatura(data, faturas);
         const html = assinaturaCriadaTemplate({
             nome: torcedor.nome,
             plano: plano.nome,
-            valor: Number(plano.valor),
-            periodicidade: plano.periodicidade,
-            inicioEm: new Date(data.inicioEm).toLocaleDateString("pt-BR"),
-            proximaCobranca: data.proximaCobrancaEm ? new Date(data.proximaCobrancaEm).toLocaleDateString("pt-BR") : undefined,
+            valor: valorMensal,
+            periodicidade: "ANUAL",
+            inicioEm: inicioEm.toLocaleDateString("pt-BR"),
+            proximaCobranca: undefined,
         });
 
         sendEmail({

@@ -1,7 +1,14 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, StatusFatura } from "@prisma/client";
 
 import { prisma } from "../../../lib/prisma";
 import { CreateAssinaturaInput, UpdateAssinaturaInput } from "../types/pagamento.type";
+
+type FaturaInput = {
+    competencia: string;
+    valor: number;
+    status: StatusFatura;
+    vencimentoEm: Date;
+};
 
 export class AssinaturaRepository {
     constructor(private readonly prismaClient = prisma) { }
@@ -14,16 +21,28 @@ export class AssinaturaRepository {
         return this.prismaClient.plano.findUnique({ where: { id } });
     }
 
-    async createAssinatura(data: CreateAssinaturaInput) {
-        return this.prismaClient.assinatura.create({
-            data: {
-                torcedorId: data.torcedorId,
-                planoId: data.planoId,
-                status: data.status,
-                inicioEm: new Date(data.inicioEm),
-                expiraEm: data.expiraEm ? new Date(data.expiraEm) : null,
-                proximaCobrancaEm: data.proximaCobrancaEm ? new Date(data.proximaCobrancaEm) : null,
-            },
+    async createAssinatura(data: CreateAssinaturaInput, faturas: FaturaInput[]) {
+        return this.prismaClient.$transaction(async (tx) => {
+            const assinatura = await tx.assinatura.create({
+                data: {
+                    torcedorId: data.torcedorId,
+                    planoId: data.planoId,
+                    status: data.status,
+                    inicioEm: new Date(data.inicioEm),
+                    expiraEm: data.expiraEm ? new Date(data.expiraEm) : null,
+                    proximaCobrancaEm: data.proximaCobrancaEm ? new Date(data.proximaCobrancaEm) : null,
+                    periodicidade: "ANUAL",
+                    valorAtual: faturas[0]?.valor ?? null,
+                },
+            });
+
+            if (faturas.length > 0) {
+                await tx.fatura.createMany({
+                    data: faturas.map((f) => ({ ...f, assinaturaId: assinatura.id })),
+                });
+            }
+
+            return assinatura;
         });
     }
 
