@@ -67,8 +67,6 @@ export class JogoRepository {
                         atualizadoEm: true,
                     },
                 },
-                criadoPor: true,
-                atualizadoPor: true,
             },
         });
     }

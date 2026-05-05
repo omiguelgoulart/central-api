@@ -2,8 +2,13 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
 interface TokenPayload {
-  userLogadoId: string;
-  userLogadoNome: string;
+  // token de torcedor
+  userLogadoId?: string;
+  userLogadoNome?: string;
+  // token de admin
+  adminId?: string;
+  adminNome?: string;
+  adminRole?: string;
 }
 
 const TOKEN_COOKIE_NAME = "token";
@@ -74,11 +79,19 @@ export function verificaToken(
   try {
     const decoded = jwt.verify(token, jwtKey) as TokenPayload;
 
-    req.userLogadoId = decoded.userLogadoId;
-    req.userLogadoNome = decoded.userLogadoNome;
+    const id = decoded.userLogadoId ?? decoded.adminId ?? "";
+    const nome = decoded.userLogadoNome ?? decoded.adminNome ?? "";
 
-    res.locals.userLogadoId = decoded.userLogadoId;
-    res.locals.userLogadoNome = decoded.userLogadoNome;
+    if (!id) {
+      res.status(401).json({ error: "Token inválido: identificador ausente" });
+      return;
+    }
+
+    req.userLogadoId = id;
+    req.userLogadoNome = nome;
+
+    res.locals.userLogadoId = id;
+    res.locals.userLogadoNome = nome;
 
     next();
   } catch {
