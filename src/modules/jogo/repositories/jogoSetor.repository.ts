@@ -12,6 +12,9 @@ export class JogoSetorRepository {
                 capacidade: data.capacidade,
                 aberto: data.aberto ?? true,
             },
+            include: {
+                setor: true,
+            },
         });
     }
 
@@ -39,6 +42,9 @@ export class JogoSetorRepository {
                 setorId: data.setorId,
                 capacidade: data.capacidade,
                 aberto: data.aberto,
+            },
+            include: {
+                setor: true,
             },
         });
     }
