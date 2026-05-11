@@ -222,6 +222,19 @@ export class AsaasRepository {
     return this.prismaClient.pagamentoSocio.updateMany({ where: { gatewayPaymentId }, data: { status, pagoEm } });
   }
 
+  async marcarFaturasPagas(gatewayPaymentId: string, pagoEm: Date) {
+    const pagamentos = await this.prismaClient.pagamentoSocio.findMany({
+      where: { gatewayPaymentId },
+      select: { faturaId: true },
+    });
+    const faturaIds = pagamentos.map(p => p.faturaId).filter((id): id is string => id !== null);
+    if (faturaIds.length === 0) return;
+    await this.prismaClient.fatura.updateMany({
+      where: { id: { in: faturaIds } },
+      data: { status: "PAGA", pagoEm },
+    });
+  }
+
   async getPagamentoComTorcedor(gatewayPaymentId: string) {
     return this.prismaClient.pagamentoSocio.findFirst({
       where: { gatewayPaymentId },

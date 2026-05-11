@@ -92,6 +92,10 @@ export class AsaasService {
     const resultado = await this.asaasRepository.atualizarPagamentoWebhook(evento.payment.id, novoStatus, pagoEm);
     if (resultado.count <= 0) return;
 
+    if (novoStatus === StatusPagamentoSocio.PAGO) {
+      await this.asaasRepository.marcarFaturasPagas(evento.payment.id, pagoEm ?? new Date());
+    }
+
     const pagamentoDb = await this.asaasRepository.getPagamentoComTorcedor(evento.payment.id);
     if (!pagamentoDb?.torcedor?.email) return;
 

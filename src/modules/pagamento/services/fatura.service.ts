@@ -66,6 +66,86 @@ export class FaturaService {
         return { message: "Fatura atualizada com sucesso", fatura: atualizada };
     }
 
+    async pagarMultiplo(faturaIds: string[], metodo: "PIX" | "BOLETO") {
+        if (!faturaIds.length) throw new Error("Nenhuma fatura informada");
+
+        const faturas = await Promise.all(faturaIds.map(id => this.repository.getFaturaParaBoleto(id)));
+
+        for (const fatura of faturas) {
+            if (!fatura) throw new Error("Fatura nao encontrada");
+            if (fatura.status === "PAGA") throw new Error("Uma das faturas ja esta paga");
+            if (fatura.status === "CANCELADA") throw new Error("Uma das faturas esta cancelada");
+        }
+
+        const torcedorIds = [...new Set(faturas.map(f => f!.assinatura.torcedor.id))];
+        if (torcedorIds.length > 1) throw new Error("Faturas pertencem a torcedores diferentes");
+
+        const primeira = faturas[0]!;
+        const torcedor = primeira.assinatura.torcedor;
+
+        let gatewayClienteId = torcedor.gatewayClienteId;
+        if (!gatewayClienteId) {
+            const cliente = await this.asaasService.criarCliente({
+                nome: torcedor.nome,
+                email: torcedor.email,
+                cpfCnpj: torcedor.cpf ?? undefined,
+            });
+            const clienteAny = cliente as Record<string, unknown>;
+            gatewayClienteId = clienteAny.id as string;
+            await this.repository.updateTorcedorGatewayClienteId(torcedor.id, gatewayClienteId);
+        }
+
+        const total = faturas.reduce((acc, f) => acc + Number(f!.valor), 0);
+        const competencias = faturas.map(f => f!.competencia).join(", ");
+        const dueDate = new Date().toISOString().slice(0, 10);
+
+        const pagamento = await this.asaasService.criarPagamento({
+            customerId: gatewayClienteId,
+            valor: total,
+            descricao: `${primeira.assinatura.plano.nome} - ${competencias}`,
+            dueDate,
+            tipo: metodo,
+        });
+
+        const pagamentoAny = pagamento as Record<string, unknown>;
+        const pagamentoId = pagamentoAny.id as string;
+
+        for (let i = 0; i < faturas.length; i++) {
+            const f = faturas[i]!;
+            await this.repository.criarPagamentoSocio({
+                torcedorId: torcedor.id,
+                faturaId: f.id,
+                valor: Number(f.valor),
+                status: "PENDENTE",
+                dataVencimento: f.vencimentoEm,
+                referencia: `${pagamentoId}-${i}`,
+                metodo,
+                descricao: `${f.assinatura.plano.nome} - ${f.competencia}`,
+                gatewayPaymentId: pagamentoId,
+            });
+        }
+
+        if (metodo === "PIX") {
+            const qrCode = await this.asaasService.obterQrCodePix(pagamentoId);
+            const qrAny = qrCode as Record<string, unknown>;
+            return {
+                paymentId: pagamentoId,
+                metodo: "PIX" as const,
+                encodedImage: qrAny.encodedImage as string,
+                payload: qrAny.payload as string,
+                expirationDate: qrAny.expirationDate as string | null,
+            };
+        }
+
+        return {
+            paymentId: pagamentoId,
+            metodo: "BOLETO" as const,
+            bankSlipUrl: pagamentoAny.bankSlipUrl as string | undefined,
+            invoiceUrl: pagamentoAny.invoiceUrl as string | undefined,
+            dueDate,
+        };
+    }
+
     async gerarBoleto(faturaId: string) {
         const fatura = await this.repository.getFaturaParaBoleto(faturaId);
         if (!fatura) throw new Error("Fatura nao encontrada");

@@ -54,6 +54,24 @@ export class FaturaController {
         }
     }
 
+    async pagarMultiplo(req: Request, res: Response) {
+        try {
+            const { faturaIds, metodo } = req.body as { faturaIds?: string[]; metodo?: string };
+            if (!Array.isArray(faturaIds) || faturaIds.length === 0) {
+                res.status(400).json({ error: "faturaIds deve ser um array não vazio" });
+                return;
+            }
+            if (metodo !== "PIX" && metodo !== "BOLETO") {
+                res.status(400).json({ error: "metodo deve ser PIX ou BOLETO" });
+                return;
+            }
+            const result = await this.service.pagarMultiplo(faturaIds, metodo);
+            res.status(200).json(result);
+        } catch (error) {
+            this.handleError(error, res, "Erro ao processar pagamento das faturas");
+        }
+    }
+
     async gerarBoleto(req: Request, res: Response) {
         try {
             const result = await this.service.gerarBoleto(req.params.id);
