@@ -23,7 +23,7 @@ export class SetorController {
         }
     }
 
-    async getAllSetores(res: Response) {
+    async getAllSetores(_req: Request, res: Response) {
         try {
             const setores = await this.setorService.getAllSetores();
             res.status(200).json(setores);

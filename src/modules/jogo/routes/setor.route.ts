@@ -12,7 +12,7 @@ const setorController = new SetorController(setorService);
 
 setorRoutes.post("/", (req, res) => setorController.createSetor(req, res));
 
-setorRoutes.get("/", (req, res) => setorController.getAllSetores(res));
+setorRoutes.get("/", (req, res) => setorController.getAllSetores(req, res));
 
 setorRoutes.get("/:id", (req, res) => setorController.getSetorById(req, res));
 
