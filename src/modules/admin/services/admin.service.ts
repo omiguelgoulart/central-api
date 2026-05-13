@@ -68,6 +68,7 @@ export class AdminService {
       email: data.email,
       role: data.role,
       senha: data.senha,
+      ativo: data.ativo,
     };
 
     if (data.senha) {

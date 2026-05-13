@@ -5,6 +5,7 @@ export const adminSchema = z.object({
     email: z.string().email("E-mail inválido"),
     senha: z.string().min(8, "Senha deve ter no mínimo 8 caracteres"),
     role: z.enum(["SUPER_ADMIN", "OPERACIONAL", "PORTARIA"]).optional(),
+    ativo: z.boolean().optional(),
 });
 
 export const updateAdminSchema = adminSchema.partial();

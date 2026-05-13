@@ -4,6 +4,15 @@ import { CreateAdminInput, UpdateAdminInput } from "../types/admin.type";
 export class AdminRepository {
   constructor(private readonly prismaClient = prisma) {}
 
+  private readonly adminSelect = {
+    id: true,
+    nome: true,
+    email: true,
+    role: true,
+    ativo: true,
+    criadoEm: true,
+  } as const;
+
   async createAdmin(data: CreateAdminInput) {
     return this.prismaClient.admin.create({
       data: {
@@ -11,17 +20,20 @@ export class AdminRepository {
         email: data.email,
         senha: data.senha,
         role: data.role,
+        ativo: data.ativo,
       },
+      select: this.adminSelect,
     });
   }
 
   async getAllAdmins() {
-    return this.prismaClient.admin.findMany();
+    return this.prismaClient.admin.findMany({ select: this.adminSelect });
   }
 
   async getAdminById(id: string) {
     return this.prismaClient.admin.findUnique({
       where: { id },
+      select: this.adminSelect,
     });
   }
 
@@ -39,7 +51,9 @@ export class AdminRepository {
         email: data.email,
         senha: data.senha,
         role: data.role,
+        ativo: data.ativo,
       },
+      select: this.adminSelect,
     });
   }
 
