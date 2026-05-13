@@ -35,17 +35,11 @@ export class CheckinService {
     if (
       ingresso.status === StatusIngresso.CANCELADO ||
       ingresso.status === StatusIngresso.EXPIRADO ||
-      ingresso.status === StatusIngresso.ESTORNADO ||
-      ingresso.status === StatusIngresso.VALIDO
+      ingresso.status === StatusIngresso.ESTORNADO
     ) {
-      const motivo =
-        ingresso.status === StatusIngresso.VALIDO
-          ? "Ingresso valido para entrada."
-          : "Ingresso nao e valido para entrada.";
-
       return {
         status: "INVALIDO",
-        mensagem: motivo,
+        mensagem: "Ingresso nao e valido para entrada.",
         ingressoId: ingresso.id,
         jogo,
       };
