@@ -25,6 +25,7 @@ export class AuthRepository {
         nome: true,
         email: true,
         senha: true,
+        anonimizadoEm: true,
       },
     });
   }

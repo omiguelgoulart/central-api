@@ -49,6 +49,10 @@ export class AuthService {
             throw new Error(mensagemPadrao);
         }
 
+        if (user.anonimizadoEm) {
+            throw new Error("Conta removida");
+        }
+
         let senhaConfere = false;
         const senhaBanco = user.senha ?? "";
         const senhaBancoSemEspacos = senhaBanco.trim();

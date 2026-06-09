@@ -19,7 +19,11 @@ export class AuthController {
                 return;
             }
             const detalhe = error instanceof Error ? error.message : String(error);
-            const status = detalhe.includes("Login ou senha incorretos") ? 401 : 500;
+            const status = detalhe === "Login ou senha incorretos"
+                ? 401
+                : detalhe === "Conta removida"
+                    ? 403
+                    : 500;
             console.error(error);
             res.status(status).json({ error: 'Erro ao realizar login', detalhe });
         }

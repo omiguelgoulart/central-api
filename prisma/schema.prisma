@@ -151,6 +151,9 @@ model Torcedor {
   senhaToken         String?   @unique
   senhaTokenExpiraEm DateTime?
 
+  anonimizadoEm        DateTime?
+  exclusaoSolicitadaEm DateTime?
+
   assinaturas      Assinatura[]
   pagamentosSocio  PagamentoSocio[]
   pedidos          Pedido[]

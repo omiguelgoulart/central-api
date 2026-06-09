@@ -20,6 +20,8 @@ import { checkoutRoutes } from "./modules/reserva/routes/checkout.route";
 import { pedidoRoutes } from "./modules/reserva/routes/pedido.route";
 import { reservaRoutes } from "./modules/reserva/routes/reserva.route";
 import { authRouter } from "./modules/users/routes/auth.route";
+import { lgpdAdminRouter } from "./modules/users/routes/lgpd.admin.route";
+import { lgpdRouter } from "./modules/users/routes/lgpd.route";
 import { usersRouter } from "./modules/users/routes/users.route";
 
 const app = express();
@@ -53,6 +55,8 @@ app.use("/beneficio", beneficioRouter);
 app.use("/auth", authRouter);
 app.use("/usuario", usersRouter);
 
+app.use("/torcedores", lgpdRouter);
+app.use("/admin/torcedores", lgpdAdminRouter);
 app.use("/admin/login", adminLoginRoutes);
 app.use("/admin/checkin", checkinRoutes);
 app.use("/admin", adminRoutes);
