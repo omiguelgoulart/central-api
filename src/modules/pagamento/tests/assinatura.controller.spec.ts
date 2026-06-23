@@ -75,7 +75,7 @@ describe("AssinaturaController", () => {
     it("deve retornar 400 ao receber corpo inválido (ZodError)", async () => {
       const req = {
         userLogadoId: "torcedor-1",
-        body: {}, // faltam campos obrigatórios -> schema.parse lança ZodError
+        body: {},
       } as unknown as Request;
       const res = makeResponse();
 
