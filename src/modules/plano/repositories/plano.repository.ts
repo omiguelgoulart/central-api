@@ -16,12 +16,15 @@ export class PlanoRepository {
     }
 
     async getAllPlanos() {
-        return this.prismaClient.plano.findMany();
+        return this.prismaClient.plano.findMany({
+            include: { beneficios: true },
+        });
     }
 
     async getPlanoById(id: string) {
         return this.prismaClient.plano.findUnique({
             where: { id },
+            include: { beneficios: true },
         });
     }
 
