@@ -92,7 +92,9 @@ export class UserService {
         const emailTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
         await this.repository.updateEmailToken(newUser.id, emailToken, emailTokenExpiry);
-        await this.enviarEmailVerificacao(newUser.nome, newUser.email, emailToken);
+
+        this.enviarEmailVerificacao(newUser.nome, newUser.email, emailToken)
+            .catch((err) => console.error("Erro ao enviar email de verificacao:", err));
 
         return {
             message: 'Usuário criado com sucesso',
@@ -240,7 +242,8 @@ export class UserService {
         await this.repository.markEmailAsVerified(user.id);
 
         if (user.email && user.nome && user.matricula) {
-            await this.enviarEmailBoasVindas(user.nome, user.matricula, user.email);
+            this.enviarEmailBoasVindas(user.nome, user.matricula, user.email)
+                .catch((err) => console.error("Erro ao enviar email de boas-vindas:", err));
         }
 
         return { message: 'Email verificado com sucesso' };
@@ -254,7 +257,8 @@ export class UserService {
         await this.repository.markEmailAsVerified(id);
 
         if (user.email && user.nome && user.matricula) {
-            await this.enviarEmailBoasVindas(user.nome, user.matricula, user.email);
+            this.enviarEmailBoasVindas(user.nome, user.matricula, user.email)
+                .catch((err) => console.error("Erro ao enviar email de boas-vindas:", err));
         }
 
         return { message: 'Email verificado com sucesso' };
