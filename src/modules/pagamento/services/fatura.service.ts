@@ -107,8 +107,8 @@ export class FaturaService {
             tipo: metodo,
         });
 
-        const pagamentoAny = pagamento as Record<string, unknown>;
-        const pagamentoId = pagamentoAny.id as string;
+        if (!pagamento) throw new Error("Pagamento nao retornado pelo Asaas");
+        const pagamentoId = pagamento.id;
 
         for (let i = 0; i < faturas.length; i++) {
             const f = faturas[i]!;
@@ -127,21 +127,20 @@ export class FaturaService {
 
         if (metodo === "PIX") {
             const qrCode = await this.asaasService.obterQrCodePix(pagamentoId);
-            const qrAny = qrCode as Record<string, unknown>;
             return {
                 paymentId: pagamentoId,
                 metodo: "PIX" as const,
-                encodedImage: qrAny.encodedImage as string,
-                payload: qrAny.payload as string,
-                expirationDate: qrAny.expirationDate as string | null,
+                encodedImage: qrCode.encodedImage,
+                payload: qrCode.payload,
+                expirationDate: qrCode.expirationDate ?? null,
             };
         }
 
         return {
             paymentId: pagamentoId,
             metodo: "BOLETO" as const,
-            bankSlipUrl: pagamentoAny.bankSlipUrl as string | undefined,
-            invoiceUrl: pagamentoAny.invoiceUrl as string | undefined,
+            bankSlipUrl: pagamento.bankSlipUrl,
+            invoiceUrl: pagamento.invoiceUrl,
             dueDate,
         };
     }
@@ -189,8 +188,8 @@ export class FaturaService {
             tipo: "BOLETO",
         });
 
-        const boletoAny = boleto as Record<string, unknown>;
-        const boletoId = boletoAny.id as string;
+        if (!boleto) throw new Error("Boleto nao retornado pelo Asaas");
+        const boletoId = boleto.id;
 
         await this.repository.setReferencia(faturaId, boletoId);
         await this.repository.criarPagamentoSocio({
@@ -207,8 +206,8 @@ export class FaturaService {
 
         return {
             paymentId: boletoId,
-            bankSlipUrl: boletoAny.bankSlipUrl as string | undefined,
-            invoiceUrl: boletoAny.invoiceUrl as string | undefined,
+            bankSlipUrl: boleto.bankSlipUrl,
+            invoiceUrl: boleto.invoiceUrl,
             dueDate,
         };
     }
