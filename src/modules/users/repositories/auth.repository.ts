@@ -22,9 +22,15 @@ export class AuthRepository {
       },
       select: {
         id: true,
+        matricula: true,
         nome: true,
         email: true,
         senha: true,
+        cpf: true,
+        telefone: true,
+        gatewayClienteId: true,
+        statusSocio: true,
+        fotoUrl: true,
         anonimizadoEm: true,
       },
     });

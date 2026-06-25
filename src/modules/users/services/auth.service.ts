@@ -98,8 +98,14 @@ export class AuthService {
         );
         return {
             id: user.id,
+            matricula: user.matricula,
             nome: user.nome,
             email: user.email,
+            cpf: user.cpf,
+            telefone: user.telefone,
+            gatewayClienteId: user.gatewayClienteId,
+            statusSocio: user.statusSocio,
+            fotoUrl: user.fotoUrl,
             token,
         };
     }
