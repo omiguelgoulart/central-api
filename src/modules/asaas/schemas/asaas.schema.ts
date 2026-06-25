@@ -31,6 +31,7 @@ export const pagamentoBaseSchema = z.object({
     tipo: z.enum(["PIX", "BOLETO", "CREDIT_CARD", "DEBIT_CARD"]),
     loteId: z.string().uuid().optional(),
     faturaId: z.string().uuid().optional(),
+    cpfCnpj: z.string().optional(),
 });
 
 export const pagamentoUnionSchema = z.discriminatedUnion("tipo", [

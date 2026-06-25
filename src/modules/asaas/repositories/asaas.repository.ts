@@ -87,7 +87,7 @@ function buildHolderInfoPayload(portador: PortadorInfo) {
   };
 }
 
-type AsaasHttpClient = Pick<typeof asaas, "get" | "post">;
+type AsaasHttpClient = Pick<typeof asaas, "get" | "post" | "put">;
 type PrismaClientLike = typeof prisma;
 type HttpClient = Pick<typeof axios, "get">;
 
@@ -102,6 +102,15 @@ export class AsaasRepository {
     const payload: Record<string, unknown> = { name: params.nome, email: params.email };
     if (params.cpfCnpj) payload.cpfCnpj = cleanDigits(params.cpfCnpj);
     const { data } = await this.asaasClient.post<Record<string, unknown>>("/customers", payload);
+    return data;
+  }
+
+  async atualizarCliente(customerId: string, params: { cpfCnpj?: string }) {
+    if (!params.cpfCnpj) return;
+    const { data } = await this.asaasClient.put<Record<string, unknown>>(
+      `/customers/${customerId}`,
+      { cpfCnpj: cleanDigits(params.cpfCnpj) },
+    );
     return data;
   }
 

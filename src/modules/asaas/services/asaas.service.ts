@@ -26,6 +26,10 @@ export class AsaasService {
     return this.asaasRepository.criarCliente(data);
   }
 
+  async atualizarCliente(customerId: string, params: { cpfCnpj?: string }) {
+    return this.asaasRepository.atualizarCliente(customerId, params);
+  }
+
   async criarPagamento(data: CriarPagamentoInput, ip?: string) {
     let valorReal: number | undefined;
 
@@ -47,6 +51,11 @@ export class AsaasService {
     const payload = { ...data, valor: valorFinal };
     delete payload.loteId;
     delete payload.faturaId;
+
+    if (payload.cpfCnpj) {
+      await this.asaasRepository.atualizarCliente(payload.customerId, { cpfCnpj: payload.cpfCnpj });
+      delete payload.cpfCnpj;
+    }
 
     switch (payload.tipo) {
       case "PIX":
