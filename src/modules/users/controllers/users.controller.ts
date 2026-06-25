@@ -17,8 +17,19 @@ export class UsersController {
                 res.status(400).json({ errors: error.errors });
                 return;
             }
+            if (error instanceof Error) {
+                const msg = error.message;
+                if (msg === 'Já existe um usuário com esse email') {
+                    res.status(409).json({ message: msg });
+                    return;
+                }
+                if (msg === 'Não foi possível gerar uma matrícula única') {
+                    res.status(503).json({ message: 'Serviço temporariamente indisponível. Tente novamente.' });
+                    return;
+                }
+            }
             console.error(error);
-            res.status(500).json({ error: 'Erro ao criar usuário', detalhe: String(error) });
+            res.status(500).json({ message: 'Erro ao criar usuário. Tente novamente mais tarde.' });
         }
     }
 
