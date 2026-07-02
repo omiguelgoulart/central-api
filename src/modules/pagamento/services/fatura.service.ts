@@ -1,10 +1,14 @@
+import { MetodoPagamento } from "@prisma/client";
+
+import { AsaasService } from "../../asaas/services/asaas.service";
 import {
     faturaGeradaTemplate,
 } from "../../emails/email-templates/fatura-gerada.template";
 import { sendEmail } from "../../emails/services/email.service";
-import { AsaasService } from "../../asaas/services/asaas.service";
 import { FaturaRepository } from "../repositories/fatura.repository";
 import { CreateFaturaInput, UpdateFaturaInput } from "../types/pagamento.type";
+
+type MetodoConfirmacao = "PIX" | "BOLETO" | "CARTAO";
 
 export class FaturaService {
     constructor(
@@ -145,6 +149,50 @@ export class FaturaService {
         };
     }
 
+    async confirmarPagamento(params: {
+        faturaIds: string[];
+        torcedorId: string;
+        paymentId: string;
+        metodo: MetodoConfirmacao;
+    }) {
+        if (!params.faturaIds.length) throw new Error("Nenhuma fatura informada");
+        if (!params.torcedorId) throw new Error("Torcedor nao informado");
+        if (!params.paymentId) throw new Error("Pagamento nao informado");
+
+        const faturas = await this.repository.getFaturasParaConfirmacao(params.faturaIds);
+
+        if (faturas.length !== params.faturaIds.length) {
+            throw new Error("Fatura nao encontrada");
+        }
+
+        for (const fatura of faturas) {
+            if (fatura.assinatura.torcedor.id !== params.torcedorId) {
+                throw new Error("Fatura nao pertence ao torcedor informado");
+            }
+
+            if (fatura.status === "CANCELADA") {
+                throw new Error("Fatura cancelada nao pode ser paga");
+            }
+        }
+
+        const metodo = this.mapMetodoConfirmacao(params.metodo);
+        const pagoEm = new Date();
+
+        const resultado = await this.repository.confirmarPagamentoFaturas({
+            faturaIds: params.faturaIds,
+            torcedorId: params.torcedorId,
+            gatewayPaymentId: params.paymentId,
+            metodo,
+            pagoEm,
+        });
+
+        return {
+            message: "Pagamento confirmado com sucesso",
+            faturasAtualizadas: resultado.count,
+            pagoEm,
+        };
+    }
+
     async gerarBoleto(faturaId: string) {
         const fatura = await this.repository.getFaturaParaBoleto(faturaId);
         if (!fatura) throw new Error("Fatura nao encontrada");
@@ -210,5 +258,16 @@ export class FaturaService {
             invoiceUrl: boleto.invoiceUrl,
             dueDate,
         };
+    }
+
+    private mapMetodoConfirmacao(metodo: MetodoConfirmacao): MetodoPagamento {
+        switch (metodo) {
+            case "PIX":
+                return MetodoPagamento.PIX;
+            case "BOLETO":
+                return MetodoPagamento.BOLETO;
+            case "CARTAO":
+                return MetodoPagamento.CARTAO_CREDITO;
+        }
     }
 }

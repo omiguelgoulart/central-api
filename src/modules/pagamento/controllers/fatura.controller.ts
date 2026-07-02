@@ -1,8 +1,14 @@
 import { Request, Response } from "express";
-import { ZodError } from "zod";
+import { z, ZodError } from "zod";
 
 import { faturaSchema } from "../schemas/pagamento.schema";
 import { FaturaService } from "../services/fatura.service";
+
+const confirmarPagamentoSchema = z.object({
+    faturaIds: z.array(z.string().uuid()).min(1),
+    paymentId: z.string().min(1),
+    metodo: z.enum(["PIX", "BOLETO", "CARTAO"]),
+});
 
 export class FaturaController {
     constructor(private readonly service = new FaturaService()) { }
@@ -69,6 +75,26 @@ export class FaturaController {
             res.status(200).json(result);
         } catch (error) {
             this.handleError(error, res, "Erro ao processar pagamento das faturas");
+        }
+    }
+
+    async confirmarPagamento(req: Request, res: Response) {
+        try {
+            const data = confirmarPagamentoSchema.parse(req.body);
+            const torcedorId = req.userLogadoId;
+
+            if (!torcedorId) {
+                res.status(401).json({ error: "Torcedor nao identificado" });
+                return;
+            }
+
+            const result = await this.service.confirmarPagamento({
+                ...data,
+                torcedorId,
+            });
+            res.status(200).json(result);
+        } catch (error) {
+            this.handleError(error, res, "Erro ao confirmar pagamento das faturas");
         }
     }
 
