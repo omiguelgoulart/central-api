@@ -61,6 +61,21 @@ export class JogoController {
         }
     }
 
+    async getJogoFull(req: Request, res: Response) {
+        const { id } = req.params;
+        try {
+            const jogo = await this.jogoService.getJogoFull(id);
+            res.status(200).json(jogo);
+        } catch (error) {
+            if (error instanceof Error && error.message === 'Jogo não encontrado') {
+                res.status(404).json({ error: 'Jogo não encontrado' });
+                return;
+            }
+            console.error(error);
+            res.status(500).json({ error: 'Erro ao buscar jogo', detalhe: String(error) });
+        }
+    }
+
     async deleteJogo(req: Request, res: Response) {
         const { id } = req.params;
         try {

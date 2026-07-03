@@ -51,6 +51,32 @@ export class JogoRepository {
         });
     }
 
+    async getJogoFull(id: string) {
+        return this.prismaClient.jogo.findUnique({
+            where: { id },
+            include: {
+                lotes: {
+                    include: {
+                        itensPedido: {
+                            include: {
+                                pedido: {
+                                    include: {
+                                        torcedor: true,
+                                    },
+                                },
+                                ingresso: {
+                                    include: {
+                                        checkins: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        });
+    }
+
     async deleteJogo(id: string) {
         return this.prismaClient.jogo.delete({
             where: { id },

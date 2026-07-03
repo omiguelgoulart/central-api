@@ -29,6 +29,36 @@ export class JogoService {
         return jogo;
     }
 
+    async getJogoFull(id: string) {
+        const jogo = await this.jogoModel.getJogoFull(id);
+        if (!jogo) {
+            throw new Error('Jogo não encontrado');
+        }
+
+        const ingressos = jogo.lotes.flatMap((lote) =>
+            lote.itensPedido
+                .filter((item) => item.ingresso)
+                .map((item) => ({
+                    id: item.ingresso!.id,
+                    valor: item.valorUnitario,
+                    status: item.ingresso!.status,
+                    socio: item.pedido.torcedor
+                        ? { nome: item.pedido.torcedor.nome }
+                        : null,
+                    checkins: item.ingresso!.checkins,
+                }))
+        );
+
+        return {
+            id: jogo.id,
+            nome: jogo.nome,
+            data: jogo.data,
+            local: jogo.local,
+            descricao: jogo.descricao,
+            ingressos,
+        };
+    }
+
     async deleteJogo(id: string) {
         const jogoExistente = await this.jogoModel.getJogoById(id);
         if (!jogoExistente) {
